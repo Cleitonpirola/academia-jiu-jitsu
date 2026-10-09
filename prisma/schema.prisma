@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+}
+model Aluno {
+  id             String       @id @default(uuid()) @db.Uuid
+  nome           String
+  telefone       String
+  email          String       @unique
+  dataNascimento String       @db.VarChar(10)
+  faixa          String
+  dataMatricula  String       @db.VarChar(10)
+  situacao       String       @default("ativo")
+  criadoEm       String
+  mensalidades   Mensalidade[]
+  presencas      Presenca[]
+}
+model Mensalidade {
+  id             String @id @default(uuid()) @db.Uuid
+  alunoId        String @db.Uuid
+  aluno          Aluno  @relation(fields: [alunoId], references: [id], onDelete: Restrict)
+  competencia    String @db.VarChar(7)
+  valorCentavos  Int
+  dataVencimento String @db.VarChar(10)
+  dataPagamento  String? @db.VarChar(10)
+  criadoEm       String
+  @@unique([alunoId, competencia])
+  @@index([dataVencimento])
+}
+model Presenca {
+  id         String  @id @default(uuid()) @db.Uuid
+  alunoId    String  @db.Uuid
+  aluno      Aluno   @relation(fields: [alunoId], references: [id], onDelete: Cascade)
+  dataTreino String  @db.VarChar(10)
+  tipoTreino String
+  presente   Boolean
+  @@unique([alunoId, dataTreino, tipoTreino])
+}
+model Analise {
+  id       String @id @default(uuid()) @db.Uuid
+  pergunta String
+  resposta String
+  modelo   String
+  usuario  String
+  metricas String
+  criadoEm String
+}
