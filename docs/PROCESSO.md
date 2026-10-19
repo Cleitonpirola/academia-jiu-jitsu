@@ -53,3 +53,42 @@ As instruções operacionais desse fluxo também estão em AGENTS.md, na raiz, p
 7. Após a apresentação do resultado e dos testes, o usuário aprovou a finalização com “pode finalizar as alterações”. Essa aprovação autoriza registrar o conjunto e enviar a branch `codex/reestruturacao` ao GitHub, seguindo o fluxo definido acima. O commit correspondente pode ser consultado no histórico Git da branch.
 
 Participação: o usuário definiu a prioridade, autorizou o escopo e aprovou a finalização; Codex escreveu implementação, testes e registros desta etapa. A aprovação não detalhou testes manuais executados pelo usuário; as verificações descritas foram realizadas pelo Codex. Não atribuir esses trechos a programação manual do candidato.
+
+## Proposta de evolução funcional — 19/10/2026
+
+Após conversar com Matheus, o usuário pediu um planejamento para ampliar as funcionalidades. Codex consultou o código, o Git e os requisitos do enunciado completo e preparou PLANO_FUNCIONAL.md, referenciado em PLANO_EVOLUCAO.md.
+
+A proposta organiza turmas/aulas, permissões, planos/cobranças, evolução do aluno, portal, relatórios e automação opcional. Distingue funcionalidades planejadas das já implementadas e das integrações externas ainda não validadas. O usuário confirmou começar por turmas, horários e chamada dos professores e informou que há turmas fixas com participação em outras. O plano passou a detalhar vínculo habitual e participação pontual, dividido em cadastro de turmas, aulas e chamada. As etapas posteriores continuam propostas.
+
+Em seguida, o usuário esclareceu que o aluno pode participar de várias aulas no mesmo dia e que o responsável pode criar um treino extra fora da grade, como às 15h entre aulas fixas das 12h e 18h. O plano foi ajustado para preservar a grade e registrar cada aula e presença separadamente, permitindo aula extra avulsa. Foi documentada a mudança futura de unicidade por aluno/data/tipo para aluno/aula; a migração ainda não foi implementada ou executada.
+
+O usuário acrescentou a intenção futura de vender a outras equipes, com planos editáveis de treinos ilimitados, limite semanal ou turma contratada e adicionais por participação além do plano. Codex ampliou o planejamento financeiro, distinguindo aula extra de adicional e prevendo histórico das condições, tratamento de consumo e cobrança sem duplicidades. Registrou que a academia atual continua sendo o caso ilimitado e que o isolamento de vários clientes ainda exige uma etapa arquitetural própria. As opções detalhadas são propostas, não políticas comerciais já aprovadas ou implementadas.
+
+O usuário detalhou o fluxo desejado: professor/mestre define o plano, aluno consulta e se registra nas aulas, cota limitada bloqueia novas inscrições incluídas e participação adicional pode ser paga. O plano foi atualizado para esse acesso do aluno, gestão mediante permissão e liberação da aula adicional após pagamento confirmado. Foi distinguida inscrição de presença efetiva, mantendo em aberto a confirmação de participação e os efeitos de cancelamento e falta no consumo. O portal continua dependendo de autenticação e autorização e não foi implementado nesta discussão.
+
+Esta etapa altera apenas documentação. Não modifica a lógica, o banco ou as telas. A conferência é de conteúdo, referências e diff, sem nova execução dos testes da aplicação. Não houve commit/push deste conjunto nem autorização para implementar todas as funções propostas. A documentação de arquitetura vigente continua descrevendo o sistema implementado; os modelos futuros serão definidos antes de cada implementação aprovada.
+
+## Execução da entrega 1A — turmas e grade fixa — 19/10/2026
+
+1. O usuário autorizou começar as entregas, solicitando destaques do trabalho e testes. Foi delimitado o primeiro conjunto: cadastro/edição de turmas, grade fixa, alunos habituais e desativação/reativação. Aulas extras e nova chamada permanecem seguintes.
+2. Consultados Git, AGENTS.md e código; preservados os documentos de planejamento ainda não aprovados para commit. O desenho foi registrado em ARQUITETURA.md antes da implementação.
+3. Codex implementou os contratos, três tabelas, migração SQLite 2 e equivalente Prisma, módulo de turmas, transação nos repositórios, nova tela e carregamento independente. A restrição de exclusão de aluno foi estendida aos vínculos de turma, com mensagem específica.
+4. Nova execução: 42 testes TypeScript e 12 Python aprovados, build/typecheck e Prisma validate aprovados. Não houve teste externo de PostgreSQL ou IA.
+5. No navegador, um processo separado em memória com seed fictício permitiu cadastrar duas turmas, editar, conferir sobreposição, manter filtro, desativar/reativar e conferir grade e formulário estreito. Os dados de teste não foram gravados na base do usuário. O override de viewport foi removido após a conferência.
+6. O servidor local foi atualizado; o runner criou backup antes da migração 2. As quatro tabelas anteriores mantiveram contagens e hashes: 20 alunos, 110 mensalidades, 432 presenças e zero análises. As três novas ficaram vazias. Oito rotas HTTP responderam 200; Python disponível e IA sem chave.
+7. README, arquitetura, guia de migrações, plano, prompts e revisão foram atualizados; TURMAS.md descreve uso, contratos, testes e defesa oral. A área Turmas foi deixada aberta para validação do usuário.
+8. O usuário perguntou sobre versões e envio ao Matheus durante a execução. VERSIONAMENTO.md registra a recomendação de push após cada pequena entrega aprovada e de marcar versões por escopo, não por número de commits. v1.1.0 é apenas candidata para a entrega de turmas; nenhuma tag ou versão de pacote foi alterada.
+
+Situação na apresentação: implementação e testes concluídos; aprovação do usuário, commit e push deste conjunto ainda pendentes naquele momento. A participação descrita foi real: Codex escreveu e testou; o usuário definiu regras. A aprovação posterior está registrada abaixo, sem atribuir ao usuário testes manuais não relatados.
+
+### Incremento solicitado durante a validação: exclusão definitiva
+
+O usuário viu a opção de desativar e pediu também excluir permanentemente para não acumular turmas inativas. Codex acrescentou o botão nos cartões e detalhes, confirmação explicativa, rota DELETE e remoção transacional de turma/horários/vínculos, preservando alunos, mensalidades e presenças. Dois testes adicionais e casos de 404 foram incluídos. A nova execução terminou com 44 testes TypeScript e build/typecheck aprovados; os 12 testes Python já haviam passado nesta mesma entrega, antes do incremento, e não foram reexecutados porque Python e fórmulas não mudaram.
+
+O navegador em ambiente fictício foi usado para conferir botões, confirmação, cancelamento e adaptação estreita. A remoção efetiva foi exercitada nos testes HTTP/SQL, com proteção dos demais registros e rollback. Ao atualizar o servidor real, a comparação das sete tabelas preservou também a turma que já havia sido cadastrada na base local: uma turma, três horários e três vínculos. Nenhuma exclusão foi executada na base do usuário. Na apresentação desse incremento, a aprovação para commit/push do conjunto atualizado ainda estava pendente.
+
+### Aprovação para registrar e enviar a entrega 1A
+
+Após perguntar se os testes terminaram sem erros e receber os resultados e limites, o usuário autorizou com “pode commitar”. Conforme o fluxo permanente, essa aprovação autoriza Codex a revisar o diff, registrar o conjunto apresentado e enviá-lo à branch `codex/reestruturacao`, sem nova pergunta para o mesmo envio. Inclui código, migrações, testes, capturas fictícias e documentação de turmas/planejamento/versionamento. Não inclui tag, release, merge ou implantação.
+
+Nesta etapa de registro, não houve nova alteração de comportamento nem reexecução dos testes da aplicação; foram revisados os diffs e o estado do Git/remoto. Os resultados de 44 testes TypeScript, build/typecheck e os 12 Python anteriores continuam sendo as execuções identificadas acima. Credenciais, base local, backups e arquivos temporários de teste permanecem excluídos do Git. A confirmação de envio deve consultar o resultado real do push; a aprovação não é prova de publicação.

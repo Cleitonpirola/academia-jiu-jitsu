@@ -8,6 +8,21 @@ export interface Aluno {
   criadoEm: string;
 }
 export type AlunoInput = Omit<Aluno, 'id' | 'criadoEm'>;
+export const DIAS_SEMANA = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'] as const;
+export interface Turma {
+  id: string; nome: string; professor: string; situacao: Situacao;
+  criadoEm: string; atualizadoEm: string;
+}
+export interface HorarioTurma {
+  id: string; turmaId: string; diaSemana: number; horaInicio: string; horaFim: string;
+}
+export interface AlunoTurma { id: string; turmaId: string; alunoId: string; criadoEm: string }
+export interface TurmaInput {
+  nome: string; professor: string; situacao: Situacao;
+  horarios: Pick<HorarioTurma, 'diaSemana' | 'horaInicio' | 'horaFim'>[];
+  alunoIds: string[];
+}
+export interface TurmaView extends Turma { horarios: HorarioTurma[]; alunoIds: string[] }
 export interface Mensalidade {
   id: string; alunoId: string; competencia: string; valorCentavos: number;
   dataVencimento: string; dataPagamento: string | null; criadoEm: string;

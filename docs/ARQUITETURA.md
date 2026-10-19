@@ -69,7 +69,7 @@ Codex revisou o rascunho e adotou: status derivado, centavos inteiros, restriç�
 
 ## Correções de evolução e integração — 19/10/2026
 
-Primeira extração gradual: `modules/analytics/service.ts` concentra a consulta dos dados e a chamada HTTP ao Python; `schema.ts` valida sua resposta com Zod. `http-error.ts` compartilha o erro HTTP entre a composição da API e esse serviço. As demais rotas continuam em `app.ts`; a modularização completa ainda não foi realizada.
+Primeira extração gradual: `modules/analytics/service.ts` concentra a consulta dos dados e a chamada HTTP ao Python; `schema.ts` valida sua resposta com Zod. `http-error.ts` compartilha o erro HTTP entre a composição da API e esse serviço. As rotas anteriores continuam em `app.ts`; a modularização completa ainda não foi realizada. A nova entrega de turmas usa módulo próprio desde sua criação, conforme a seção abaixo.
 
 O contrato TypeScript descreve os tipos durante o desenvolvimento. A validação Zod verifica os valores recebidos pela rede: datas, mês solicitado, inteiros não negativos, listas e níveis de risco. Campos adicionais são aceitos e descartados; campos obrigatórios ausentes ou incompatíveis geram HTTP 503. Isso evita repassar uma string onde a tela espera uma lista. Essa checagem não prova, sozinha, que toda fórmula financeira está correta: os testes determinísticos e a conferência dos períodos continuam necessários.
 
@@ -82,3 +82,30 @@ O SQLite usa o runner em `database/sqlite/migrate.ts` e os arquivos SQL de `data
 O histórico `_tatame_migrations` descreve o schema local, independentemente da versão do pacote npm. Migrações Prisma/PostgreSQL são outro caminho, mantido em `prisma/migrations/`; trocar DATABASE_URL não transfere registros. Procedimento e limites: [MIGRACOES_SQLITE.md](MIGRACOES_SQLITE.md).
 
 Ao mudar o mês, o dashboard é invalidado até chegar o novo resumo; indicadores também limpam o contexto anterior durante a consulta. Isso impede atribuir números do período anterior ao mês recém-selecionado, sem invalidar os cadastros que não dependem do mês.
+
+## Desenho da entrega 1A — turmas e grade fixa — 19/10/2026
+
+Registrado antes da implementação, após o usuário autorizar começar pelas pequenas entregas. Escopo: cadastrar, editar, consultar e desativar turmas; grade semanal com vários horários por dia; vínculos habituais dos alunos. Aula extra, encontro datado, nova chamada, planos e login permanecem nas entregas seguintes. O professor responsável é um nome cadastral nesta etapa, não uma conta autenticada.
+
+- Turma: UUID, nome, professor responsável, situação ativo/inativo e datas de criação/atualização.
+- HorarioTurma: UUID, turmaId, diaSemana (0 = domingo a 6 = sábado), horaInicio/horaFim em HH:mm. Vários horários no mesmo dia são permitidos; repetição e sobreposição dentro da mesma turma são rejeitadas. Nesta entrega, um intervalo não atravessa a meia-noite.
+- AlunoTurma: UUID, turmaId, alunoId e criadoEm; unicidade por turma/aluno. O vínculo é habitual e não define ainda um direito comercial ou uma presença.
+
+As tabelas novas usam chaves estrangeiras e não alteram as quatro tabelas de negócio anteriores. Novos vínculos exigem aluno ativo; um aluno posteriormente inativado pode permanecer vinculado até a remoção explícita. Exclusão de aluno vinculado é impedida, com orientação para retirar o vínculo ou inativar. Desativar a turma preserva horários e vínculos.
+
+O desenho inicial não expunha exclusão de turma. Após conferir a interface, o usuário pediu a remoção definitiva, além da desativação. Foi acrescentado DELETE /api/turmas/:id e `removeTurma` no repositório, removendo horários, vínculos e turma em uma transação SQLite/Prisma. Não exclui alunos, mensalidades ou as presenças existentes. Não foi necessária outra migração. A interface exige confirmação e explica que recriar uma turma gera um cadastro novo. Na futura etapa de aulas, a preservação do histórico de encontros e presenças também deverá ser mantida ao definir a relação com turmas.
+
+Implementado em `modules/turmas/`: schema Zod, serviço e rotas. O método `saveTurma` do repositório salva turma, horários e vínculos na mesma transação: síncrona, sem awaits intercalados no SQLite, e por `$transaction` no Prisma. A grade define programação, sem gerar encontros ou presenças automaticamente. Os horários usam a referência local da academia, America/Sao_Paulo nesta entrega.
+
+Contratos implementados: GET/POST /api/turmas, GET/PUT/DELETE /api/turmas/:id e PATCH /api/turmas/:id/situacao. A edição completa recebe nome, professor, situação, lista de horários e alunoIds; a resposta inclui identificadores e datas. O React possui recurso próprio de turmas, com falha isolada das demais áreas, filtros, cartões, detalhes, formulário e grade semanal. A versão de schema SQLite avança pela nova migração `002_turmas`; `001_initial.sql` permanece intacta. O caminho PostgreSQL recebe migração equivalente, sem presumir validação externa.
+
+Validação executada: migração sobre arquivo temporário da versão anterior sem alterar seus registros, persistência após reabrir, gravação atômica com rollback, horários inválidos/sobrepostos, vínculos inexistentes/repetidos/inativos, aluno em várias turmas, desativação sem perda e navegador com base fictícia isolada. A atualização da base local também preservou os registros anteriores. Resultados e limites em [TURMAS.md](TURMAS.md) e [REVISAO_IA.md](REVISAO_IA.md).
+
+```mermaid
+erDiagram
+  Turma ||--o{ HorarioTurma : possui
+  Turma ||--o{ AlunoTurma : organiza
+  Aluno ||--o{ AlunoTurma : participa
+```
+
+Horários mantidos preservam seus IDs por dia/início; vínculos mantidos preservam ID e data de criação. A substituição da grade e dos vínculos ocorre como uma unidade. Nesta fase, não há histórico completo de remoção de vínculos nem bloqueio otimista de edições simultâneas: a última edição completa prevalece. A geração de aulas futuras deverá guardar seus próprios dados e participantes esperados, sem reconstruir encontros antigos a partir da grade atual. Aulas, planos, login e isolamento entre academias continuam planejados.

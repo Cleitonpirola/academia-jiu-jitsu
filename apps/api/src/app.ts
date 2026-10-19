@@ -9,6 +9,7 @@ import type { Repository, Table } from './repository.js';
 import { alunoSchema, mensalidadeSchema, paymentSchema, presencaSchema, monthSchema, statusOf, dashboard, currentMonth } from './domain.js';
 import { HttpError } from './http-error.js';
 import { calculateAnalytics } from './modules/analytics/service.js';
+import { turmasRouter } from './modules/turmas/routes.js';
 const fold = (text: string) => text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 export function createApp(repo: Repository, options: { apiKey?: string; analyticsUrl?: string } = {}) {
   const app = express();
@@ -35,6 +36,7 @@ export function createApp(repo: Repository, options: { apiKey?: string; analytic
   app.delete('/api/alunos/:id',async(req,res)=>{
     await find('Aluno',req.params.id);
     if((await repo.list('Mensalidade')).some(m=>m.alunoId===req.params.id)) throw new HttpError(409,'Este aluno possui cobranças. Altere sua situação para inativo para preservar o histórico.');
+    if((await repo.list('AlunoTurma')).some(v=>v.alunoId===req.params.id)) throw new HttpError(409,'Este aluno está vinculado a uma turma. Remova os vínculos antes de excluir ou apenas inative o cadastro para preservá-lo.');
     await repo.remove('Aluno',req.params.id); res.status(204).end();
   });
   app.get('/api/mensalidades',async(req,res)=>{
@@ -78,6 +80,7 @@ export function createApp(repo: Repository, options: { apiKey?: string; analytic
     const row=await repo.insert('Analise',{id:randomUUID(),pergunta,resposta:answer,modelo:model,usuario:'Administrador local',metricas:JSON.stringify(snapshot),criadoEm:new Date().toISOString()});
     res.status(201).json(row);
   });
+  app.use('/api/turmas',turmasRouter(repo));
   app.use('/api',(_req,_res,next)=>next(new HttpError(404,'Rota não encontrada.')));
   const dist=resolve('apps/web/dist');
   if(existsSync(dist)) { app.use(express.static(dist)); app.get('/{*path}',(_req,res)=>res.sendFile(resolve(dist,'index.html'))); }

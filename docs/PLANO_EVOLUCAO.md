@@ -6,6 +6,12 @@ Este documento analisa as duas imagens fornecidas pelo usuário e o código atua
 
 **Atualização de 19/10/2026:** o diagnóstico e a sequência abaixo registram o planejamento inicial. Nesta data foram implementados runner SQLite, carregamentos independentes e contrato validado Node/Python, com extração do módulo de analytics. A tag remota v1.0.0 e main foram confirmadas no GitHub. A validação técnica atual está em REVISAO_IA.md; os demais módulos, as duas entregas e as integrações externas seguem pendentes. Após a apresentação dos resultados, o usuário aprovou a finalização do conjunto para commit e envio da branch de trabalho.
 
+**Nova proposta funcional, ainda para discussão:** o [PLANO_FUNCIONAL.md](PLANO_FUNCIONAL.md) reúne turmas/aulas, acessos, planos e cobranças, evolução do aluno, portal e relatórios. Esse complemento considera as 19 páginas do enunciado e distingue funções extras de pendências obrigatórias. As seções abaixo preservam o diagnóstico e a ordem do plano técnico inicial; não são uma nova execução das validações. A proposta funcional não altera o código nem foi aprovada para implementação ou commit.
+
+**Evolução posterior:** a entrega 1A de turmas, grade e vínculos foi implementada e testada, incluindo a exclusão definitiva solicitada na validação. O usuário aprovou o conjunto e seus documentos para commit/envio com “pode commitar”. As demais funções da proposta continuam planejadas; este registro não autoriza sua implementação automática. Guia: [TURMAS.md](TURMAS.md).
+
+No detalhamento posterior, o usuário confirmou grade fixa com aulas extras e várias presenças no dia, e acrescentou o objetivo de comercializar para outras equipes. O plano funcional agora prevê regras de planos configuráveis por academia, distingue aula extra de cobrança adicional e registra a necessidade futura de isolamento entre clientes. O sistema atual permanece de uma academia local, sem essas novas funções implementadas.
+
 ## 1. O que as imagens exigem
 
 O desafio pede duas aplicações de academia de Jiu-Jitsu. A segunda deve evoluir os dados e as funcionalidades da primeira com análise de dados e IA real e verificável.

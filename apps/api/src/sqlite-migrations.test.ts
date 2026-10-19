@@ -4,6 +4,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { mkdtempSync, readdirSync, existsSync, unlinkSync, rmdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve, sep } from 'node:path';
+import { randomUUID } from 'node:crypto';
 import { migrateSqlite, sqliteMigrations, type SqliteMigration } from './database/sqlite/migrate.js';
 import { SqliteRepository } from './repository.js';
 
@@ -35,10 +36,10 @@ const originalStudent = [
 it('registra a versão inicial de um banco novo e não reaplica a migração', async () => {
   const repo = new SqliteRepository(':memory:');
   try {
-    assert.deepEqual(repo.migration.applied, [1]);
+    assert.deepEqual(repo.migration.applied, [1, 2]);
     assert.equal(repo.migration.backupPath, null);
     assert.deepEqual(migrateSqlite(repo.db).applied, []);
-    assert.equal(repo.db.prepare('SELECT COUNT(*) AS total FROM _tatame_migrations').get()?.total, 1);
+    assert.equal(repo.db.prepare('SELECT COUNT(*) AS total FROM _tatame_migrations').get()?.total, 2);
   } finally { await repo.close(); }
 });
 
@@ -145,4 +146,39 @@ it('interrompe estrutura legada desconhecida, faz backup e não inventa a faixa 
     } finally { unchanged.close(); }
     assert.equal(readdirSync(join(resolve(temp.file, '..'), 'backups')).length, 1);
   } finally { temp.cleanup(); }
+});
+
+it('evolui versão 1 para turmas, preserva as quatro tabelas e persiste grade e vínculos após reabrir', async () => {
+  const temp = temporaryDatabase();
+  let repo: SqliteRepository | undefined;
+  const originalTables = ['Aluno', 'Mensalidade', 'Presenca', 'Analise'];
+  try {
+    const old = new DatabaseSync(temp.file);
+    migrateSqlite(old, temp.file, sqliteMigrations.slice(0, 1));
+    old.prepare('INSERT INTO Aluno VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(...originalStudent);
+    old.prepare('INSERT INTO Mensalidade VALUES (?, ?, ?, ?, ?, ?, ?)').run(randomUUID(), originalStudent[0], '2026-10', 20000, '2026-10-10', null, originalStudent[8]);
+    old.prepare('INSERT INTO Presenca VALUES (?, ?, ?, ?, ?)').run(randomUUID(), originalStudent[0], '2026-10-01', 'Com kimono', 1);
+    old.prepare('INSERT INTO Analise VALUES (?, ?, ?, ?, ?, ?, ?)').run(randomUUID(), 'Pergunta preservada', 'Resposta preservada', 'modelo-de-teste', 'Teste', '{}', originalStudent[8]);
+    const before = originalTables.map(table => old.prepare(`SELECT * FROM "${table}" ORDER BY id`).all());
+    old.close();
+    repo = new SqliteRepository(temp.file);
+    assert.deepEqual(repo.migration.applied, [2]); assert.equal(repo.migration.version, 2);
+    assert.deepEqual(originalTables.map(table => repo!.db.prepare(`SELECT * FROM "${table}" ORDER BY id`).all()), before);
+    assert.ok(repo.migration.backupPath);
+    const backup = new DatabaseSync(repo.migration.backupPath, { readOnly: true });
+    try {
+      assert.equal(backup.prepare('SELECT MAX(version) AS version FROM _tatame_migrations').get()?.version, 1);
+      assert.equal(backup.prepare("SELECT name FROM sqlite_master WHERE name='Turma'").get(), undefined);
+    } finally { backup.close(); }
+    const turma = { id: randomUUID(), nome: 'Turma persistida', professor: 'Mestre', situacao: 'ativo' as const, criadoEm: '2026-10-19T00:00:00Z', atualizadoEm: '2026-10-19T00:00:00Z' };
+    const horario = { id: randomUUID(), turmaId: turma.id, diaSemana: 1, horaInicio: '12:00', horaFim: '13:00' };
+    const vinculo = { id: randomUUID(), turmaId: turma.id, alunoId: originalStudent[0], criadoEm: turma.criadoEm };
+    await repo.saveTurma(turma, [horario], [vinculo], true);
+    await repo.close(); repo = new SqliteRepository(temp.file);
+    assert.deepEqual(repo.migration.applied, []);
+    assert.deepEqual(await repo.get('Turma', turma.id), turma);
+    assert.deepEqual(await repo.list('HorarioTurma'), [horario]); assert.deepEqual(await repo.list('AlunoTurma'), [vinculo]);
+    assert.deepEqual(originalTables.map(table => repo!.db.prepare(`SELECT * FROM "${table}" ORDER BY id`).all()), before);
+    assert.deepEqual(repo.db.prepare('PRAGMA foreign_key_check').all(), []);
+  } finally { if (repo) await repo.close(); temp.cleanup(); }
 });

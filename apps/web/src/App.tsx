@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { LayoutDashboard, Users, CreditCard, CalendarCheck, Sparkles, ArrowUpRight, X, RotateCw, CheckCircle2, Activity, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, CalendarCheck, CalendarDays, Sparkles, ArrowUpRight, X, RotateCw, CheckCircle2, Activity, ChevronRight } from 'lucide-react';
 import { MonthPicker, Button } from './components';
 import { api, today } from './lib';
 import { StoreContext } from './store';
@@ -10,10 +10,11 @@ import { StudentsPage, StudentForm } from './pages/StudentsPage';
 import { PaymentsPage } from './pages/PaymentsPage';
 import { AttendancePage } from './pages/AttendancePage';
 import { IntelligencePage } from './pages/IntelligencePage';
-const navigation=[{id:'dashboard',label:'Visão geral',icon:LayoutDashboard},{id:'alunos',label:'Alunos',icon:Users},{id:'mensalidades',label:'Mensalidades',icon:CreditCard},{id:'presencas',label:'Presenças',icon:CalendarCheck},{id:'inteligencia',label:'Inteligência',icon:Sparkles}];
+import { TurmasPage } from './pages/TurmasPage';
+const navigation=[{id:'dashboard',label:'Visão geral',icon:LayoutDashboard},{id:'alunos',label:'Alunos',icon:Users},{id:'turmas',label:'Turmas',icon:CalendarDays},{id:'mensalidades',label:'Mensalidades',icon:CreditCard},{id:'presencas',label:'Presenças',icon:CalendarCheck},{id:'inteligencia',label:'Inteligência',icon:Sparkles}];
 const requiredResources: Record<string, Resource[]> = {
   dashboard: ['dashboard', 'alunos', 'mensalidades'], alunos: ['alunos'],
-  mensalidades: ['mensalidades', 'alunos'], presencas: ['alunos', 'presencas'], inteligencia: [],
+  mensalidades: ['mensalidades', 'alunos'], presencas: ['alunos', 'presencas'], inteligencia: [], turmas: ['turmas', 'alunos'],
 };
 export default function App() {
   const [page,setPage]=useState('dashboard');const [month,setMonth]=useState(today().slice(0,7));
@@ -79,7 +80,7 @@ export default function App() {
           <div className="breadcrumb">Academia <ChevronRight size={14}/><strong>{navigation.find(item=>item.id===page)?.label}</strong></div>
           <div className="topbar-actions">
             <span className={`env-badge ${data.health?'':'is-offline'}`}><i/>{data.health?(data.health.database==='supabase'?'Supabase conectado':'Banco local'):(resourceStatus.health.loading?'Conferindo conexão…':'Conexão indisponível')}</span>
-            <MonthPicker value={month} onChange={setMonth}/>
+            {page!=='turmas'&&<MonthPicker value={month} onChange={setMonth}/>}
           </div>
         </header>
         <main>
@@ -88,6 +89,7 @@ export default function App() {
           {!pageError&&pageLoading&&!pageHasData?<div className="loading-screen"><div className="spinner"/><h2>Preparando sua academia</h2><p>Carregando os dados desta área…</p></div>:pageError?null:<>
             {page==='dashboard'&&<DashboardPage onNewStudent={()=>setStudentForm(true)} onPayments={()=>goto('mensalidades')} onStudents={()=>goto('alunos')}/>}
             {page==='alunos'&&<StudentsPage onPayments={viewPayments}/>}
+            {page==='turmas'&&<TurmasPage/>}
             {page==='mensalidades'&&<PaymentsPage initialStudent={paymentStudent}/>}
             {page==='presencas'&&<AttendancePage/>}
             {page==='inteligencia'&&<IntelligencePage/>}

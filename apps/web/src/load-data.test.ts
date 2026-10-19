@@ -29,7 +29,7 @@ it('mantém os resultados dos outros módulos quando o histórico falha', async 
     onSuccess: resource => { success.add(resource); },
     onFailure: (resource, message) => { errors.set(resource, message); },
   });
-  assert.deepEqual([...success].sort(), ['alunos', 'dashboard', 'health', 'mensalidades', 'presencas']);
+  assert.deepEqual([...success].sort(), ['alunos', 'dashboard', 'health', 'mensalidades', 'presencas', 'turmas']);
   assert.equal(errors.get('analises'), 'Histórico indisponível');
   assert.equal(errors.size, 1);
 });
@@ -68,4 +68,15 @@ it('separa erro do dashboard e solicita o mês escolhido sem bloquear os demais 
   assert.deepEqual(errors, ['dashboard']);
   assert.ok(succeeded.includes('alunos'));
   assert.ok(succeeded.includes('mensalidades'));
+});
+
+it('falha das turmas não bloqueia cadastros ou cobranças e não é apresentada como lista vazia válida', async () => {
+  const succeeded: Resource[] = []; const errors: Resource[] = [];
+  const read: ReadApi = async <T>(path: string) => {
+    if (path === '/turmas') throw new Error('Turmas indisponíveis');
+    return [] as T;
+  };
+  await loadResources('2026-10', read, { onSuccess: resource => { succeeded.push(resource); }, onFailure: resource => { errors.push(resource); } });
+  assert.deepEqual(errors, ['turmas']); assert.ok(!succeeded.includes('turmas'));
+  assert.ok(succeeded.includes('alunos')); assert.ok(succeeded.includes('mensalidades'));
 });

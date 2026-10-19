@@ -16,6 +16,7 @@ model Aluno {
   criadoEm       String
   mensalidades   Mensalidade[]
   presencas      Presenca[]
+  turmas         AlunoTurma[]
 }
 model Mensalidade {
   id             String @id @default(uuid()) @db.Uuid
@@ -46,4 +47,33 @@ model Analise {
   usuario  String
   metricas String
   criadoEm String
+}
+model Turma {
+  id           String @id @default(uuid()) @db.Uuid
+  nome         String
+  professor    String
+  situacao     String
+  criadoEm     String
+  atualizadoEm String
+  horarios     HorarioTurma[]
+  alunos       AlunoTurma[]
+}
+model HorarioTurma {
+  id         String @id @default(uuid()) @db.Uuid
+  turmaId    String @db.Uuid
+  turma      Turma @relation(fields: [turmaId], references: [id], onDelete: Restrict)
+  diaSemana  Int
+  horaInicio String @db.VarChar(5)
+  horaFim    String @db.VarChar(5)
+  @@unique([turmaId, diaSemana, horaInicio])
+}
+model AlunoTurma {
+  id       String @id @default(uuid()) @db.Uuid
+  turmaId  String @db.Uuid
+  turma    Turma @relation(fields: [turmaId], references: [id], onDelete: Restrict)
+  alunoId  String @db.Uuid
+  aluno    Aluno @relation(fields: [alunoId], references: [id], onDelete: Restrict)
+  criadoEm String
+  @@unique([turmaId, alunoId])
+  @@index([alunoId])
 }

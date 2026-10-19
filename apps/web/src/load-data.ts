@@ -11,6 +11,7 @@ export async function loadResources(month: string, read: ReadApi, handlers: Load
   const paths: Record<Resource, string> = {
     alunos: '/alunos', mensalidades: '/mensalidades', presencas: '/presencas',
     dashboard: '/dashboard?mes=' + month, health: '/health', analises: '/analises',
+    turmas: '/turmas',
   };
   await Promise.allSettled(resources.map(async resource => {
     try {
