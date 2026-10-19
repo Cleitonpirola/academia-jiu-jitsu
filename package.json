@@ -15,7 +15,7 @@
     "start": "node scripts/run.mjs --production",
     "build": "npm run typecheck && vite build --config apps/web/vite.config.ts",
     "typecheck": "tsc --noEmit -p apps/api/tsconfig.json && tsc --noEmit -p apps/web/tsconfig.json",
-    "test": "tsx --test apps/api/src/app.test.ts",
+    "test": "tsx --test apps/api/src/*.test.ts apps/web/src/*.test.ts",
     "setup:analytics": "node scripts/setup-python.mjs",
     "test:analytics": "node scripts/test-python.mjs",
     "db:generate": "prisma generate",

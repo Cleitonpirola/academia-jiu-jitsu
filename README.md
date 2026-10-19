@@ -1,6 +1,6 @@
 # Tatame — Academia de Jiu-Jitsu
 
-Versão **1.0.0**: registro do MVP atual, preservando sua lógica. Veja o [guia de envio ao GitHub](docs/GITHUB.md).
+A tag **v1.0.0** preserva o MVP inicial. A branch `codex/reestruturacao` contém as correções descritas abaixo, aprovadas pelo usuário para finalização e envio ao GitHub. Veja o [guia de envio ao GitHub](docs/GITHUB.md).
 
 MVP full stack para cadastro de alunos, controle de mensalidades, dashboard financeiro, chamada de treinos e analytics de frequência/evasão. Interface em português, responsiva e com dados fictícios para validação imediata.
 
@@ -18,6 +18,14 @@ npm run dev
 Abra http://127.0.0.1:5173. API em http://127.0.0.1:3333/api; documentação do Python em http://127.0.0.1:8000/docs.
 
 Sem credenciais, o projeto usa SQLite real, persistido em `data/academia.sqlite`. Na primeira execução são criados 20 alunos fictícios, faixas diferentes, alunos ativos/inativos, cobranças pagas/pendentes/atrasadas e presenças distribuídas em três meses. Reiniciar não sobrescreve seus dados. Dados locais e credenciais estão no .gitignore.
+
+## Correções de arquitetura — 19/10/2026
+
+- SQLite possui migrações versionadas, histórico e verificação dos arquivos aplicados. Antes de atualizar um arquivo com tabelas, cria uma cópia consistente em `data/backups/` (ou `backups/` ao lado de um SQLITE_PATH personalizado). Uma falha reverte a transação; estruturas desconhecidas interrompem a abertura com uma mensagem, sem inventar dados. Veja [MIGRACOES_SQLITE.md](docs/MIGRACOES_SQLITE.md).
+- Cada consulta da interface possui carregamento e erro próprios. Uma falha no histórico não bloqueia alunos, cobranças ou dashboard. A recarga após uma gravação mantém a tela montada e seus filtros.
+- O módulo de analytics da API valida a resposta do Python antes de entregá-la ao React ou à IA. Respostas incompatíveis retornam HTTP 503 e uma mensagem controlada. O Python valida as entidades recebidas com modelos Pydantic.
+
+As regras de cobrança e a fórmula de risco foram mantidas. Esta etapa conserva SQLite; não transfere registros para Supabase. PostgreSQL/Supabase são recomendados pelo desafio, que exige banco SQL; sua validação continua no plano da stack escolhida.
 
 ## Validar as telas
 
@@ -55,6 +63,8 @@ npm start
 
 `npm start` usa o frontend compilado, servido pela API em http://127.0.0.1:3333, junto ao serviço Python. `npm run dev` usa Vite e proxy para a API.
 
+`npm test` executa 30 testes de API, contratos, migrações e carregamento de dados do frontend; `npm run test:analytics` executa 12 testes Python. Os testes de carregamento não são uma suíte automática de navegador. A verificação visual e os limites das integrações estão em [REVISAO_IA.md](docs/REVISAO_IA.md).
+
 ## Estrutura
 
 Captura do MVP em execução:
@@ -63,6 +73,8 @@ Captura do MVP em execução:
 
 ```text
 apps/api/src/          API, domínio, repositórios SQLite/Prisma e testes
+  database/sqlite/     Runner, histórico e arquivos de migração SQLite
+  modules/analytics/  Serviço e validação de resposta do Python
 apps/web/src/          React, telas e estilos Tailwind
 packages/shared/src/  Contratos TypeScript
 services/analytics/   FastAPI, Pandas e testes dos indicadores
@@ -79,9 +91,9 @@ docs/                 Arquitetura, prompts, processo e revisão
 - Risco: atraso +30, 14 dias sem treino +30, queda acima de 50% +40; baixo até 30, médio até 60, alto acima de 60. Sem treinos anteriores, não há divisão por zero nem queda presumida. Aluno sem treinos usa a matrícula como referência para tempo sem treino.
 - Frequência compara janelas equivalentes. Situação ativo/inativo é o cadastro atual; não há histórico de mudanças cadastrais para reconstruir status passado.
 - MVP local com administrador único. Autenticação, perfis, publicação e dois repositórios públicos para a entrega do desafio permanecem como etapas posteriores.
-- SQLite permite validar agora, mas a entrega final deve ser validada com Supabase/PostgreSQL.
+- O desafio exige SQL e recomenda PostgreSQL/Supabase. Essa integração pertence à stack escolhida e ainda precisa de validação externa; SQLite continua suportado localmente.
 - Se as portas 3333/5173/8000 estiverem ocupadas, finalize a execução anterior antes de iniciar outra.
 - Se analytics estiver indisponível, execute `npm run setup:analytics` e reinicie `npm run dev`.
-- Ambiente validado: Node 24.19, Python 3.14.7, 12 testes da API e 8 testes de analytics. requirements.lock.txt registra as dependências Python desse ambiente.
+- Ambiente validado em 19/10/2026: Node 24.19, Python 3.14.7, 30 testes TypeScript e 12 testes Python. requirements.lock.txt registra as dependências Python desse ambiente.
 
 Referências usadas na implementação: [Prisma/Supabase](https://supabase.com/docs/guides/database/prisma), [Tailwind/Vite](https://tailwindcss.com/docs/installation/using-vite), [FastAPI](https://fastapi.tiangolo.com/tutorial/first-steps/), [OpenAI Responses](https://developers.openai.com/api/docs/quickstart).

@@ -1,5 +1,6 @@
 import unittest
 from datetime import date
+from pydantic import ValidationError
 from app import AnalyticsRequest, calculate
 
 def student(**changes):
@@ -54,6 +55,26 @@ class AnalyticsTests(unittest.TestCase):
     def test_inactive_students_not_in_risk(self):
         result = metrics(alunos=[student(situacao="inativo")])
         self.assertEqual(result["riscos"], [])
+
+    def test_rejects_student_without_required_field(self):
+        incomplete = student()
+        del incomplete['dataMatricula']
+        with self.assertRaises(ValidationError):
+            metrics(alunos=[incomplete])
+
+    def test_rejects_invalid_calendar_date(self):
+        with self.assertRaises(ValidationError):
+            metrics(presencas=[attendance('2026-02-30')])
+
+    def test_rejects_text_in_presence_boolean(self):
+        with self.assertRaises(ValidationError):
+            metrics(presencas=[{**attendance('2026-10-08'), 'presente': 'true'}])
+
+    def test_rejects_fractional_or_negative_cents(self):
+        for value in [-100, 150.5]:
+            with self.subTest(value=value):
+                with self.assertRaises(ValidationError):
+                    metrics(mensalidades=[billing(valorCentavos=value)])
 
 if __name__ == "__main__":
     unittest.main()

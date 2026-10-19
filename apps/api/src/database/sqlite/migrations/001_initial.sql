@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS Aluno (id TEXT PRIMARY KEY, nome TEXT NOT NULL, telefone TEXT NOT NULL, email TEXT NOT NULL UNIQUE, dataNascimento TEXT NOT NULL, faixa TEXT NOT NULL, dataMatricula TEXT NOT NULL, situacao TEXT NOT NULL CHECK(situacao IN ('ativo','inativo')), criadoEm TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS Mensalidade (id TEXT PRIMARY KEY, alunoId TEXT NOT NULL REFERENCES Aluno(id) ON DELETE RESTRICT, competencia TEXT NOT NULL, valorCentavos INTEGER NOT NULL CHECK(valorCentavos>0), dataVencimento TEXT NOT NULL, dataPagamento TEXT, criadoEm TEXT NOT NULL, UNIQUE(alunoId, competencia));
+CREATE INDEX IF NOT EXISTS mensalidade_vencimento ON Mensalidade(dataVencimento);
+CREATE TABLE IF NOT EXISTS Presenca (id TEXT PRIMARY KEY, alunoId TEXT NOT NULL REFERENCES Aluno(id) ON DELETE CASCADE, dataTreino TEXT NOT NULL, tipoTreino TEXT NOT NULL, presente INTEGER NOT NULL CHECK(presente IN (0,1)), UNIQUE(alunoId,dataTreino,tipoTreino));
+CREATE TABLE IF NOT EXISTS Analise (id TEXT PRIMARY KEY, pergunta TEXT NOT NULL, resposta TEXT NOT NULL, modelo TEXT NOT NULL, usuario TEXT NOT NULL, metricas TEXT NOT NULL, criadoEm TEXT NOT NULL);

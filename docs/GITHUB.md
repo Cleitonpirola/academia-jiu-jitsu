@@ -1,5 +1,11 @@
 # Salvar a versão 1.0.0 no GitHub
 
+## Fluxo adotado após o primeiro envio
+
+Desde 19/10/2026, o usuário valida cada alteração antes do commit. Após a aprovação explícita do conjunto apresentado, o Codex cria o commit descritivo, envia a branch de trabalho ao GitHub e confirma hash, branch e link do resultado. As etapas detalhadas estão em [PROCESSO.md](PROCESSO.md) e as instruções para próximas sessões estão em [AGENTS.md](../AGENTS.md).
+
+O tutorial abaixo continua como referência para entender a instalação e o primeiro envio. Para alterações futuras, a execução de commit/push fica com o Codex depois da validação do usuário. A tag v1.0.0 permanece preservada.
+
 Git registra versões no computador. GitHub guarda uma cópia desses registros na sua conta. Um **commit** é um registro dos arquivos; a **tag v1.0.0** identifica o registro desta primeira versão.
 
 ## 1. Instalação e preparação

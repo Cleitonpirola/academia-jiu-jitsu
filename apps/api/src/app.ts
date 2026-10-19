@@ -6,9 +6,9 @@ import { existsSync } from 'node:fs';
 import { z, ZodError } from 'zod';
 import OpenAI from 'openai';
 import type { Repository, Table } from './repository.js';
-import { alunoSchema, mensalidadeSchema, paymentSchema, presencaSchema, monthSchema, statusOf, dashboard, currentMonth, today } from './domain.js';
-import type { Analytics } from '@tatame/shared';
-class HttpError extends Error { constructor(public status: number, message: string) { super(message); } }
+import { alunoSchema, mensalidadeSchema, paymentSchema, presencaSchema, monthSchema, statusOf, dashboard, currentMonth } from './domain.js';
+import { HttpError } from './http-error.js';
+import { calculateAnalytics } from './modules/analytics/service.js';
 const fold = (text: string) => text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 export function createApp(repo: Repository, options: { apiKey?: string; analyticsUrl?: string } = {}) {
   const app = express();
@@ -16,14 +16,7 @@ export function createApp(repo: Repository, options: { apiKey?: string; analytic
   const analyticsUrl = options.analyticsUrl || process.env.ANALYTICS_URL || 'http://127.0.0.1:8000';
   const apiKey = options.apiKey ?? process.env.OPENAI_API_KEY;
   const find = async (table: Table, id: string) => { if (!z.string().uuid().safeParse(id).success) throw new HttpError(404,'Registro não encontrado.'); const row = await repo.get(table,id); if(!row) throw new HttpError(404,'Registro não encontrado.'); return row; };
-  const metricas = async (mes: string): Promise<Analytics> => {
-    const [alunos,mensalidades,presencas] = await Promise.all([repo.list('Aluno'),repo.list('Mensalidade'),repo.list('Presenca')]);
-    let response: Response;
-    try { response=await fetch(`${analyticsUrl}/analytics`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mes,hoje:today(),alunos:alunos.map(a=>({id:a.id,nome:a.nome,faixa:a.faixa,dataMatricula:a.dataMatricula,situacao:a.situacao})),mensalidades,presencas}),signal:AbortSignal.timeout(10000)}); }
-    catch { throw new HttpError(503,'O serviço de análises está indisponível. Reinicie o projeto com npm run dev.'); }
-    if(!response.ok) throw new HttpError(503,'O serviço de análises não conseguiu calcular os indicadores.');
-    return await response.json() as Analytics;
-  };
+  const metricas = (mes: string) => calculateAnalytics(repo, mes, analyticsUrl);
   app.get('/api/health',async (_req,res)=>{
     await repo.list('Aluno');
     let analyticsAvailable=false;

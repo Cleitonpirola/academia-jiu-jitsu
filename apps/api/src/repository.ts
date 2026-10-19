@@ -4,6 +4,7 @@ import { dirname, resolve } from 'node:path';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import type { Aluno, Mensalidade, Presenca, Analise } from '@tatame/shared';
+import { migrateSqlite, type MigrationResult } from './database/sqlite/migrate.js';
 
 export type Tables = { Aluno: Aluno; Mensalidade: Mensalidade; Presenca: Presenca; Analise: Analise };
 export type Table = keyof Tables;
@@ -26,16 +27,18 @@ export class SqliteRepository implements Repository {
   kind = 'sqlite' as const;
   db: DatabaseSync;
   fresh: boolean;
+  migration: MigrationResult;
   constructor(path = resolve(process.env.SQLITE_PATH || 'data/academia.sqlite')) {
     this.fresh = path !== ':memory:' && !existsSync(path);
     if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true });
     this.db = new DatabaseSync(path);
-    this.db.exec(`PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;
-      CREATE TABLE IF NOT EXISTS Aluno (id TEXT PRIMARY KEY, nome TEXT NOT NULL, telefone TEXT NOT NULL, email TEXT NOT NULL UNIQUE, dataNascimento TEXT NOT NULL, faixa TEXT NOT NULL, dataMatricula TEXT NOT NULL, situacao TEXT NOT NULL CHECK(situacao IN ('ativo','inativo')), criadoEm TEXT NOT NULL);
-      CREATE TABLE IF NOT EXISTS Mensalidade (id TEXT PRIMARY KEY, alunoId TEXT NOT NULL REFERENCES Aluno(id) ON DELETE RESTRICT, competencia TEXT NOT NULL, valorCentavos INTEGER NOT NULL CHECK(valorCentavos>0), dataVencimento TEXT NOT NULL, dataPagamento TEXT, criadoEm TEXT NOT NULL, UNIQUE(alunoId, competencia));
-      CREATE INDEX IF NOT EXISTS mensalidade_vencimento ON Mensalidade(dataVencimento);
-      CREATE TABLE IF NOT EXISTS Presenca (id TEXT PRIMARY KEY, alunoId TEXT NOT NULL REFERENCES Aluno(id) ON DELETE CASCADE, dataTreino TEXT NOT NULL, tipoTreino TEXT NOT NULL, presente INTEGER NOT NULL CHECK(presente IN (0,1)), UNIQUE(alunoId,dataTreino,tipoTreino));
-      CREATE TABLE IF NOT EXISTS Analise (id TEXT PRIMARY KEY, pergunta TEXT NOT NULL, resposta TEXT NOT NULL, modelo TEXT NOT NULL, usuario TEXT NOT NULL, metricas TEXT NOT NULL, criadoEm TEXT NOT NULL);`);
+    try {
+      this.db.exec('PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;');
+      this.migration = migrateSqlite(this.db, path);
+    } catch (error) {
+      this.db.close();
+      throw error;
+    }
   }
   private decode<K extends Table>(table: K, row: unknown): Tables[K] {
     const record = row as Record<string, unknown>;

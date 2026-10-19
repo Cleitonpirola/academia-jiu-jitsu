@@ -9,3 +9,7 @@ __pycache__/
 *.pyc
 *.log
 .test-output/
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-journal
