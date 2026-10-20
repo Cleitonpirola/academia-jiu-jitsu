@@ -92,3 +92,33 @@ O navegador em ambiente fictício foi usado para conferir botões, confirmação
 Após perguntar se os testes terminaram sem erros e receber os resultados e limites, o usuário autorizou com “pode commitar”. Conforme o fluxo permanente, essa aprovação autoriza Codex a revisar o diff, registrar o conjunto apresentado e enviá-lo à branch `codex/reestruturacao`, sem nova pergunta para o mesmo envio. Inclui código, migrações, testes, capturas fictícias e documentação de turmas/planejamento/versionamento. Não inclui tag, release, merge ou implantação.
 
 Nesta etapa de registro, não houve nova alteração de comportamento nem reexecução dos testes da aplicação; foram revisados os diffs e o estado do Git/remoto. Os resultados de 44 testes TypeScript, build/typecheck e os 12 Python anteriores continuam sendo as execuções identificadas acima. Credenciais, base local, backups e arquivos temporários de teste permanecem excluídos do Git. A confirmação de envio deve consultar o resultado real do push; a aprovação não é prova de publicação.
+
+Resultado confirmado: commit `507d2602a50a0f03ccf7c47a7af4aa8cb02f16fd`, enviado por push normal à branch `codex/reestruturacao` e conferido no remoto. Estado local limpo ao encerrar essa entrega. Tag v1.0.0 preservada, sem merge ou nova release.
+
+## Execução da entrega 1B — aulas datadas — 19/10/2026
+
+1. O usuário perguntou o próximo passo e respondeu “bora” à proposta de aulas fixas/extras e cancelamento. Essa autorização inicia a implementação, sem aprovar antecipadamente o commit/push.
+2. Consultados Git limpo em `507d260`, AGENTS.md e os contratos existentes. O desenho foi registrado em ARQUITETURA.md antes de implementar: dados próprios da aula, lista histórica de previstos, turma opcional, origem única por horário/data e cancelamento com motivo.
+3. Codex acrescentou duas tabelas, migração SQLite 3 e equivalente PostgreSQL, contratos, módulo próprio, criação transacional e cancelamento condicional. A interface ganhou agenda por dia, criação da grade/extra, filtros, detalhes e cancelamento. A confirmação de excluir turma agora informa a preservação de aulas históricas. Navegação móvel com sete áreas foi adaptada para duas linhas.
+4. Executados testes e build. Após acrescentar cenários de histórico e concorrência, o resultado final foi 61 testes TypeScript e 12 Python aprovados, build/typecheck, geração e validação do schema Prisma aprovados. Houve bloqueio EACCES das conexões locais numa execução restrita; a repetição com acesso necessário passou, sem mudança de regra para esconder a falha. PostgreSQL/Supabase e IA externa não foram executados.
+5. Navegador em processo isolado em memória: criadas aulas 12h/18h da grade e extra 15h; erro de horário corrigido no formulário; filtros, busca, previstos, mudança de data e cancelamento conferidos. Capturas fictícias e responsividade registradas em AULAS.md. Nenhuma aula de teste foi inserida no banco do usuário.
+6. Antes de reiniciar, identificados os processos do próprio projeto. Comparadas as sete tabelas antes/depois: contagens e hashes preservados; backup antes-v3 criado, novas tabelas vazias, sem vínculos inválidos. Nove rotas HTTP locais e interface responderam 200; Python disponível, IA sem chave.
+7. README, arquitetura, migrações, guias e documentos de processo atualizados. A aplicação principal foi deixada em Aulas para validação. Não houve commit/push ou nova tag desta entrega.
+
+Participação real: o usuário definiu a prioridade e autorizou começar; Codex escreveu código, testes e documentação e executou as verificações descritas. Não atribuir programação ou testes manuais ao usuário sem relato dele. Presenças por aula, modalidades finais, planos e acessos permanecem etapas seguintes.
+
+### Incremento da entrega 1B — exclusão de aulas extras
+
+O usuário pediu “adicione um botão de exclusão das aulas extras também”. Codex preservou o conjunto 1B ainda pendente no Git e registrou o desenho antes de implementar. Acrescentou Excluir nos cartões/detalhes das extras, confirmação com opção de voltar, DELETE na API e remoção transacional de aula/previstos nos dois repositórios. Origem grade fica protegida na API e no repositório. Não houve nova migração.
+
+Nova execução: 65 testes TypeScript aprovados (quatro adicionais, com casos de agendada/cancelada, avulsa/vinculada, preservação, recriação, bloqueio de fixa, rollback e concorrência) e build/typecheck aprovados. Python não mudou; os 12 testes Python aprovados são da execução anterior desta entrega, sem repetição no incremento. Não houve execução PostgreSQL/IA externa.
+
+Navegador isolado: três aulas fictícias; botão somente nas duas extras, entrada pelos cartões e detalhes, confirmação de agendada/cancelada e Voltar mantendo os registros. Tela estreita e quebra de linha dos três botões conferidas, viewport restaurado. Exclusão efetiva testada por HTTP/SQL automatizado; não foi confirmada remoção pelo navegador nem enviada exclusão à base do usuário.
+
+Ao atualizar os servidores, contagens e hashes das nove tabelas foram iguais antes/depois, preservando inclusive a aula que já existia na base local. Seis rotas de consulta e interface 200; versão SQLite permanece 3. Documentação e capturas fictícias atualizadas, aplicação principal aberta em Aulas. O conjunto 1B com esse incremento continua aguardando validação antes de commit/push.
+
+### Aprovação para commit/envio da entrega 1B — 20/10/2026
+
+Após consultar novamente se o botão Excluir funcionava e receber os resultados e limites, o usuário autorizou com “pode commitar”. A aprovação abrange o conjunto apresentado: agenda de aulas da grade e extras, previstos, cancelamento, exclusão de extras, migrações, testes, capturas fictícias e documentação. Conforme o fluxo permanente, Codex revisa o diff e envia à branch `codex/reestruturacao`, sem nova pergunta para esse mesmo envio. Não inclui tag/release, merge, implantação ou implementação da chamada 1C.
+
+Na revisão para registro, foram conferidos Git e remoto em `507d260`, mantendo v1.0.0 na referência inicial; as alterações correspondiam ao conjunto apresentado. Atualizados os registros de aprovação sem mudar comportamento. Não houve nova execução de testes da aplicação nesta etapa: os 65 TypeScript e build são da última execução do incremento; os 12 Python foram executados antes desse incremento. Não atribuir aprovação de integração externa ou testes manuais ao usuário. A confirmação do envio depende do resultado real do push.

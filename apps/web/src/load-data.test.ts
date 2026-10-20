@@ -29,7 +29,7 @@ it('mantém os resultados dos outros módulos quando o histórico falha', async 
     onSuccess: resource => { success.add(resource); },
     onFailure: (resource, message) => { errors.set(resource, message); },
   });
-  assert.deepEqual([...success].sort(), ['alunos', 'dashboard', 'health', 'mensalidades', 'presencas', 'turmas']);
+  assert.deepEqual([...success].sort(), ['alunos', 'aulas', 'dashboard', 'health', 'mensalidades', 'presencas', 'turmas']);
   assert.equal(errors.get('analises'), 'Histórico indisponível');
   assert.equal(errors.size, 1);
 });
@@ -79,4 +79,11 @@ it('falha das turmas não bloqueia cadastros ou cobranças e não é apresentada
   await loadResources('2026-10', read, { onSuccess: resource => { succeeded.push(resource); }, onFailure: resource => { errors.push(resource); } });
   assert.deepEqual(errors, ['turmas']); assert.ok(!succeeded.includes('turmas'));
   assert.ok(succeeded.includes('alunos')); assert.ok(succeeded.includes('mensalidades'));
+});
+
+it('falha das aulas fica isolada, sem representar agenda vazia válida nem bloquear turmas', async () => {
+  const succeeded: Resource[] = []; const errors: Resource[] = [];
+  const read: ReadApi = async <T>(path: string) => { if (path === '/aulas') throw new Error('Agenda indisponível'); return [] as T; };
+  await loadResources('2026-10', read, { onSuccess: resource => { succeeded.push(resource); }, onFailure: resource => { errors.push(resource); } });
+  assert.deepEqual(errors, ['aulas']); assert.ok(!succeeded.includes('aulas')); assert.ok(succeeded.includes('turmas')); assert.ok(succeeded.includes('alunos'));
 });

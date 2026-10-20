@@ -6,7 +6,7 @@ Data: 19/10/2026. Base consultada: commit `fb7600a`, branch `codex/reestruturaca
 
 **Objetivo comercial futuro:** o usuário pretende vender a plataforma para outras equipes. O planejamento deve permitir que cada academia configure planos ilimitados, limites de treinos e turmas incluídas, com tratamento de participações excedentes. A academia atual usa mensalidade com treinos ilimitados. Regras detalhadas de excedente e operação com várias academias ainda precisam de definição; não estão implementadas.
 
-**Estado de execução posterior ao planejamento:** entrega 1A implementada, testada localmente e aprovada pelo usuário para commit/push com “pode commitar”. Inclui cadastro/edição de turmas, professor cadastral, grade fixa, vínculos habituais, desativação/reativação, exclusão definitiva com confirmação e visualização semanal. A exclusão foi acrescentada após pedido do usuário ao conferir a tela. As partes 1B/1C e demais etapas continuam planejadas. Guia e evidências: [TURMAS.md](TURMAS.md). A proposta de versionamento está em [VERSIONAMENTO.md](VERSIONAMENTO.md); nenhuma nova tag foi criada.
+**Estado de execução posterior ao planejamento:** entrega 1A implementada, testada, aprovada e enviada no commit `507d260` da branch `codex/reestruturacao`. Guia: [TURMAS.md](TURMAS.md). Após “bora”, a parte 1B de aulas datadas, extras e cancelamento foi implementada/testada localmente, incluindo a exclusão de extras; o usuário aprovou esse conjunto para commit/push em 20/10/2026 com “pode commitar”. Guia: [AULAS.md](AULAS.md). A parte 1C e demais etapas continuam planejadas. A proposta de versionamento está em [VERSIONAMENTO.md](VERSIONAMENTO.md); nenhuma nova tag foi criada.
 
 ## 1. O objetivo da próxima evolução
 
@@ -14,7 +14,7 @@ Conectar as funções existentes à rotina da academia: organizar aulas, fazer a
 
 Exemplo do fluxo desejado: o administrador cadastra um aluno e seu plano; vincula o aluno a uma turma; o professor abre a aula do dia e registra presenças; o financeiro gera as cobranças do mês; os indicadores mostram frequência e inadimplência; a IA explica os resultados calculados.
 
-Esse fluxo completo ainda não existe. Hoje há cadastro de alunos, turmas com grade fixa e vínculos habituais, cobranças criadas individualmente, registro de pagamento, dashboard, chamada por data/tipo, analytics Python e integração de IA configurável. Ainda não há aulas datadas, nova chamada por aula, planos, login ou portal do aluno.
+Esse fluxo completo ainda não existe. Hoje há cadastro de alunos, turmas com grade fixa e vínculos habituais, agenda de aulas datadas/extra com cancelamento, cobranças criadas individualmente, registro de pagamento, dashboard, chamada por data/tipo, analytics Python e integração de IA configurável. Ainda não há nova chamada por aula, planos, login ou portal do aluno.
 
 ## 2. O que precisa ser concluído para o desafio
 
@@ -94,10 +94,10 @@ No exemplo da academia atual, os três treinos estão incluídos na mensalidade.
 | Parte | Entrega concreta | Validação principal |
 | --- | --- | --- |
 | 1A — Turmas, implementada localmente | Listagem, cadastro/edição, professor responsável, grade fixa de dias/horários, situação, vínculos habituais e exclusão definitiva | Testes e navegador conferidos; usuário aprovou commit/push |
-| 1B — Aulas | Listagem por data/turma, encontros da grade fixa, criação de aula extra com horário livre e cancelamento preservando o histórico | Manter aulas fixas às 12h e 18h e criar uma extra às 15h, sem alterar a grade; cancelar uma sem gerar faltas |
+| 1B — Aulas, implementada localmente | Listagem por dia/turma, encontros criados da grade fixa, aula extra avulsa/vinculada, previstos, cancelamento com motivo e exclusão definitiva de extras com confirmação | Testes e navegador conferidos; usuário aprovou commit/push em 20/10/2026 |
 | 1C — Chamada | Alunos habituais, inclusão pontual de aluno de outra turma e marcação explícita por aula fixa ou extra | Registrar três presenças do mesmo aluno nas três aulas do dia; impedir duplicação apenas dentro da mesma aula; conferir indicadores |
 
-A parte 1A está disponível localmente; as partes 1B e 1C continuam propostas. Na parte 1C, definir quais alunos eram esperados em cada aula sem aplicar alterações atuais de vínculo retroativamente ao histórico. Login e autorização por professor continuam na entrega 2; identificar o responsável na tela não restringe o acesso sozinho.
+As partes 1A e 1B estão disponíveis localmente; 1A foi enviada ao GitHub e 1B foi aprovada para envio. A parte 1C continua proposta. A parte 1B já guarda os habituais ativos previstos no momento de criar a aula; a chamada deverá usar esse histórico sem aplicar vínculos atuais retroativamente. Login e autorização por professor continuam na entrega 2; identificar o responsável na tela não restringe o acesso sozinho.
 
 ### Escopo inicial
 

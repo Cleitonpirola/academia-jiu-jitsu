@@ -2,6 +2,8 @@
 
 Implementação em 19/10/2026, aprovada pelo usuário para commit e envio na branch `codex/reestruturacao` após a apresentação das telas e verificações. A tag v1.0.0 está preservada. Esta entrega não cria uma nova tag ou número de versão do produto; a versão 2 é somente a versão da estrutura SQLite.
 
+**Evolução posterior:** 1A enviada no commit `507d260`. A entrega 1B acrescentou [Aulas](AULAS.md) e a migração SQLite 3. Excluir uma turma também preserva suas aulas datadas e nomes históricos, removendo somente a referência à turma; a confirmação passou a explicar isso. As descrições de aulas “futuras” e os testes abaixo registram a apresentação original da entrega 1A; a chamada por aula continua para 1C.
+
 ## O que você pode fazer
 
 No menu **Turmas**, clique em **Nova turma**. Informe nome, professor responsável, situação e pelo menos um horário com dia, início e término. Use **Adicionar horário** para cadastrar, por exemplo, segunda-feira das 12h às 13h e das 18h às 19h na mesma turma.

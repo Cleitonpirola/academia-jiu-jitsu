@@ -4,9 +4,11 @@ A tag **v1.0.0** preserva o MVP inicial. A branch `codex/reestruturacao` contém
 
 **Entrega 1A aprovada — 19/10/2026:** cadastro de turmas, grade semanal, vínculos habituais de alunos e exclusão definitiva com confirmação. Após a apresentação das telas e verificações, o usuário autorizou o commit e envio desta entrega na branch `codex/reestruturacao`. Guia: [TURMAS.md](docs/TURMAS.md).
 
+**Entrega 1B aprovada — 20/10/2026:** agenda por dia, aulas da grade fixa, extras avulsas ou vinculadas, cancelamento com motivo e exclusão definitiva de extras com confirmação. Após a apresentação das telas, testes e esclarecimentos sobre a exclusão, o usuário autorizou commit e envio na branch `codex/reestruturacao`. Uso e decisões: [AULAS.md](docs/AULAS.md).
+
 Recomendação de acompanhamento: enviar cada entrega testada após aprovação do usuário, fornecendo o link para revisão do Matheus. Tags e releases marcam escopos combinados, sem contagem fixa de commits. Veja [VERSIONAMENTO.md](docs/VERSIONAMENTO.md).
 
-MVP full stack para cadastro de alunos, turmas e grade fixa, controle de mensalidades, dashboard financeiro, chamada de treinos e analytics de frequência/evasão. Interface em português, responsiva e com dados fictícios para validação imediata.
+MVP full stack para cadastro de alunos, turmas, grade fixa e agenda de aulas, controle de mensalidades, dashboard financeiro, chamada de treinos e analytics de frequência/evasão. Interface em português, responsiva e com dados fictícios para validação imediata.
 
 ## Executar
 
@@ -39,12 +41,13 @@ As regras de cobrança e a fórmula de risco foram mantidas. Esta etapa conserva
 4. **Presenças:** selecione data/tipo e marque presente/ausente. Cada marcação é salva na API.
 5. **Inteligência:** consulte risco, frequência e inadimplência calculados por FastAPI/Pandas. O assistente gera respostas reais somente após configuração da API de IA.
 6. **Turmas:** crie uma turma com professor responsável e pelo menos um intervalo semanal. Adicione vários horários no mesmo dia, selecione alunos habituais, edite, desative/reative ou exclua definitivamente após confirmação. Consulte também a Grade semanal. Horários da mesma turma não podem se repetir ou se sobrepor; o término deve ocorrer no mesmo dia, depois do início.
+7. **Aulas:** escolha o dia da agenda. **Da grade fixa** cria um encontro de uma turma ativa na data compatível; **Aula extra** permite horário livre e turma opcional. Há busca, filtros e detalhes. Cancelar exige motivo e mantém o encontro no histórico. Extras agendadas ou canceladas também podem ser excluídas definitivamente, com confirmação: remove o encontro e seus previstos, preservando os demais registros. Aulas da grade não podem ser excluídas. Repetir a criação do mesmo horário/data retorna a aula existente, sem duplicar ou reativar uma cancelada.
 
 As turmas começam vazias, para o usuário montar sua grade. O mesmo aluno pode estar em várias turmas. Novos vínculos exigem aluno ativo; vínculos existentes de alunos posteriormente inativados permanecem até a remoção explícita. Desativar a turma preserva horários e vínculos. O professor é um nome cadastral, sem login nesta entrega.
 
-**Excluir** remove a turma, a grade e seus vínculos, preservando os alunos, mensalidades e presenças existentes. Funciona para turmas ativas e inativas, com confirmação explícita na tela. Cadastrar novamente cria uma turma nova; não restaura o registro excluído.
+**Excluir** remove a turma, a grade e seus vínculos, preservando os alunos, mensalidades, presenças e aulas existentes. A aula guarda os nomes e horários da época e perde apenas a referência à turma excluída. Funciona para turmas ativas e inativas, com confirmação explícita na tela. Cadastrar novamente cria uma turma nova; não restaura o registro excluído.
 
-A grade fixa não cria aulas datadas ou presenças. Aulas extras, chamada por aula, inscrições dos alunos e planos com limites permanecem no [planejamento](docs/PLANO_FUNCIONAL.md). A chamada anterior continua por data/tipo até a próxima entrega.
+A grade fixa não gera calendário automaticamente: cada aula é criada explicitamente na agenda. Criar ou cancelar aulas não registra presenças/faltas, não muda indicadores nem gera cobranças. A lista de alunos previstos é uma cópia dos habituais ativos no momento da criação, para preparar a futura chamada. A chamada por aula, inscrições e planos com limites permanecem no [planejamento](docs/PLANO_FUNCIONAL.md); a chamada anterior continua por data/tipo.
 
 ## Supabase / PostgreSQL e Prisma
 
@@ -57,7 +60,7 @@ npm run db:seed
 npm run dev
 ```
 
-As migrations criam Aluno, Mensalidade, Presenca e Analise e acrescentam Turma, HorarioTurma e AlunoTurma, com FKs e índices. O seed externo é explícito e só insere dados quando a tabela Aluno está vazia; não cria turmas automaticamente. Os dados locais não são transferidos automaticamente para o Supabase. Usando apenas Prisma no servidor, considere desativar a Data API no painel do Supabase; acesso direto da aplicação cliente não é necessário.
+As migrations criam Aluno, Mensalidade, Presenca e Analise e acrescentam Turma, HorarioTurma, AlunoTurma, Aula e AulaAlunoPrevisto, com FKs e índices. O seed externo é explícito e só insere dados quando a tabela Aluno está vazia; não cria turmas ou aulas automaticamente. Os dados locais não são transferidos automaticamente para o Supabase. Usando apenas Prisma no servidor, considere desativar a Data API no painel do Supabase; acesso direto da aplicação cliente não é necessário.
 
 ## Assistente de IA
 
@@ -74,7 +77,7 @@ npm start
 
 `npm start` usa o frontend compilado, servido pela API em http://127.0.0.1:3333, junto ao serviço Python. `npm run dev` usa Vite e proxy para a API.
 
-`npm test` executa 44 testes de API, turmas, contratos, migrações e carregamento de dados do frontend; `npm run test:analytics` executa 12 testes Python. Os testes de carregamento não são uma suíte automática de navegador. A verificação visual e os limites das integrações estão em [REVISAO_IA.md](docs/REVISAO_IA.md).
+`npm test` executa 65 testes de API, turmas, aulas, contratos, migrações e carregamento de dados do frontend; `npm run test:analytics` executa 12 testes Python. Os testes de carregamento não são uma suíte automática de navegador. A verificação visual e os limites das integrações estão em [REVISAO_IA.md](docs/REVISAO_IA.md).
 
 ## Estrutura
 
@@ -86,11 +89,16 @@ Turmas na validação visual com dados fictícios em ambiente separado. Essas tu
 
 ![Cadastro de turmas em validação](docs/screenshots/turmas-validacao.png)
 
+Agenda na validação isolada com três encontros fictícios (12h, 15h e 18h), sendo a extra cancelada com motivo. Esses encontros não foram inseridos na base do usuário:
+
+![Agenda de aulas em validação](docs/screenshots/aulas-validacao.png)
+
 ```text
 apps/api/src/          API, domínio, repositórios SQLite/Prisma e testes
   database/sqlite/     Runner, histórico e arquivos de migração SQLite
   modules/analytics/  Serviço e validação de resposta do Python
   modules/turmas/     Rotas, validação e regras de turmas e grade semanal
+  modules/aulas/      Aulas datadas, fotografia dos previstos e cancelamento
 apps/web/src/          React, telas e estilos Tailwind
 packages/shared/src/  Contratos TypeScript
 services/analytics/   FastAPI, Pandas e testes dos indicadores
@@ -110,6 +118,6 @@ docs/                 Arquitetura, prompts, processo e revisão
 - O desafio exige SQL e recomenda PostgreSQL/Supabase. Essa integração pertence à stack escolhida e ainda precisa de validação externa; SQLite continua suportado localmente.
 - Se as portas 3333/5173/8000 estiverem ocupadas, finalize a execução anterior antes de iniciar outra.
 - Se analytics estiver indisponível, execute `npm run setup:analytics` e reinicie `npm run dev`.
-- Ambiente validado em 19/10/2026: Node 24.19, Python 3.14.7, 44 testes TypeScript e 12 testes Python. requirements.lock.txt registra as dependências Python desse ambiente.
+- Ambiente validado em 19/10/2026: Node 24.19, Python 3.14.7, 65 testes TypeScript e 12 testes Python (executados antes do incremento de exclusão, sem mudanças no Python). requirements.lock.txt registra as dependências Python desse ambiente.
 
 Referências usadas na implementação: [Prisma/Supabase](https://supabase.com/docs/guides/database/prisma), [Tailwind/Vite](https://tailwindcss.com/docs/installation/using-vite), [FastAPI](https://fastapi.tiangolo.com/tutorial/first-steps/), [OpenAI Responses](https://developers.openai.com/api/docs/quickstart).

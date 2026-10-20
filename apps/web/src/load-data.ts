@@ -12,6 +12,7 @@ export async function loadResources(month: string, read: ReadApi, handlers: Load
     alunos: '/alunos', mensalidades: '/mensalidades', presencas: '/presencas',
     dashboard: '/dashboard?mes=' + month, health: '/health', analises: '/analises',
     turmas: '/turmas',
+    aulas: '/aulas',
   };
   await Promise.allSettled(resources.map(async resource => {
     try {

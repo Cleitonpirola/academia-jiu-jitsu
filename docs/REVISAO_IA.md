@@ -95,3 +95,44 @@ A revisão final encontrou uma orientação ambígua gerada por Codex: a mensage
 ### Revisão para commit, após aprovação
 
 O usuário autorizou o conjunto com “pode commitar”. Codex revisou os diffs de implementação, migrações, testes e documentação, conferiu a branch `codex/reestruturacao` e confirmou que o remoto ainda apontava para `fb7600a` antes do envio. A tag remota `v1.0.0` permaneceu na referência inicial. Foram atualizados somente os registros de aprovação, sem mudança adicional de comportamento ou nova execução dos testes da aplicação. A aprovação não inclui novo marco de versão, merge ou implantação.
+
+## Entrega 1B — aulas datadas — 19/10/2026
+
+Autorizada pelo usuário com “bora”, após a proposta da próxima etapa. Desenho registrado antes do código em ARQUITETURA.md; uso e contratos em [AULAS.md](AULAS.md).
+
+| Verificação nova | Resultado observado |
+| --- | --- |
+| npm test, execução final | 61 aprovados, zero falhas: 44 anteriores, 15 de aulas, um de migração e um de carregamento |
+| npm run test:analytics | Nova execução com 12 aprovados; Python/fórmulas não mudaram |
+| npm run build | Typecheck e Vite aprovados; repetido após ajuste de textos da interface |
+| npm run db:generate e Prisma validate | Cliente gerado e schema válido; não comprovam execução PostgreSQL |
+| Grade, extras, filtros, datas | 12h/18h + extra 15h, dia da semana, futuro/bissexto, horários inválidos, turmas inativas e filtros conferidos |
+| Repetição/concorrência | Mesma origem/data não duplica; cancelamento conserva o primeiro motivo/timestamp, inclusive em requisições concorrentes |
+| Fotografia histórica | Mudar grade, professor, vínculos ou nome do aluno não altera aulas/previstos anteriores; excluir cadastro deixa referência null, conservando nomes |
+| Transações | Falha na previsão não deixa aula parcial; falha após DELETE da turma reverte grade, vínculos e desvínculo das aulas |
+| Migração v2→v3 em arquivo temporário | Sete tabelas com registros preservadas, backup v2 e reabertura mantendo aula/previstos/cancelamento |
+| Banco local | Mesmos hashes/contagens nas sete tabelas anteriores; 20 alunos, 110 cobranças, 432 presenças e zero análises/turmas/horários/vínculos; duas novas vazias; backup antes-v3 e FK check sem inconsistências |
+| HTTP real local | Nove rotas da API e frontend 200; analytics disponível; IA sem chave |
+| Navegador fictício | Criação de duas fixas + extra, rejeição de intervalo errado, correção, busca/filtros, dia/Hoje, detalhes dos previstos, retorno sem cancelar e cancelamento com motivo |
+| Responsividade | Agenda/cartões/formulário/nav sem transbordamento; sete destinos em duas linhas; medidas e capturas em AULAS.md; viewport restaurado |
+
+Uma execução em paralelo ao build no ambiente restrito retornou EACCES nas conexões HTTP de loopback (17 testes locais passaram e 43 dependentes de rede falharam). Após permitir as conexões locais, os 60 testes daquele momento e os 12 Python passaram. Foi acrescentada a conferência de rollback das referências históricas e fortalecida a base do teste de migração; a execução final passou com 61 testes TypeScript. Esse bloqueio de ambiente não foi apresentado como erro de regra corrigido no produto ou como execução aprovada.
+
+Decisão revisada: apontar uma FK diretamente da aula ao horário da grade seria incompatível com a substituição de horários usada pela edição de turmas. A origem ficou como chave histórica, com unicidade por origem/data, e os dados relevantes foram copiados para a aula. Turma/aluno têm referências opcionais SET NULL e nomes históricos próprios. Isso preserva a exclusão definitiva solicitada pelo usuário sem apagar os encontros. A explicação da confirmação de turma foi atualizada para esse comportamento.
+
+Limites na apresentação inicial da entrega 1B, antes do incremento abaixo: não havia PostgreSQL/Supabase/IA externa validados, autenticação, nova chamada, marcação de realização, edição/reativação/exclusão de aula ou cobrança por extras. Agendada não comprova aula realizada. Não há paginação nem bloqueio global de conflito entre professores/locais. A lista prevista não é presença ou inscrição. Os testes de navegador são verificações desta sessão, não suíte automática de CI ou teste em telefone físico. Não foram executadas exclusões, cancelamentos ou criação de aulas de teste na base do usuário. O Git desta entrega permanece aguardando sua validação.
+
+### Incremento: exclusão definitiva de extras, após pedido do usuário
+
+- `npm test` reexecutado: **65 aprovados, zero falhas**, incluindo os quatro testes adicionais de exclusão. Cobrem extras avulsas/vinculadas e agendadas/canceladas, retorno 204 e 404 após remoção, preservação dos demais registros, recriação com ID novo, proteção de grade fixa na API/repositório, falha após remover a aula com rollback dos previstos e duas exclusões simultâneas com uma remoção e um 404.
+- `npm run build` reexecutado: typecheck e Vite aprovados. Python não foi modificado nem reexecutado no incremento; os 12 testes citados acima pertencem à execução anterior. PostgreSQL/Supabase e IA externa continuam sem validação.
+- A revisão confirmou checagem da origem antes de remover os previstos nos dois repositórios e operação transacional; não foi necessário alterar schema ou SQL aplicado. Nova rota DELETE /api/aulas/:id permite somente extras. Confirmar remoção apaga seu histórico/lista prevista, enquanto cancelar preserva o encontro.
+- Navegador em memória: extras agendada/cancelada com Excluir, fixa sem botão; abertura pelos cartões e detalhes, confirmação e Voltar preservando três encontros. Não foi pressionado Excluir definitivamente pelo navegador; a remoção efetiva foi verificada nos testes HTTP/SQL. Capturas fictícias em AULAS.md.
+- Tela estreita: documento 341/341 px, cartões 304/304, ações 270/270, diálogo 323/323 (client/scroll); três botões acessíveis com quebra de linha, sem transbordamento. Override removido após conferência.
+- Atualização dos servidores: nove tabelas com contagens e hashes iguais, incluindo uma aula existente do usuário, 20 alunos, 110 mensalidades e 432 presenças. Nenhuma aula real foi removida. Seis rotas de consulta e interface responderam 200. SQLite permanece versão 3, sem migração adicional.
+
+Limite para a próxima implementação: as presenças atuais ainda não têm aulaId. Ao implementar 1C, preservar histórico e definir proteção de exclusão para encontros com presenças, antes de permitir remoções nesse novo modelo. A entrega 1B, incluindo este incremento, permanece local aguardando validação para commit/push.
+
+### Revisão para commit da entrega 1B — 20/10/2026
+
+O usuário aprovou com “pode commitar” após os esclarecimentos sobre a exclusão. Revisados os diffs de código, migrações, testes e documentação do conjunto apresentado; Git/remoto conferidos em `507d260` antes do envio, tag v1.0.0 preservada. Apenas registros de aprovação foram atualizados nesta etapa, sem nova mudança de comportamento ou reexecução da aplicação/testes. Os resultados de 65 TypeScript, build e 12 Python permanecem associados às execuções identificadas acima. PostgreSQL/Supabase/IA externa continuam sem validação. A aprovação não inclui tag/release, merge ou implantação; os registros de pendência anteriores são históricos.

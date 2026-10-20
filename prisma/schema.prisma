@@ -17,6 +17,7 @@ model Aluno {
   mensalidades   Mensalidade[]
   presencas      Presenca[]
   turmas         AlunoTurma[]
+  aulasPrevistas AulaAlunoPrevisto[]
 }
 model Mensalidade {
   id             String @id @default(uuid()) @db.Uuid
@@ -57,6 +58,7 @@ model Turma {
   atualizadoEm String
   horarios     HorarioTurma[]
   alunos       AlunoTurma[]
+  aulas        Aula[]
 }
 model HorarioTurma {
   id         String @id @default(uuid()) @db.Uuid
@@ -75,5 +77,36 @@ model AlunoTurma {
   aluno    Aluno @relation(fields: [alunoId], references: [id], onDelete: Restrict)
   criadoEm String
   @@unique([turmaId, alunoId])
+  @@index([alunoId])
+}
+model Aula {
+  id                 String @id @default(uuid()) @db.Uuid
+  titulo             String
+  dataAula           String
+  horaInicio         String @db.VarChar(5)
+  horaFim            String @db.VarChar(5)
+  professor          String
+  origem             String
+  origemHorarioId    String? @db.Uuid
+  turmaId            String? @db.Uuid
+  turma              Turma? @relation(fields: [turmaId], references: [id], onDelete: SetNull)
+  turmaNome          String?
+  situacao           String
+  motivoCancelamento String?
+  canceladaEm        String?
+  criadoEm           String
+  alunosPrevistos    AulaAlunoPrevisto[]
+  @@unique([origemHorarioId, dataAula])
+  @@index([dataAula])
+  @@index([turmaId])
+}
+model AulaAlunoPrevisto {
+  id      String @id @default(uuid()) @db.Uuid
+  aulaId  String @db.Uuid
+  aula    Aula @relation(fields: [aulaId], references: [id], onDelete: Restrict)
+  alunoId String? @db.Uuid
+  aluno   Aluno? @relation(fields: [alunoId], references: [id], onDelete: SetNull)
+  nome    String
+  @@unique([aulaId, alunoId])
   @@index([alunoId])
 }

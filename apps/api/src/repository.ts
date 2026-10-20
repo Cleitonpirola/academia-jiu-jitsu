@@ -3,10 +3,10 @@ import { mkdirSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
-import type { Aluno, Mensalidade, Presenca, Analise, Turma, HorarioTurma, AlunoTurma } from '@tatame/shared';
+import type { Aluno, Mensalidade, Presenca, Analise, Turma, HorarioTurma, AlunoTurma, Aula, AulaAlunoPrevisto } from '@tatame/shared';
 import { migrateSqlite, type MigrationResult } from './database/sqlite/migrate.js';
 
-export type Tables = { Aluno: Aluno; Mensalidade: Mensalidade; Presenca: Presenca; Analise: Analise; Turma: Turma; HorarioTurma: HorarioTurma; AlunoTurma: AlunoTurma };
+export type Tables = { Aluno: Aluno; Mensalidade: Mensalidade; Presenca: Presenca; Analise: Analise; Turma: Turma; HorarioTurma: HorarioTurma; AlunoTurma: AlunoTurma; Aula: Aula; AulaAlunoPrevisto: AulaAlunoPrevisto };
 export type Table = keyof Tables;
 export interface Repository {
   kind: 'sqlite' | 'supabase';
@@ -17,6 +17,9 @@ export interface Repository {
   remove(table: Table, id: string): Promise<void>;
   saveTurma(turma: Turma, horarios: HorarioTurma[], alunos: AlunoTurma[], create: boolean): Promise<void>;
   removeTurma(id: string): Promise<void>;
+  createAula(aula: Aula, alunos: AulaAlunoPrevisto[]): Promise<void>;
+  cancelAula(id: string, motivo: string, timestamp: string): Promise<void>;
+  removeAulaExtra(id: string): Promise<boolean>;
   close(): Promise<void>;
 }
 const columns: Record<Table, string[]> = {
@@ -27,6 +30,8 @@ const columns: Record<Table, string[]> = {
   Turma: ['id','nome','professor','situacao','criadoEm','atualizadoEm'],
   HorarioTurma: ['id','turmaId','diaSemana','horaInicio','horaFim'],
   AlunoTurma: ['id','turmaId','alunoId','criadoEm'],
+  Aula: ['id','titulo','dataAula','horaInicio','horaFim','professor','origem','origemHorarioId','turmaId','turmaNome','situacao','motivoCancelamento','canceladaEm','criadoEm'],
+  AulaAlunoPrevisto: ['id','aulaId','alunoId','nome'],
 };
 export class SqliteRepository implements Repository {
   kind = 'sqlite' as const;
@@ -92,6 +97,28 @@ export class SqliteRepository implements Repository {
       this.db.exec('COMMIT');
     } catch (error) { this.db.exec('ROLLBACK'); throw error; }
   }
+  async createAula(aula: Aula, alunos: AulaAlunoPrevisto[]) {
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      this.insertRow('Aula', aula);
+      for (const aluno of alunos) this.insertRow('AulaAlunoPrevisto', aluno);
+      this.db.exec('COMMIT');
+    } catch (error) { this.db.exec('ROLLBACK'); throw error; }
+  }
+  async cancelAula(id: string, motivo: string, timestamp: string) {
+    this.db.prepare("UPDATE Aula SET situacao='cancelada', motivoCancelamento=?, canceladaEm=? WHERE id=? AND situacao='agendada'").run(motivo, timestamp, id);
+  }
+  async removeAulaExtra(id: string) {
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      const aula = this.db.prepare("SELECT id FROM Aula WHERE id=? AND origem='extra'").get(id);
+      if (!aula) { this.db.exec('COMMIT'); return false; }
+      this.db.prepare('DELETE FROM AulaAlunoPrevisto WHERE aulaId=?').run(id);
+      const result = this.db.prepare("DELETE FROM Aula WHERE id=? AND origem='extra'").run(id);
+      this.db.exec('COMMIT');
+      return result.changes === 1;
+    } catch (error) { this.db.exec('ROLLBACK'); throw error; }
+  }
   async close() { this.db.close(); }
 }
 type Delegate = {
@@ -126,6 +153,24 @@ export class PrismaRepository implements Repository {
       await client.horarioTurma.deleteMany({ where: { turmaId: id } });
       await client.alunoTurma.deleteMany({ where: { turmaId: id } });
       await client.turma.delete({ where: { id } });
+    });
+  }
+  async createAula(aula: Aula, alunos: AulaAlunoPrevisto[]) {
+    await this.client.$transaction(async client => {
+      await client.aula.create({ data: aula });
+      if (alunos.length) await client.aulaAlunoPrevisto.createMany({ data: alunos });
+    });
+  }
+  async cancelAula(id: string, motivo: string, timestamp: string) {
+    await this.client.aula.updateMany({ where: { id, situacao: 'agendada' }, data: { situacao: 'cancelada', motivoCancelamento: motivo, canceladaEm: timestamp } });
+  }
+  async removeAulaExtra(id: string) {
+    return this.client.$transaction(async client => {
+      const aula = await client.aula.findFirst({ where: { id, origem: 'extra' }, select: { id: true } });
+      if (!aula) return false;
+      await client.aulaAlunoPrevisto.deleteMany({ where: { aulaId: id } });
+      const result = await client.aula.deleteMany({ where: { id, origem: 'extra' } });
+      return result.count === 1;
     });
   }
   async close() { await this.client.$disconnect(); }

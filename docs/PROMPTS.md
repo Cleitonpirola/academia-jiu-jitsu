@@ -63,3 +63,25 @@ Durante o trabalho, o usuário perguntou como numerar versões e quando enviar a
 Pedido adicional após conferir a tela: “eu gostaria que você adicionasse um botão de excluir também [...] ou se ela só quiser desativar, ou se ela quiser excluir definitivo”. Codex acrescentou confirmação de exclusão nos cartões e detalhes, rota DELETE e remoção transacional nos dois repositórios. Regra: remover somente turma, horários e vínculos; preservar cadastros dos alunos e registros financeiros e de presença existentes. Recriação recebe novo ID. Dois testes adicionais levaram a suíte a 44 aprovados; também foram ampliadas verificações de 404. A mudança foi apresentada para validação antes de commit/push.
 
 Após consultar o resultado dos testes, o usuário aprovou o conjunto com “pode commitar”. Codex revisou as alterações e o estado do Git/remoto para registrar e enviar a entrega, seguindo PROCESSO.md. A aprovação não inclui tag/release ou implementação das funcionalidades futuras. Nesta etapa de registro não houve nova execução dos testes da aplicação.
+
+## Implementação da entrega 1B — 19/10/2026
+
+Prompt do usuário: “bora”, respondendo à explicação de que o próximo passo seria criar a área Aulas, com encontros da grade fixa, aulas extras de horário livre e cancelamento preservando histórico, deixando a nova chamada para depois. O conjunto anterior de turmas já tinha sido aprovado e enviado; sua aprovação não foi reutilizada para commit deste novo escopo.
+
+Codex primeiro conferiu Git/instruções/código e registrou o desenho. Depois acrescentou Aula e AulaAlunoPrevisto, migração 003, modelos Prisma, módulo de API, gravação transacional, unicidade da origem/data, cancelamento condicional e tela de agenda. Professor, horários e nomes são copiados para preservar o histórico; previsão não é presença. A turma é opcional para extras e excluir cadastros não apaga as aulas.
+
+Validação real: 61 testes TypeScript, 12 Python, build/typecheck, geração e validação Prisma; conferência visual em processo em memória; preservação da base local e HTTP dos serviços. Uma tentativa de testes restrita retornou EACCES nas conexões locais; repetida com acesso autorizado, passou. A automação de campos de hora usou eventos de teclado. Captura de página inteira não foi disponibilizada pelo navegador; foram guardadas capturas normais da agenda e formulários, sem editar as imagens.
+
+Resultado e limites em AULAS.md e REVISAO_IA.md. Não foram implementadas novas presenças, login ou regras comerciais, nem executadas integrações externas PostgreSQL/IA. A entrega 1B aguarda validação antes de commit/push. A implementação, testes e registros foram escritos por Codex; o usuário forneceu regras e orientação de produto.
+
+### Pedido adicional: excluir aulas extras
+
+Prompt do usuário: “adicione um botão de exclusão das aulas extras também”. Contexto: agenda 1B apresentada e testes esclarecidos; nenhum commit/push da entrega 1B havia sido aprovado.
+
+Codex registrou o novo desenho e implementou botão nos cartões/detalhes, confirmação explicando remoção da aula e previstos, DELETE /api/aulas/:id e transação SQLite/Prisma. A operação aceita extras agendadas/canceladas, avulsas/vinculadas, preservando demais aulas, cadastros, turmas/grade, cobranças e presenças existentes. A grade fixa recebe 409 na API e é protegida também no repositório. Cancelar continua sendo a opção que mantém o histórico. Antes da futura chamada 1C, a política deverá considerar presenças vinculadas.
+
+Validação nova: 65 testes TypeScript e build/typecheck aprovados; quatro testes adicionais de exclusão/proteção/rollback/concorrência e ampliação de 404. Os 12 testes Python anteriores não foram reexecutados; Python não mudou. Navegador fictício conferiu confirmação e retorno, cartões/detalhes e tela estreita; efetiva exclusão exercitada pelos testes HTTP/SQL, sem apagar aulas reais. As nove tabelas mantiveram contagens e hashes no reinício. Código, testes e documentação do incremento foram escritos por Codex após a regra solicitada pelo usuário; aguardam validação antes de envio ao GitHub.
+
+### Aprovação do conjunto 1B — 20/10/2026
+
+O usuário perguntou “o botão de excluir já está funcionando?” e, após a resposta com funcionamento e testes, autorizou com “pode commitar”. Codex revisou o conjunto aprovado, a branch e o remoto e atualizou os registros de aprovação para criar o commit e fazer push conforme PROCESSO.md. Não houve nova mudança de lógica ou execução dos testes nesta etapa de registro, nem autorização para tag/release ou para implementar 1C. Os relatos acima de aprovação pendente registram o momento anterior à autorização.

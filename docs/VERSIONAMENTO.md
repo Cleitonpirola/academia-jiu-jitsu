@@ -44,3 +44,5 @@ Esta proposta não criou a tag `v1.1.0`, não mudou os manifestos de `1.0.0` e n
 A tag local existente é `v1.0.0`, preservada. Antes da entrega de turmas, o último commit local era `fb7600a` na branch `codex/reestruturacao`. As correções desse commit já foram enviadas em etapa anterior; não foi criada uma tag de correção para cada commit. Após a apresentação da implementação de turmas e seus documentos, o usuário autorizou commit/push com “pode commitar”. Não houve autorização para nova tag ou release.
 
 Cada confirmação futura deve consultar o estado real do Git e do remoto; este parágrafo registra o momento da preparação, não garante sincronização de alterações ainda não aprovadas.
+
+Atualização posterior: entrega 1A enviada no commit `507d260` à branch de trabalho e conferida no remoto, sem tag/release. Em seguida, a entrega 1B de aulas foi implementada e testada localmente após autorização para começar. Em 20/10/2026, após os esclarecimentos da exclusão de extras, o usuário aprovou commit/push do conjunto 1B com “pode commitar”. Não foi atribuído automaticamente um número de versão a nenhuma dessas etapas nem autorizada nova tag/release.

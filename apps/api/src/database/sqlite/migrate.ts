@@ -9,6 +9,7 @@ export interface MigrationResult { version: number; applied: number[]; backupPat
 export const sqliteMigrations: readonly SqliteMigration[] = [
   { version: 1, name: '001_initial', sql: readFileSync(new URL('./migrations/001_initial.sql', import.meta.url), 'utf8') },
   { version: 2, name: '002_turmas', sql: readFileSync(new URL('./migrations/002_turmas.sql', import.meta.url), 'utf8') },
+  { version: 3, name: '003_aulas', sql: readFileSync(new URL('./migrations/003_aulas.sql', import.meta.url), 'utf8') },
 ];
 
 const checksum = (sql: string) => createHash('sha256').update(sql.replace(/\r\n/g, '\n').trim()).digest('hex');

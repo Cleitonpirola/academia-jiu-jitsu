@@ -10,6 +10,8 @@ Este documento analisa as duas imagens fornecidas pelo usuário e o código atua
 
 **Evolução posterior:** a entrega 1A de turmas, grade e vínculos foi implementada e testada, incluindo a exclusão definitiva solicitada na validação. O usuário aprovou o conjunto e seus documentos para commit/envio com “pode commitar”. As demais funções da proposta continuam planejadas; este registro não autoriza sua implementação automática. Guia: [TURMAS.md](TURMAS.md).
 
+**Entrega seguinte:** após 1A ser enviada em `507d260`, o usuário autorizou começar 1B com “bora”. Agenda de aulas fixas/extras, cancelamento e exclusão de extras foram implementados/testados localmente; o conjunto foi aprovado para commit/envio em 20/10/2026. A chamada por aula continua para 1C. Estado detalhado em [AULAS.md](AULAS.md); as seções iniciais abaixo são históricas.
+
 No detalhamento posterior, o usuário confirmou grade fixa com aulas extras e várias presenças no dia, e acrescentou o objetivo de comercializar para outras equipes. O plano funcional agora prevê regras de planos configuráveis por academia, distingue aula extra de cobrança adicional e registra a necessidade futura de isolamento entre clientes. O sistema atual permanece de uma academia local, sem essas novas funções implementadas.
 
 ## 1. O que as imagens exigem

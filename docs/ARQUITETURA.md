@@ -109,3 +109,34 @@ erDiagram
 ```
 
 Horários mantidos preservam seus IDs por dia/início; vínculos mantidos preservam ID e data de criação. A substituição da grade e dos vínculos ocorre como uma unidade. Nesta fase, não há histórico completo de remoção de vínculos nem bloqueio otimista de edições simultâneas: a última edição completa prevalece. A geração de aulas futuras deverá guardar seus próprios dados e participantes esperados, sem reconstruir encontros antigos a partir da grade atual. Aulas, planos, login e isolamento entre academias continuam planejados.
+
+## Desenho da entrega 1B — aulas datadas — 19/10/2026
+
+Registrado antes de implementar, após o usuário aprovar começar com “bora”. Aula guarda data, início/fim, título, professor, origem (grade/extra), situação (agendada/cancelada), turma opcional e cópia do nome da turma. Criar da grade recebe horário e data, exige turma ativa e dia da semana compatível; usa cópias dos horários/professor atuais, sem gerar calendário inteiro. Extra recebe campos livres, com turma ativa opcional. Datas futuras são permitidas; horários não atravessam meia-noite. Não há confirmação automática de realização ou presença.
+
+`AulaAlunoPrevisto` guarda a lista de alunos habituais ativos no momento da criação e uma cópia dos nomes. Previsão não é presença/inscrição nem limita participação futura. Essa fotografia prepara a chamada 1C sem aplicar mudanças atuais de vínculo ao passado. As duas tabelas são salvas numa transação. A turma e o aluno são referências opcionais com ON DELETE SET NULL: excluir o cadastro desvincula a referência, preservando a aula e seus nomes históricos. Nenhuma presença anterior é convertida ou inventada.
+
+A origem do horário é uma chave histórica sem FK, porque a edição da grade substitui seus registros. A combinação origemHorarioId/dataAula é única: repetir a criação retorna a aula existente, inclusive cancelada, sem reativar ou sobrescrever dados. Cancelar exige motivo e preserva o registro; repetição mantém o primeiro cancelamento. Não há rota de exclusão nem edição de aula nesta entrega. Correções usam cancelamento e nova aula extra, com histórico explícito. Sobreposição entre aulas/professores não é bloqueada, pois ainda não há cadastro de locais e contas de professores.
+
+Serão acrescentados módulo de aulas, contratos compartilhados, migração SQLite 3 e equivalente PostgreSQL, navegação própria e carregamento isolado. A edição/exclusão de turmas permanece disponível, com suas aulas preservadas. Fluxo administrativo local, sem login, cobrança automática, nova chamada ou mudança nos cálculos Python. Aprovação para implementar não é aprovação para commit/push desta entrega.
+
+**Estado após implementação:** o desenho acima foi implementado em `modules/aulas`, `AulasPage.tsx`, migração 003 e modelos Prisma. Rotas: GET /api/aulas (filtros opcionais), GET /api/aulas/:id, POST /api/aulas/da-grade, POST /api/aulas/extras e PATCH /api/aulas/:id/cancelamento. Criação da grade responde 201 ou 200 para repetição; a chave única também protege concorrência. Cancelamento usa UPDATE condicionado a agendada, preservando o primeiro motivo/timestamp. Agenda e formulários possuem recurso de carregamento próprio; os sete destinos móveis ficam em duas linhas. Lista por dia na interface; consultas ainda carregam todas as aulas, sem paginação.
+
+Foram aprovados 61 testes TypeScript, 12 Python, build/typecheck e schema Prisma; navegador fictício e preservação das sete tabelas locais conferidos. Não houve validação externa PostgreSQL/IA. Sem conversão de presenças antigas, marcação de realização, edição ou reativação de aula; alunos previstos não são presenças. Guia e evidências em [AULAS.md](AULAS.md). A entrega 1B permanece local para validação antes de commit/push.
+
+```mermaid
+erDiagram
+  Turma o|--o{ Aula : referencia_opcional
+  Aula ||--o{ AulaAlunoPrevisto : guarda
+  Aluno o|--o{ AulaAlunoPrevisto : referencia_opcional
+```
+
+### Incremento 1B solicitado: excluir aulas extras
+
+Após conferir os testes, o usuário pediu “adicione um botão de exclusão das aulas extras também”. Desenho anterior à implementação do incremento: DELETE /api/aulas/:id permitido somente para origem extra, agendada ou cancelada; aulas da grade retornam 409. Remover a extra e seus alunos previstos numa transação, preservando cadastros, turmas/grade, finanças, presenças atuais e outras aulas. A confirmação diferencia excluir definitivamente de cancelar com histórico; cancelar continua disponível. O repositório também confere a origem antes de remover os previstos, evitando perda parcial se for chamado diretamente com uma aula da grade.
+
+Não é necessária nova migração. Nesta fase as presenças antigas ainda não apontam para aulas. Antes da entrega 1C, a política de exclusão deverá considerar as presenças vinculadas, sem apagá-las por consequência. O incremento permanece no conjunto local da entrega 1B, aguardando validação antes de commit/push.
+
+Implementado em serviço/rota, repositórios e tela de aulas. DELETE retorna 204; ID inválido/inexistente retorna 404, grade fixa 409. Os dois repositórios fazem a remoção transacional somente após conferir origem extra; SQLite sem awaits durante a transação e Prisma por `$transaction`. Botão nos cartões/detalhes, confirmação explícita e opção de voltar. Nova execução: 65 testes TypeScript e build/typecheck aprovados. Navegador verificou a confirmação e seu cancelamento; exclusão efetiva e rollback validados em HTTP/SQL. A comparação das nove tabelas no reinício preservou inclusive a aula já criada pelo usuário. Sem alteração de SQL aplicado ou validação externa do Prisma.
+
+**Aprovação posterior — 20/10/2026:** o usuário autorizou commit/envio do conjunto 1B, incluindo exclusão de extras, com “pode commitar”. As pendências de aprovação descritas nesta seção registram a apresentação anterior. Não houve nova alteração de arquitetura ou testes nesta etapa de registro; não inclui autorização para implementar a chamada 1C ou publicar tag/release.

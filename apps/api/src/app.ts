@@ -10,6 +10,7 @@ import { alunoSchema, mensalidadeSchema, paymentSchema, presencaSchema, monthSch
 import { HttpError } from './http-error.js';
 import { calculateAnalytics } from './modules/analytics/service.js';
 import { turmasRouter } from './modules/turmas/routes.js';
+import { aulasRouter } from './modules/aulas/routes.js';
 const fold = (text: string) => text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 export function createApp(repo: Repository, options: { apiKey?: string; analyticsUrl?: string } = {}) {
   const app = express();
@@ -81,6 +82,7 @@ export function createApp(repo: Repository, options: { apiKey?: string; analytic
     res.status(201).json(row);
   });
   app.use('/api/turmas',turmasRouter(repo));
+  app.use('/api/aulas',aulasRouter(repo));
   app.use('/api',(_req,_res,next)=>next(new HttpError(404,'Rota não encontrada.')));
   const dist=resolve('apps/web/dist');
   if(existsSync(dist)) { app.use(express.static(dist)); app.get('/{*path}',(_req,res)=>res.sendFile(resolve(dist,'index.html'))); }

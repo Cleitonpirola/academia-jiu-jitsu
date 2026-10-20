@@ -23,6 +23,20 @@ export interface TurmaInput {
   alunoIds: string[];
 }
 export interface TurmaView extends Turma { horarios: HorarioTurma[]; alunoIds: string[] }
+export type SituacaoAula = 'agendada' | 'cancelada';
+export interface Aula {
+  id: string; titulo: string; dataAula: string; horaInicio: string; horaFim: string;
+  professor: string; origem: 'grade' | 'extra'; origemHorarioId: string | null;
+  turmaId: string | null; turmaNome: string | null; situacao: SituacaoAula;
+  motivoCancelamento: string | null; canceladaEm: string | null; criadoEm: string;
+}
+export interface AulaAlunoPrevisto { id: string; aulaId: string; alunoId: string | null; nome: string }
+export interface AulaView extends Aula { alunosPrevistos: AulaAlunoPrevisto[] }
+export interface AulaGradeInput { horarioId: string; dataAula: string }
+export interface AulaExtraInput {
+  titulo: string; dataAula: string; horaInicio: string; horaFim: string;
+  professor: string; turmaId: string | null;
+}
 export interface Mensalidade {
   id: string; alunoId: string; competencia: string; valorCentavos: number;
   dataVencimento: string; dataPagamento: string | null; criadoEm: string;
