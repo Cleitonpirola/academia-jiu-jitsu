@@ -1,5 +1,13 @@
 # Processo
 
+## Aprovação para envio e verificação final — 22/10/2026
+
+Após a apresentação das entregas locais, o usuário autorizou: “testa e se tudo estiver ok, pode commitar”. A autorização contempla chamada por aula, horários combinados, aniversários, autenticação/portal, bloqueio financeiro, migrações, testes e documentação correspondente. Supera as pendências de aprovação nos registros anteriores. Não autoriza merge na main, release, nova tag ou implantação.
+
+Nova execução nesta etapa: `npm test` com 121 aprovados, zero falhas; `npm run test:analytics` com 13 aprovados; `npm run build` com typecheck e Vite aprovados; `npm run db:generate` e `prisma validate` aprovados. Conferência de 16 documentos e 82 links locais sem destino ausente. As evidências de navegador e preservação da base abaixo são execuções anteriores, não foram repetidas nesta etapa. PostgreSQL/Supabase e provedor de IA não foram executados externamente; e-mail e pagamento automático continuam planejados.
+
+Procedimento autorizado: revisar o diff, selecionar somente os arquivos deste conjunto, criar commit descritivo em português e realizar push normal para `codex/evolucao-tatame`. Conferir o hash remoto após envio e informar o resultado ao usuário. Credenciais, banco local, dependências e build ficam fora do commit. O registro descreve a autorização e verificações anteriores ao envio; a confirmação do push deve usar o resultado real do Git.
+
 1. Leitura do desafio técnico e definição da stack com o usuário.
 2. O usuário criou docs/ARQUITETURA.md, corrigiu a extensão .md.txt e registrou entidades, relações e campos de aluno.
 3. Mudança autorizada de prioridade: entregar MVP e revisar explicações depois.
@@ -136,3 +144,54 @@ Após a operação, foram preparados ajustes nas orientações atuais do README,
 ### Aprovação dos ajustes documentais — 21/10/2026
 
 Após a apresentação dos sete documentos e das verificações, o usuário autorizou com “pode commitar”. Codex revisou o conjunto aprovado para registrar e enviar somente README, GITHUB, PLANO_EVOLUCAO, PROCESSO, PROMPTS, REVISAO_IA e VERSIONAMENTO na branch `codex/evolucao-tatame`. Atualizar este registro de aprovação não muda o comportamento da aplicação. O envio deve ser confirmado pelo resultado real do push; as menções anteriores à validação pendente são históricas.
+
+## Entrega 1C — chamada por aula — 21/10/2026
+
+1. Após sugestões de funcionalidades e discussão da prioridade de chamada por aula, o usuário autorizou começar as alterações. Codex delimitou esse primeiro incremento e avisou que apresentaria mudanças/testes antes de commit. Não tratou a autorização de desenvolvimento como aprovação antecipada para envio ou implementação de todas as ideias.
+2. Git consultado: branch `codex/evolucao-tatame`, HEAD `1778e67`, árvore limpa. AGENTS.md e este processo consultados. Desenho registrado em ARQUITETURA.md antes do código.
+3. Implementados PresencaAula, migração SQLite 4 aditiva/equivalente Prisma, unicidade aula/aluno, marcação/correção/limpeza explícitas e transações com proteção contra cancelamento/exclusão. Presenças antigas preservadas sem aula presumida; aluno com chamada deve ser inativado, não excluído.
+4. Interface: Chamada na agenda e em Presenças, seleção por data/aula, previstos sem marcação, inclusão pontual, busca, contagens, correção e confirmação para limpar. Registro por modalidade mantido em aba própria; aviso para não lançar o mesmo evento nas duas formas. Falha de aulas não transforma agenda em lista vazia válida nem bloqueia o formato anterior.
+5. Analytics projeta ambas as fontes para o contrato do Python; cada aula frequentada é um treino, sem agrupar por dia. Sem alteração da fórmula de risco, regras financeiras, planos ou contas de acesso.
+6. Nova execução final: 81 testes TypeScript, 13 Python, build/typecheck e Prisma generate/validate aprovados. Na primeira compilação, dois erros de nulabilidade foram corrigidos antes da execução aprovada. A revisão final acrescentou um teste e erro controlado para consultas inconsistentes de aula/chamada durante limpeza/exclusão concorrente; testes TypeScript e build foram repetidos após essa mudança. Python não mudou nessa revisão; os 13 aprovados pertencem à execução desta entrega, anterior a esse ajuste Node. Nenhum teste externo PostgreSQL/Supabase/IA foi executado.
+7. Navegador com processo fictício em memória: presenças de Ana às 12h/15h/18h, Bruno ausente e Carla participante pontual às 12h, busca, escolha de aula/data, bloqueio futuro/cancelado, histórico por modalidade e confirmação/Voltar na limpeza. Limpeza efetiva exercitada por HTTP/SQL automatizado. Não foram inseridos/excluídos registros de teste na base do usuário. Tela estreita conferida e override restaurado; capturas fictícias em CHAMADA.md. Os campos nativos de data exigiram eventos de teclado na automação.
+8. Verificação adicional Node → Python local real, só com dados fictícios: cinco presenças, sendo quatro novas por aula e uma antiga; Ana com quatro treinos no mês, três deles no mesmo dia. Ausência não contada. Não houve chamada de IA.
+9. Antes/depois do reinício, nove tabelas com contagens e hashes idênticos: 20 alunos, 110 mensalidades, 433 presenças antigas e zero nas demais seis tabelas. Runner criou backup antes-v4; nova PresencaAula vazia, sem vínculos inválidos. Os zeros já existiam antes da migração e não foram produzidos pelos testes. Oito consultas API e interface responderam 200; servidor local atualizado para validação.
+10. README, arquitetura, guia de chamada, migrações, planos, guias afetados e registros de prompts/revisão/processo atualizados. Produto segue 1.0.0, tag preservada. **Conjunto local aguarda validação do usuário antes de commit/push.** Sem PR, merge, release ou implantação.
+
+Participação: o usuário forneceu as regras da academia e autorizou começar; Codex escreveu implementação, testes e documentação e executou as verificações. Não atribuir programação ou testes manuais ao usuário sem relato. O nome do professor continua cadastral e a operação é administrativa local; autenticação/perfis constituem o próximo conjunto proposto.
+
+## Incremento — selecionar vários dias no mesmo horário — 21/10/2026
+
+O usuário pediu para selecionar dias como segunda, quarta e sexta e preencher 12h–13h uma única vez. Codex consultou Git/instruções e preservou todas as alterações da chamada 1C ainda não aprovadas para commit. Adaptou somente o formulário, estilos e helper de agrupamento/expansão, mantendo contrato, validações e persistência já existentes.
+
+Nova execução: 87 testes TypeScript e build/typecheck aprovados; seis casos novos verificam expansão, agrupamento de dados existentes, edição sem mutação dos dados de origem, nenhum dia, limite por intervalos expandidos e dias inválidos/repetidos. Python e Prisma não foram alterados nem reexecutados neste incremento; seus resultados anteriores continuam associados à entrega 1C.
+
+Navegador com banco separado em memória: editar/salvar turma existente com quatro horários em dois blocos preservou todos os IDs e o aluno vinculado; cadastro Seg/Qua/Sex 12h–13h mais segunda 18h–19h; erro por nenhum dia; rejeição de sobreposição e correção; edição removendo sexta e acrescentando terça preservou os outros IDs e o intervalo das 18h. Tela estreita sem transbordamento horizontal. Não foram gravadas turmas de teste na base do usuário. Documentação e capturas fictícias atualizadas; incremento aguarda validação antes de commit/push, assim como o conjunto 1C.
+
+
+## Horários combinados, aniversários e área do aluno — 21–22/10/2026
+
+O usuário ampliou o pedido de vários dias para vários intervalos na mesma combinação, pediu homenagem aos aniversariantes do dia e autorizou iniciar login/portal depois dessas ações. A construção usa as tabelas e chamadas já existentes. A arquitetura de acesso foi registrada em ACESSO_ALUNO.md antes do código; decidiu-se identificar a conta primeiro para nunca fazer check-in em nome de um aluno escolhido livremente no navegador.
+
+Implementação: helper de combinações dias × intervalos; agrupamento por conjunto completo para não inventar horários ao editar; aniversário por data atual/ativos; identidade/sessão/convite temporário; proteção administrativa e portal com cadastro, mensalidades, agenda e histórico próprios; check-in separado da presença confirmada. Autenticação não foi deixada apenas na interface. As telas e a API mantêm os cálculos Python dependentes da chamada confirmada.
+
+A migração 005 e o equivalente PostgreSQL foram criados sem alterar migrações anteriores já aplicadas. O primeiro administrador não foi inventado nem recebeu senha padrão: o usuário deverá concluir a configuração local pessoalmente. Convites de aluno e redefinição foram testados por HTTP com dados fictícios, sem transmitir credenciais reais. O teste auxiliar de sessão dos casos antigos não é carregado pelo servidor.
+
+Uma tentativa de testes foi interrompida porque a revisão automática de aprovação não pôde prosseguir com o limite de uso esgotado. Essa tentativa não executou a suíte. Após o usuário solicitar continuidade em 22/10, a execução autorizada passou: 112 testes TypeScript, 13 Python, typecheck/build; Prisma Client gerado e schema verificado. Testes prévios de 93/109 casos pertencem a estados intermediários, não substituem esta execução.
+
+Navegador de teste/SQLite em memória: Ana fez check-in às 12h e às 15h; a aula futura ficou indisponível. A gestão mostrou os avisos, e a confirmação de uma presença apareceu no portal e resultou em um treino no Python real local. A grade de quatro horários e vínculo habitual preservou IDs ao salvar; nova combinação Seg/Qua/Sex 12h–13h e 18h–19h salvou seis horários. Aniversariante do dia ativo foi exibido, enquanto amanhã e inativo não apareceram. Tela estreita conferida sem transbordamento; não é teste em aparelho físico.
+
+Na retomada, a base real já estava no schema 5, aplicado ao iniciar o servidor com o novo código. Conferimos o backup anterior v4 e o estado atual: dez conjuntos de linhas iguais por SHA-256, nenhum vínculo inválido, 20 alunos, 110 mensalidades, 433 registros antigos, uma turma com três horários, demais tabelas anteriores vazias. Usuario, Sessao e CheckinAula permaneceram vazias. Reinício posterior preservou os dados; não foi criado usuário fictício na base real. A tela de configuração inicial está disponível para validação.
+
+O limite de uso interrompeu o trabalho, sem descartar os arquivos. Código e documentação foram retomados na mesma branch codex/evolucao-tatame. Nenhum commit/push, merge, release, tag ou implantação foi realizado. As alterações aguardam a validação explícita do usuário, conforme AGENTS.md.
+
+
+## Bloqueio financeiro e planejamento de pagamentos — 22/10/2026
+
+O usuário pediu restringir o acesso após o vencimento da mensalidade e mostrar orientação para regularizar com o professor. Implementação autorizada: vencimento hoje permite; dia seguinte com cobrança não paga restringe o portal e check-in. Identificação continua permitida para exibir aviso privado. Administração registra pagamento, e quitar todos os vencidos libera na próxima consulta da mesma sessão. A arquitetura foi registrada antes do código. Não houve mudança de plano, multa, envio externo ou flag de bloqueio no banco.
+
+Durante a execução, o usuário pediu também reconhecimento automático do pagamento e aviso destacado de paga/a vencer junto à jornada de acesso/check-in, e determinou que ficassem para a etapa final. Esse incremento futuro foi registrado em PLANO_FUNCIONAL.md; não foi implementado agora nem confundido com envio de e-mail. O status local já usa os pagamentos registrados pelo responsável.
+
+Verificações reais: 121 testes TypeScript aprovados, zero falhas; build/typecheck aprovados. Primeiro teste de reversão enviou null ao PATCH de pagamento, que aceita somente data; corrigimos o teste para usar a edição PUT já existente, sem alterar a regra da API. Navegador/SQLite em memória verificou aviso, áreas ocultas, largura móvel e liberação após pagamento fictício via API; a mesma sessão voltou a fazer check-in. Não foi movimentado dinheiro nem alterada mensalidade real. Python não foi reexecutado neste incremento; seus 13 testes anteriores estão registrados separadamente.
+
+Reinício com schema 5 mantido, sem migração. Treze tabelas reais comparadas antes/depois por hash/contagem, sem alteração ou violação de FK: 21 alunos, 110 mensalidades, 433 presenças antigas, uma turma, três horários, uma conta, uma sessão e demais tabelas vazias. O aluno/conta/sessão adicionais já existiam antes do reinício; não foram criados por este teste. A aplicação atualizada está disponível localmente. Sem commit/push até validação explícita do usuário.

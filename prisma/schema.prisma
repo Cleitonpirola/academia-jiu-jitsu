@@ -18,6 +18,9 @@ model Aluno {
   presencas      Presenca[]
   turmas         AlunoTurma[]
   aulasPrevistas AulaAlunoPrevisto[]
+  chamadas       PresencaAula[]
+  usuario        Usuario?
+  checkins       CheckinAula[]
 }
 model Mensalidade {
   id             String @id @default(uuid()) @db.Uuid
@@ -96,6 +99,8 @@ model Aula {
   canceladaEm        String?
   criadoEm           String
   alunosPrevistos    AulaAlunoPrevisto[]
+  chamada            PresencaAula[]
+  checkins           CheckinAula[]
   @@unique([origemHorarioId, dataAula])
   @@index([dataAula])
   @@index([turmaId])
@@ -107,6 +112,55 @@ model AulaAlunoPrevisto {
   alunoId String? @db.Uuid
   aluno   Aluno? @relation(fields: [alunoId], references: [id], onDelete: SetNull)
   nome    String
+  @@unique([aulaId, alunoId])
+  @@index([alunoId])
+}
+
+model PresencaAula {
+  id           String @id @default(uuid()) @db.Uuid
+  aulaId       String @db.Uuid
+  aula         Aula @relation(fields: [aulaId], references: [id], onDelete: Restrict)
+  alunoId      String @db.Uuid
+  aluno        Aluno @relation(fields: [alunoId], references: [id], onDelete: Restrict)
+  nome         String
+  presente     Boolean
+  criadoEm     String
+  atualizadoEm String
+  @@unique([aulaId, alunoId])
+  @@index([alunoId])
+}
+
+model Usuario {
+  id String @id @default(uuid()) @db.Uuid
+  nome String
+  email String @unique
+  perfil String
+  alunoId String? @unique @db.Uuid
+  aluno Aluno? @relation(fields: [alunoId], references: [id], onDelete: Restrict)
+  senhaHash String?
+  conviteHash String? @unique
+  conviteExpiraEm String?
+  criadoEm String
+  sessoes Sessao[]
+}
+model Sessao {
+  id String @id @default(uuid()) @db.Uuid
+  usuarioId String @db.Uuid
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  tokenHash String @unique
+  credencialHash String
+  expiraEm String
+  criadoEm String
+  @@index([usuarioId])
+}
+model CheckinAula {
+  id String @id @default(uuid()) @db.Uuid
+  aulaId String @db.Uuid
+  aula Aula @relation(fields: [aulaId], references: [id], onDelete: Restrict)
+  alunoId String @db.Uuid
+  aluno Aluno @relation(fields: [alunoId], references: [id], onDelete: Restrict)
+  nome String
+  criadoEm String
   @@unique([aulaId, alunoId])
   @@index([alunoId])
 }

@@ -1,12 +1,18 @@
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
+import { randomUUID } from 'node:crypto';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
-import type { Aluno, Mensalidade, Presenca, Analise, Turma, HorarioTurma, AlunoTurma, Aula, AulaAlunoPrevisto } from '@tatame/shared';
+import type { Aluno, Mensalidade, Presenca, Analise, Turma, HorarioTurma, AlunoTurma, Aula, AulaAlunoPrevisto, PresencaAula, CheckinAula } from '@tatame/shared';
+import type { Usuario, Sessao } from './modules/auth/models.js';
+import { validateCheckin } from './modules/auth/checkin-rules.js';
+import { assertFinanceiroRegular } from './modules/auth/financial-access.js';
 import { migrateSqlite, type MigrationResult } from './database/sqlite/migrate.js';
+import { assertSemChamada, validateAlunoChamada, validateAulaChamada } from './modules/chamada/rules.js';
+import { HttpError } from './http-error.js';
 
-export type Tables = { Aluno: Aluno; Mensalidade: Mensalidade; Presenca: Presenca; Analise: Analise; Turma: Turma; HorarioTurma: HorarioTurma; AlunoTurma: AlunoTurma; Aula: Aula; AulaAlunoPrevisto: AulaAlunoPrevisto };
+export type Tables = { Aluno: Aluno; Mensalidade: Mensalidade; Presenca: Presenca; Analise: Analise; Turma: Turma; HorarioTurma: HorarioTurma; AlunoTurma: AlunoTurma; Aula: Aula; AulaAlunoPrevisto: AulaAlunoPrevisto; PresencaAula: PresencaAula; Usuario: Usuario; Sessao: Sessao; CheckinAula: CheckinAula };
 export type Table = keyof Tables;
 export interface Repository {
   kind: 'sqlite' | 'supabase';
@@ -20,6 +26,10 @@ export interface Repository {
   createAula(aula: Aula, alunos: AulaAlunoPrevisto[]): Promise<void>;
   cancelAula(id: string, motivo: string, timestamp: string): Promise<void>;
   removeAulaExtra(id: string): Promise<boolean>;
+  savePresencaAula(aulaId: string, alunoId: string, presente: boolean, timestamp: string): Promise<{ registro: PresencaAula; created: boolean }>;
+  removePresencaAula(aulaId: string, alunoId: string): Promise<void>;
+  activateUsuario(id: string, conviteHash: string, senhaHash: string, timestamp: string): Promise<boolean>;
+  saveCheckin(aulaId: string, alunoId: string, timestamp: string): Promise<CheckinAula>;
   close(): Promise<void>;
 }
 const columns: Record<Table, string[]> = {
@@ -32,6 +42,10 @@ const columns: Record<Table, string[]> = {
   AlunoTurma: ['id','turmaId','alunoId','criadoEm'],
   Aula: ['id','titulo','dataAula','horaInicio','horaFim','professor','origem','origemHorarioId','turmaId','turmaNome','situacao','motivoCancelamento','canceladaEm','criadoEm'],
   AulaAlunoPrevisto: ['id','aulaId','alunoId','nome'],
+  PresencaAula: ['id','aulaId','alunoId','nome','presente','criadoEm','atualizadoEm'],
+  Usuario: ['id','nome','email','perfil','alunoId','senhaHash','conviteHash','conviteExpiraEm','criadoEm'],
+  Sessao: ['id','usuarioId','tokenHash','credencialHash','expiraEm','criadoEm'],
+  CheckinAula: ['id','aulaId','alunoId','nome','criadoEm'],
 };
 export class SqliteRepository implements Repository {
   kind = 'sqlite' as const;
@@ -52,7 +66,7 @@ export class SqliteRepository implements Repository {
   }
   private decode<K extends Table>(table: K, row: unknown): Tables[K] {
     const record = row as Record<string, unknown>;
-    return { ...record, ...(table === 'Presenca' ? { presente: Boolean(record.presente) } : {}) } as unknown as Tables[K];
+    return { ...record, ...(['Presenca', 'PresencaAula'].includes(table) ? { presente: Boolean(record.presente) } : {}) } as unknown as Tables[K];
   }
   async list<K extends Table>(table: K) { return this.db.prepare(`SELECT * FROM "${table}"`).all().map(row => this.decode(table, row)); }
   async get<K extends Table>(table: K, id: string) { const row = this.db.prepare(`SELECT * FROM "${table}" WHERE id=?`).get(id); return row ? this.decode(table, row) : null; }
@@ -106,17 +120,75 @@ export class SqliteRepository implements Repository {
     } catch (error) { this.db.exec('ROLLBACK'); throw error; }
   }
   async cancelAula(id: string, motivo: string, timestamp: string) {
-    this.db.prepare("UPDATE Aula SET situacao='cancelada', motivoCancelamento=?, canceladaEm=? WHERE id=? AND situacao='agendada'").run(motivo, timestamp, id);
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      assertSemChamada(Boolean(this.db.prepare('SELECT id FROM PresencaAula WHERE aulaId=? LIMIT 1').get(id)));
+      this.db.prepare("UPDATE Aula SET situacao='cancelada', motivoCancelamento=?, canceladaEm=? WHERE id=? AND situacao='agendada'").run(motivo, timestamp, id);
+      this.db.exec('COMMIT');
+    } catch (error) { this.db.exec('ROLLBACK'); throw error; }
   }
   async removeAulaExtra(id: string) {
     this.db.exec('BEGIN IMMEDIATE');
     try {
       const aula = this.db.prepare("SELECT id FROM Aula WHERE id=? AND origem='extra'").get(id);
       if (!aula) { this.db.exec('COMMIT'); return false; }
+      assertSemChamada(Boolean(this.db.prepare('SELECT id FROM PresencaAula WHERE aulaId=? LIMIT 1').get(id)));
       this.db.prepare('DELETE FROM AulaAlunoPrevisto WHERE aulaId=?').run(id);
+      if (this.db.prepare('SELECT id FROM CheckinAula WHERE aulaId=? LIMIT 1').get(id)) throw new HttpError(409, 'Esta aula possui check-ins. Cancele-a para preservar os avisos dos alunos.');
       const result = this.db.prepare("DELETE FROM Aula WHERE id=? AND origem='extra'").run(id);
       this.db.exec('COMMIT');
       return result.changes === 1;
+    } catch (error) { this.db.exec('ROLLBACK'); throw error; }
+  }
+  async savePresencaAula(aulaId: string, alunoId: string, presente: boolean, timestamp: string) {
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      const aula = (this.db.prepare('SELECT * FROM Aula WHERE id=?').get(aulaId) as unknown as Aula | undefined) ?? null;
+      validateAulaChamada(aula);
+      const existing = this.db.prepare('SELECT * FROM PresencaAula WHERE aulaId=? AND alunoId=?').get(aulaId, alunoId);
+      const aluno = (this.db.prepare('SELECT * FROM Aluno WHERE id=?').get(alunoId) as unknown as Aluno | undefined) ?? null;
+      validateAlunoChamada(aluno, aula.dataAula, Boolean(existing));
+      const registro: PresencaAula = existing ? { ...this.decode('PresencaAula', existing), presente, atualizadoEm: timestamp }
+        : { id: randomUUID(), aulaId, alunoId, nome: aluno.nome, presente, criadoEm: timestamp, atualizadoEm: timestamp };
+      if (existing) this.db.prepare('UPDATE PresencaAula SET presente=?, atualizadoEm=? WHERE id=?').run(Number(presente), timestamp, registro.id);
+      else this.insertRow('PresencaAula', registro);
+      this.db.exec('COMMIT');
+      return { registro, created: !existing };
+    } catch (error) { this.db.exec('ROLLBACK'); throw error; }
+  }
+  async removePresencaAula(aulaId: string, alunoId: string) {
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      const aula = (this.db.prepare('SELECT * FROM Aula WHERE id=?').get(aulaId) as unknown as Aula | undefined) ?? null;
+      validateAulaChamada(aula);
+      const result = this.db.prepare('DELETE FROM PresencaAula WHERE aulaId=? AND alunoId=?').run(aulaId, alunoId);
+      if (!result.changes) throw new HttpError(404, 'Marcação não encontrada. Atualize a chamada.');
+      this.db.exec('COMMIT');
+    } catch (error) { this.db.exec('ROLLBACK'); throw error; }
+  }
+  async activateUsuario(id: string, conviteHash: string, senhaHash: string, timestamp: string) {
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      const result = this.db.prepare('UPDATE Usuario SET senhaHash=?, conviteHash=NULL, conviteExpiraEm=NULL WHERE id=? AND conviteHash=? AND conviteExpiraEm>? AND alunoId IN (SELECT id FROM Aluno WHERE situacao=\'ativo\')').run(senhaHash, id, conviteHash, timestamp);
+      if (result.changes) this.db.prepare('DELETE FROM Sessao WHERE usuarioId=?').run(id);
+      this.db.exec('COMMIT'); return result.changes === 1;
+    } catch (error) { this.db.exec('ROLLBACK'); throw error; }
+  }
+  async saveCheckin(aulaId: string, alunoId: string, timestamp: string) {
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      const aula = this.db.prepare('SELECT * FROM Aula WHERE id=?').get(aulaId) as unknown as Aula | undefined;
+      const aluno = this.db.prepare('SELECT * FROM Aluno WHERE id=?').get(alunoId) as unknown as Aluno | undefined;
+      validateCheckin(aula, aluno);
+      const mensalidades = this.db.prepare('SELECT * FROM Mensalidade WHERE alunoId=?').all(alunoId) as unknown as Mensalidade[];
+      assertFinanceiroRegular(mensalidades, alunoId);
+      let row = this.db.prepare('SELECT * FROM CheckinAula WHERE aulaId=? AND alunoId=?').get(aulaId, alunoId) as unknown as CheckinAula | undefined;
+      if (!row) {
+        if (this.db.prepare('SELECT id FROM PresencaAula WHERE aulaId=? AND alunoId=?').get(aulaId, alunoId)) throw new HttpError(409, 'Esta aula já foi avaliada pelo responsável.');
+        row = { id: randomUUID(), aulaId, alunoId, nome: aluno!.nome, criadoEm: timestamp };
+        this.insertRow('CheckinAula', row);
+      }
+      this.db.exec('COMMIT'); return row;
     } catch (error) { this.db.exec('ROLLBACK'); throw error; }
   }
   async close() { this.db.close(); }
@@ -137,7 +209,10 @@ export class PrismaRepository implements Repository {
   async get<K extends Table>(table: K, id: string) { return await this.delegate(table).findUnique({ where: { id } }) as Tables[K] | null; }
   async insert<K extends Table>(table: K, row: Tables[K]) { return await this.delegate(table).create({ data: row }) as Tables[K]; }
   async update<K extends Table>(table: K, id: string, row: Partial<Tables[K]>) { return await this.delegate(table).update({ where: { id }, data: row }) as Tables[K]; }
-  async remove(table: Table, id: string) { await this.delegate(table).delete({ where: { id } }); }
+  async remove(table: Table, id: string) {
+    if (table === 'Sessao') { await this.client.sessao.deleteMany({ where: { id } }); return; }
+    await this.delegate(table).delete({ where: { id } });
+  }
   async saveTurma(turma: Turma, horarios: HorarioTurma[], alunos: AlunoTurma[], create: boolean) {
     await this.client.$transaction(async client => {
       if (create) await client.turma.create({ data: turma });
@@ -162,15 +237,61 @@ export class PrismaRepository implements Repository {
     });
   }
   async cancelAula(id: string, motivo: string, timestamp: string) {
-    await this.client.aula.updateMany({ where: { id, situacao: 'agendada' }, data: { situacao: 'cancelada', motivoCancelamento: motivo, canceladaEm: timestamp } });
+    await this.client.$transaction(async client => {
+      await client.$queryRaw`SELECT id FROM "Aula" WHERE id=${id}::uuid FOR UPDATE`;
+      assertSemChamada(Boolean(await client.presencaAula.findFirst({ where: { aulaId: id }, select: { id: true } })));
+      await client.aula.updateMany({ where: { id, situacao: 'agendada' }, data: { situacao: 'cancelada', motivoCancelamento: motivo, canceladaEm: timestamp } });
+    });
   }
   async removeAulaExtra(id: string) {
     return this.client.$transaction(async client => {
+      await client.$queryRaw`SELECT id FROM "Aula" WHERE id=${id}::uuid FOR UPDATE`;
       const aula = await client.aula.findFirst({ where: { id, origem: 'extra' }, select: { id: true } });
       if (!aula) return false;
+      assertSemChamada(Boolean(await client.presencaAula.findFirst({ where: { aulaId: id }, select: { id: true } })));
+      if (await client.checkinAula.findFirst({ where: { aulaId: id }, select: { id: true } })) throw new HttpError(409, 'Esta aula possui check-ins. Cancele-a para preservar os avisos dos alunos.');
       await client.aulaAlunoPrevisto.deleteMany({ where: { aulaId: id } });
       const result = await client.aula.deleteMany({ where: { id, origem: 'extra' } });
       return result.count === 1;
+    });
+  }
+  async savePresencaAula(aulaId: string, alunoId: string, presente: boolean, timestamp: string) {
+    return this.client.$transaction(async client => {
+      const [aula] = await client.$queryRaw<Aula[]>`SELECT * FROM "Aula" WHERE id=${aulaId}::uuid FOR UPDATE`;
+      validateAulaChamada(aula ?? null);
+      const [aluno] = await client.$queryRaw<Aluno[]>`SELECT * FROM "Aluno" WHERE id=${alunoId}::uuid FOR UPDATE`;
+      const existing = await client.presencaAula.findUnique({ where: { aulaId_alunoId: { aulaId, alunoId } } });
+      validateAlunoChamada(aluno ?? null, aula.dataAula, Boolean(existing));
+      const registro = existing ? await client.presencaAula.update({ where: { id: existing.id }, data: { presente, atualizadoEm: timestamp } })
+        : await client.presencaAula.create({ data: { id: randomUUID(), aulaId, alunoId, nome: aluno.nome, presente, criadoEm: timestamp, atualizadoEm: timestamp } });
+      return { registro, created: !existing };
+    });
+  }
+  async removePresencaAula(aulaId: string, alunoId: string) {
+    await this.client.$transaction(async client => {
+      const [aula] = await client.$queryRaw<Aula[]>`SELECT * FROM "Aula" WHERE id=${aulaId}::uuid FOR UPDATE`;
+      validateAulaChamada(aula ?? null);
+      const result = await client.presencaAula.deleteMany({ where: { aulaId, alunoId } });
+      if (!result.count) throw new HttpError(404, 'Marcação não encontrada. Atualize a chamada.');
+    });
+  }
+  async activateUsuario(id: string, conviteHash: string, senhaHash: string, timestamp: string) {
+    return this.client.$transaction(async client => {
+      const result = await client.usuario.updateMany({ where: { id, conviteHash, conviteExpiraEm: { gt: timestamp }, aluno: { situacao: 'ativo' } }, data: { senhaHash, conviteHash: null, conviteExpiraEm: null } });
+      if (result.count) await client.sessao.deleteMany({ where: { usuarioId: id } });
+      return result.count === 1;
+    });
+  }
+  async saveCheckin(aulaId: string, alunoId: string, timestamp: string) {
+    return this.client.$transaction(async client => {
+      const [aula] = await client.$queryRaw<Aula[]>`SELECT * FROM "Aula" WHERE id=${aulaId}::uuid FOR UPDATE`;
+      const [aluno] = await client.$queryRaw<Aluno[]>`SELECT * FROM "Aluno" WHERE id=${alunoId}::uuid FOR UPDATE`;
+      validateCheckin(aula, aluno);
+      assertFinanceiroRegular(await client.mensalidade.findMany({ where: { alunoId } }), alunoId);
+      const existing = await client.checkinAula.findUnique({ where: { aulaId_alunoId: { aulaId, alunoId } } });
+      if (existing) return existing;
+      if (await client.presencaAula.findUnique({ where: { aulaId_alunoId: { aulaId, alunoId } } })) throw new HttpError(409, 'Esta aula já foi avaliada pelo responsável.');
+      return client.checkinAula.create({ data: { id: randomUUID(), aulaId, alunoId, nome: aluno.nome, criadoEm: timestamp } });
     });
   }
   async close() { await this.client.$disconnect(); }

@@ -8,9 +8,21 @@ export async function calculateAnalytics(repo: Repository, mes: string, analytic
   if (mes < '1900-01' || mes > currentMonth()) {
     throw new HttpError(400, 'Selecione um mês válido que já começou.');
   }
-  const [alunos, mensalidades, presencas] = await Promise.all([
-    repo.list('Aluno'), repo.list('Mensalidade'), repo.list('Presenca'),
+  const [alunos, mensalidades, anteriores, chamadas, aulas] = await Promise.all([
+    repo.list('Aluno'), repo.list('Mensalidade'), repo.list('Presenca'), repo.list('PresencaAula'), repo.list('Aula'),
   ]);
+  const byAula = new Map(aulas.map(aula => [aula.id, aula]));
+  // Cada participação em uma aula é um treino. Não colapsar alunos que treinam duas vezes no dia.
+  // O registro legado não informa horário: não inventar uma associação nem deduplicação entre fontes.
+  const presencas = [
+    ...anteriores.map(({ alunoId, dataTreino, presente }) => ({ alunoId, dataTreino, presente })),
+    ...chamadas.map(({ alunoId, aulaId, presente }) => {
+      const aula = byAula.get(aulaId);
+      // Consultas separadas podem observar instantes diferentes no banco externo.
+      if (!aula) throw new HttpError(503, 'Os dados da chamada mudaram durante a consulta. Atualize os indicadores e tente novamente.');
+      return { alunoId, dataTreino: aula.dataAula, presente };
+    }),
+  ];
   let response: Response;
   try {
     response = await fetch(`${analyticsUrl}/analytics`, {

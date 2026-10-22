@@ -36,10 +36,10 @@ const originalStudent = [
 it('registra a versão inicial de um banco novo e não reaplica a migração', async () => {
   const repo = new SqliteRepository(':memory:');
   try {
-    assert.deepEqual(repo.migration.applied, [1, 2, 3]);
+    assert.deepEqual(repo.migration.applied, [1, 2, 3, 4, 5]);
     assert.equal(repo.migration.backupPath, null);
     assert.deepEqual(migrateSqlite(repo.db).applied, []);
-    assert.equal(repo.db.prepare('SELECT COUNT(*) AS total FROM _tatame_migrations').get()?.total, 3);
+    assert.equal(repo.db.prepare('SELECT COUNT(*) AS total FROM _tatame_migrations').get()?.total, 5);
   } finally { await repo.close(); }
 });
 
@@ -162,7 +162,7 @@ it('evolui versão 1 para turmas, preserva as quatro tabelas e persiste grade e 
     const before = originalTables.map(table => old.prepare(`SELECT * FROM "${table}" ORDER BY id`).all());
     old.close();
     repo = new SqliteRepository(temp.file);
-    assert.deepEqual(repo.migration.applied, [2, 3]); assert.equal(repo.migration.version, 3);
+    assert.deepEqual(repo.migration.applied, [2, 3, 4, 5]); assert.equal(repo.migration.version, 5);
     assert.deepEqual(originalTables.map(table => repo!.db.prepare(`SELECT * FROM "${table}" ORDER BY id`).all()), before);
     assert.ok(repo.migration.backupPath);
     const backup = new DatabaseSync(repo.migration.backupPath, { readOnly: true });
@@ -183,7 +183,7 @@ it('evolui versão 1 para turmas, preserva as quatro tabelas e persiste grade e 
   } finally { if (repo) await repo.close(); temp.cleanup(); }
 });
 
-it('evolui v2 para aulas sem alterar as sete tabelas, cria backup v2 e persiste o novo histórico', async () => {
+it('evolui v2 para aulas/chamada sem alterar as sete tabelas, cria backup v2 e persiste o novo histórico', async () => {
   const temp = temporaryDatabase(); let repo: SqliteRepository | undefined;
   const tables = ['Aluno', 'Mensalidade', 'Presenca', 'Analise', 'Turma', 'HorarioTurma', 'AlunoTurma'];
   try {
@@ -199,7 +199,7 @@ it('evolui v2 para aulas sem alterar as sete tabelas, cria backup v2 e persiste 
     old.prepare('INSERT INTO AlunoTurma VALUES (?, ?, ?, ?)').run(randomUUID(), turmaId, originalStudent[0], originalStudent[8]);
     const before = tables.map(table => old.prepare(`SELECT * FROM "${table}" ORDER BY id`).all()); old.close();
     repo = new SqliteRepository(temp.file);
-    assert.deepEqual(repo.migration.applied, [3]); assert.ok(repo.migration.backupPath);
+    assert.deepEqual(repo.migration.applied, [3, 4, 5]); assert.ok(repo.migration.backupPath);
     assert.deepEqual(tables.map(table => repo!.db.prepare(`SELECT * FROM "${table}" ORDER BY id`).all()), before);
     const backup = new DatabaseSync(repo.migration.backupPath, { readOnly: true });
     try { assert.equal(backup.prepare('SELECT MAX(version) AS version FROM _tatame_migrations').get()?.version, 2); assert.equal(backup.prepare("SELECT name FROM sqlite_master WHERE name='Aula'").get(), undefined); }
@@ -211,6 +211,38 @@ it('evolui v2 para aulas sem alterar as sete tabelas, cria backup v2 e persiste 
     assert.deepEqual(repo.migration.applied, []);
     assert.deepEqual(await repo.get('Aula', aula.id), { ...aula, situacao: 'cancelada', motivoCancelamento: 'Motivo histórico', canceladaEm: '2026-10-19T10:00:00Z' });
     assert.deepEqual(await repo.list('AulaAlunoPrevisto'), [expected]);
+    assert.deepEqual(tables.map(table => repo!.db.prepare(`SELECT * FROM "${table}" ORDER BY id`).all()), before);
+    assert.deepEqual(repo.db.prepare('PRAGMA foreign_key_check').all(), []);
+  } finally { if (repo) await repo.close(); temp.cleanup(); }
+});
+
+it('evolui v3 para chamada preservando nove tabelas, backup e registros por modalidade sem fabricar participações', async () => {
+  const temp = temporaryDatabase(); let repo: SqliteRepository | undefined;
+  const tables = ['Aluno', 'Mensalidade', 'Presenca', 'Analise', 'Turma', 'HorarioTurma', 'AlunoTurma', 'Aula', 'AulaAlunoPrevisto'];
+  try {
+    const old = new DatabaseSync(temp.file);
+    old.exec('PRAGMA foreign_keys=ON');
+    migrateSqlite(old, temp.file, sqliteMigrations.slice(0, 3));
+    old.prepare('INSERT INTO Aluno VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(...originalStudent);
+    old.prepare('INSERT INTO Presenca VALUES (?, ?, ?, ?, ?)').run(randomUUID(), originalStudent[0], '2026-10-01', 'Com kimono', 1);
+    const aulaId = randomUUID();
+    old.prepare('INSERT INTO Aula VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(aulaId, 'Treino preservado', '2026-10-19', '15:00', '16:00', 'Mestre', 'extra', null, null, null, 'agendada', null, null, originalStudent[8]);
+    old.prepare('INSERT INTO AulaAlunoPrevisto VALUES (?, ?, ?, ?)').run(randomUUID(), aulaId, originalStudent[0], originalStudent[1]);
+    const before = tables.map(table => old.prepare(`SELECT * FROM "${table}" ORDER BY id`).all()); old.close();
+    repo = new SqliteRepository(temp.file);
+    assert.deepEqual(repo.migration.applied, [4, 5]); assert.equal(repo.migration.version, 5); assert.ok(repo.migration.backupPath);
+    assert.deepEqual(tables.map(table => repo!.db.prepare(`SELECT * FROM "${table}" ORDER BY id`).all()), before);
+    assert.deepEqual(await repo.list('PresencaAula'), []);
+    const backup = new DatabaseSync(repo.migration.backupPath, { readOnly: true });
+    try {
+      assert.equal(backup.prepare('SELECT MAX(version) AS version FROM _tatame_migrations').get()?.version, 3);
+      assert.equal(backup.prepare("SELECT name FROM sqlite_master WHERE name='PresencaAula'").get(), undefined);
+      assert.deepEqual(tables.map(table => backup.prepare(`SELECT * FROM "${table}" ORDER BY id`).all()), before);
+    } finally { backup.close(); }
+    const marked = await repo.savePresencaAula(aulaId, originalStudent[0], true, '2026-10-21T12:00:00Z');
+    await repo.close(); repo = new SqliteRepository(temp.file);
+    assert.deepEqual(repo.migration.applied, []); assert.equal(repo.migration.backupPath, null);
+    assert.deepEqual(await repo.list('PresencaAula'), [marked.registro]);
     assert.deepEqual(tables.map(table => repo!.db.prepare(`SELECT * FROM "${table}" ORDER BY id`).all()), before);
     assert.deepEqual(repo.db.prepare('PRAGMA foreign_key_check').all(), []);
   } finally { if (repo) await repo.close(); temp.cleanup(); }

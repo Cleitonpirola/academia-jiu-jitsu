@@ -7,10 +7,10 @@ export const initials = (name: string) => name.split(' ').filter(Boolean).slice(
 export const fold = (v: string) => v.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
   let response: Response;
-  try { response=await fetch('/api'+path,{...options,headers:{'Content-Type':'application/json',...options.headers},signal:options.signal || AbortSignal.timeout(path==='/assistente'?60000:15000)}); }
+  try { response=await fetch('/api'+path,{...options,headers:{'Content-Type':'application/json','X-Tatame-Request':'1',...options.headers},signal:options.signal || AbortSignal.timeout(path==='/assistente'?60000:15000)}); }
   catch { throw new Error('Não foi possível conectar ao servidor. Confira se o projeto está em execução.'); }
   if(response.status===204) return undefined as T;
   const body=await response.json().catch(()=>({message:'Resposta inválida do servidor.'}));
-  if(!response.ok) throw new Error(body.message || 'Não foi possível concluir a operação.');
+  if(!response.ok) { if(response.status===401 && !path.startsWith('/auth/')) window.dispatchEvent(new Event('tatame:session-expired')); throw new Error(body.message || 'Não foi possível concluir a operação.'); }
   return body as T;
 }

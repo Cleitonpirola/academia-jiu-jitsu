@@ -4,29 +4,31 @@ import { DIAS_SEMANA, type TurmaInput, type TurmaView } from '@tatame/shared';
 import { useAcademia } from '../store';
 import { Badge, Button, Empty, Field, FormError, Modal, Person } from '../components';
 import { fold } from '../lib';
+import { agruparHorarios, expandirHorarios, ORDEM_SEMANA, type HorarioAgrupado } from '../turma-horarios';
 
-const week = [1, 2, 3, 4, 5, 6, 0];
+const week = ORDEM_SEMANA;
 const shortDay = (day: number) => DIAS_SEMANA[day].replace('-feira', '');
+const dayLabels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
 function TurmaForm({ turma, onClose }: { turma?: TurmaView; onClose: () => void }) {
   const { alunos, mutate } = useAcademia();
   const [nome, setNome] = useState(turma?.nome ?? '');
   const [professor, setProfessor] = useState(turma?.professor ?? '');
   const [situacao, setSituacao] = useState<TurmaInput['situacao']>(turma?.situacao ?? 'ativo');
-  const [horarios, setHorarios] = useState(() => (turma?.horarios ?? [{ diaSemana: 1, horaInicio: '', horaFim: '' }])
-    .map(item => ({ ...item, key: crypto.randomUUID() })));
+  const [horarios, setHorarios] = useState(() => agruparHorarios(turma?.horarios ?? [{ diaSemana: 1, horaInicio: '', horaFim: '' }])
+    .map(item => ({ ...item, key: crypto.randomUUID(), intervalos: item.intervalos.map(intervalo => ({ ...intervalo, key: crypto.randomUUID() })) })));
   const [alunoIds, setAlunoIds] = useState(turma?.alunoIds ?? []);
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const rows = alunos.filter(aluno => fold(aluno.nome).includes(fold(search)));
-  const changeTime = (key: string, changes: Partial<TurmaInput['horarios'][number]>) => setHorarios(previous => previous.map(item => item.key === key ? { ...item, ...changes } : item));
+  const totalHorarios = horarios.reduce((total, item) => total + item.diasSemana.length * item.intervalos.length, 0);
+  const changeDays = (key: string, diasSemana: number[]) => setHorarios(previous => previous.map(item => item.key === key ? { ...item, diasSemana } : item));
+  const changeTime = (groupKey: string, timeKey: string, changes: Partial<HorarioAgrupado['intervalos'][number]>) => setHorarios(previous => previous.map(item => item.key === groupKey ? { ...item, intervalos: item.intervalos.map(intervalo => intervalo.key === timeKey ? { ...intervalo, ...changes } : intervalo) } : item));
   const save = async (event: FormEvent) => {
     event.preventDefault(); setBusy(true); setError('');
-    const input: TurmaInput = { nome, professor, situacao, alunoIds,
-      horarios: horarios.map(({ diaSemana, horaInicio, horaFim }) => ({ diaSemana, horaInicio, horaFim })),
-    };
     try {
+      const input: TurmaInput = { nome, professor, situacao, alunoIds, horarios: expandirHorarios(horarios) };
       await mutate(turma ? '/turmas/' + turma.id : '/turmas', turma ? 'PUT' : 'POST', input, turma ? 'Turma atualizada.' : 'Turma cadastrada.');
       onClose();
     } catch (error) { setError((error as Error).message); }
@@ -39,14 +41,20 @@ function TurmaForm({ turma, onClose }: { turma?: TurmaView; onClose: () => void 
         <Field label="Professor responsável"><input required minLength={2} maxLength={120} placeholder="Nome do professor ou mestre" value={professor} onChange={event => setProfessor(event.target.value)}/></Field>
         <Field label="Situação da turma"><select value={situacao} onChange={event => setSituacao(event.target.value as TurmaInput['situacao'])}><option value="ativo">Ativa</option><option value="inativo">Inativa</option></select></Field>
       </div>
-      <div className="turma-form-section"><h3>Grade fixa</h3><p>Adicione os dias e horários habituais. Você pode ter mais de um horário no mesmo dia.</p>
-        <div className="turma-time-rows">{horarios.map((item, index) => <div className="turma-time-row" key={item.key}>
-          <Field label="Dia da semana"><select aria-label={`Dia da semana ${index + 1}`} value={item.diaSemana} onChange={event => changeTime(item.key, { diaSemana: Number(event.target.value) })}>{week.map(day => <option key={day} value={day}>{DIAS_SEMANA[day]}</option>)}</select></Field>
-          <Field label="Início"><input required type="time" aria-label={`Início do horário ${index + 1}`} value={item.horaInicio} onChange={event => changeTime(item.key, { horaInicio: event.target.value })}/></Field>
-          <Field label="Término"><input required type="time" aria-label={`Término do horário ${index + 1}`} value={item.horaFim} onChange={event => changeTime(item.key, { horaFim: event.target.value })}/></Field>
-          <button type="button" className="icon-btn" aria-label={`Remover horário ${index + 1}`} disabled={horarios.length === 1} onClick={() => setHorarios(previous => previous.filter(row => row.key !== item.key))}><X size={17}/></button>
+      <div className="turma-form-section"><h3>Grade fixa</h3><p>Combine os dias e todos os horários que eles têm em comum. Ex.: Seg/Qua/Sex, às 12h e às 18h, na mesma combinação.</p>
+        <div className="turma-time-rows">{horarios.map((item, index) => <div className="turma-time-group" key={item.key}>
+          <div className="turma-time-heading"><strong>Combinação {index + 1}</strong><button type="button" className="icon-btn" aria-label={`Remover combinação ${index + 1}`} disabled={horarios.length === 1} onClick={() => setHorarios(previous => previous.filter(row => row.key !== item.key))}><X size={17}/></button></div>
+          <fieldset className="turma-weekdays"><legend>Dias da semana</legend>{week.map(day => <label key={day}><input type="checkbox" aria-label={`${DIAS_SEMANA[day]} da combinação ${index + 1}`} checked={item.diasSemana.includes(day)} disabled={!item.diasSemana.includes(day) && totalHorarios + item.intervalos.length > 100} onChange={event => changeDays(item.key, event.target.checked ? [...item.diasSemana, day] : item.diasSemana.filter(value => value !== day))}/><span>{dayLabels[day]}</span></label>)}</fieldset>
+          <p className="helper turma-combination-note">Todos os horários abaixo valem para cada dia selecionado.</p>
+          <div className="turma-intervals">{item.intervalos.map((intervalo, timeIndex) => <div className="turma-interval-row" key={intervalo.key}>
+            <Field label="Início"><input required type="time" aria-label={`Início do horário ${timeIndex + 1} da combinação ${index + 1}`} value={intervalo.horaInicio} onChange={event => changeTime(item.key, intervalo.key, { horaInicio: event.target.value })}/></Field>
+            <Field label="Término"><input required type="time" aria-label={`Término do horário ${timeIndex + 1} da combinação ${index + 1}`} value={intervalo.horaFim} onChange={event => changeTime(item.key, intervalo.key, { horaFim: event.target.value })}/></Field>
+            <button type="button" className="icon-btn" aria-label={`Remover horário ${timeIndex + 1} da combinação ${index + 1}`} disabled={item.intervalos.length === 1} onClick={() => setHorarios(previous => previous.map(row => row.key === item.key ? { ...row, intervalos: row.intervalos.filter(value => value.key !== intervalo.key) } : row))}><X size={16}/></button>
+          </div>)}</div>
+          <Button variant="secondary" aria-label={`Adicionar horário à combinação ${index + 1}`} disabled={item.intervalos.length >= 100 || totalHorarios + item.diasSemana.length > 100} onClick={() => setHorarios(previous => previous.map(row => row.key === item.key ? { ...row, intervalos: [...row.intervalos, { key: crypto.randomUUID(), horaInicio: '', horaFim: '' }] } : row))}><Plus size={15}/>Adicionar horário</Button>
+          <p className="helper turma-combination-note">{item.diasSemana.length} {item.diasSemana.length === 1 ? 'dia' : 'dias'} · {item.intervalos.length} {item.intervalos.length === 1 ? 'horário por dia' : 'horários por dia'}</p>
         </div>)}</div>
-        <Button variant="secondary" disabled={horarios.length >= 100} onClick={() => setHorarios(previous => [...previous, { key: crypto.randomUUID(), diaSemana: previous.at(-1)?.diaSemana ?? 1, horaInicio: '', horaFim: '' }])}><Plus size={15}/>Adicionar horário</Button>
+        <div className="turma-time-footer"><Button variant="ghost" disabled={horarios.length >= 100 || totalHorarios >= 100} onClick={() => setHorarios(previous => [...previous, { key: crypto.randomUUID(), diasSemana: [1], intervalos: [{ key: crypto.randomUUID(), horaInicio: '', horaFim: '' }] }])}><Plus size={15}/>Adicionar outra combinação</Button><span className="helper" role="status">{totalHorarios} {totalHorarios === 1 ? 'horário semanal selecionado' : 'horários semanais selecionados'}</span></div>
       </div>
       <div className="turma-form-section"><h3>Alunos habituais <span>{alunoIds.length} selecionados</span></h3><p>Este vínculo organiza a turma. Ele não registra presença nem limita a participação em outras aulas.</p>
         <div className="search turma-student-search"><Search size={16}/><input aria-label="Buscar aluno para vincular" placeholder="Buscar aluno…" value={search} onChange={event => setSearch(event.target.value)}/></div>

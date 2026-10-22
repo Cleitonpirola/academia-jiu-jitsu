@@ -1,12 +1,30 @@
 # Turmas e grade fixa — entrega 1A
 
+**Estado em 22/10/2026:** as melhorias posteriores de horários combinados foram aprovadas para commit/envio, junto da chamada e portal. Nova validação passou com 121 testes TypeScript, 13 Python, build/typecheck e Prisma. As pendências de aprovação nos registros anteriores são históricas; autorização em [PROCESSO.md](PROCESSO.md).
+
 Implementação em 19/10/2026, aprovada pelo usuário para commit e envio na branch `codex/reestruturacao` após a apresentação das telas e verificações. A tag v1.0.0 está preservada. Esta entrega não cria uma nova tag ou número de versão do produto; a versão 2 é somente a versão da estrutura SQLite.
 
 **Evolução posterior:** 1A enviada no commit `507d260`. A entrega 1B acrescentou [Aulas](AULAS.md) e a migração SQLite 3. Excluir uma turma também preserva suas aulas datadas e nomes históricos, removendo somente a referência à turma; a confirmação passou a explicar isso. As descrições de aulas “futuras” e os testes abaixo registram a apresentação original da entrega 1A; a chamada por aula continua para 1C.
 
+**Atualização de 21/10/2026:** [Chamada por aula](CHAMADA.md) implementada e testada localmente em 1C, aguardando validação antes de commit/push. Excluir turma também preserva essas marcações. Aluno com chamada por aula deve ser inativado em vez de excluído. Referências abaixo a chamada futura são históricas; a situação posterior de login e área do aluno está descrita em [ACESSO_ALUNO.md](ACESSO_ALUNO.md). Reservas futuras e planos continuam pendentes.
+
+**Melhoria do formulário — 21–22/10/2026:** uma combinação reúne vários dias e vários intervalos. Todos os intervalos valem para todos os dias selecionados. Exemplo: Seg/Qua/Sex às 12h–13h e 18h–19h, seis horários semanais salvos juntos. Não exige migração ou mudança no contrato da API de turmas. Incremento local aguardando validação antes de commit/push. O login, implementado em seguida, passou a proteger a API administrativa.
+
+Primeira verificação, anterior à ampliação para múltiplos intervalos por combinação: **87 testes TypeScript e build/typecheck aprovados**; seis casos novos do helper de horários. Em navegador com banco fictício em memória, criação Seg/Qua/Sex 12h–13h e segundo intervalo na segunda, edição de dias, preservação de IDs/vínculos, erro sem dia e bloqueio de sobreposição foram conferidos. Medição de tela estreita: documento 341/341, modal 309/309 e dias 242/242 px (client/scroll), com sete opções e sem transbordamento. Viewport restaurado; não é teste em aparelho físico. Python e Prisma não foram reexecutados neste incremento. As execuções de 44/12 testes abaixo pertencem à entrega 1A original.
+
+**Validação posterior — 22/10/2026:** 112 testes TypeScript e build/typecheck aprovados no conjunto atual; oito testes do helper cobrem o produto dias × intervalos, agrupamento sem inventar aulas, preservação, validações e limite de 100. Os 13 testes Python também foram reexecutados e passaram. Confira o registro atual em [REVISAO_IA.md](REVISAO_IA.md).
+
+![Seleção de vários dias com dados fictícios](screenshots/turmas-dias.jpg)
+
+![Seleção de dias em tela estreita](screenshots/turmas-dias-celular.jpg)
+
 ## O que você pode fazer
 
-No menu **Turmas**, clique em **Nova turma**. Informe nome, professor responsável, situação e pelo menos um horário com dia, início e término. Use **Adicionar horário** para cadastrar, por exemplo, segunda-feira das 12h às 13h e das 18h às 19h na mesma turma.
+No menu **Turmas**, clique em **Nova turma**. Informe nome, professor responsável e situação. Em **Grade fixa**, marque os dias que compartilham os mesmos intervalos. Preencha início e término e use **Adicionar horário** dentro da combinação para incluir outros intervalos nesses mesmos dias. Exemplo: **Seg, Qua e Sex**, das **12:00 às 13:00** e das **18:00 às 19:00**. Ao salvar, os seis horários entram juntos na grade.
+
+Use **Adicionar outra combinação** quando outros dias tiverem uma programação diferente. Uma segunda-feira pode ter vários intervalos na mesma combinação, e terça/quinta podem ter outro conjunto. Cada combinação precisa de pelo menos um dia e um intervalo. O limite de 100 considera dias × intervalos, somados entre as combinações.
+
+Ao **Editar**, só são agrupados dias que possuem o mesmo conjunto completo de intervalos. Assim, se segunda tem 12h e 18h, mas quarta apenas 12h, o formulário não inventa quarta às 18h. Mudar um intervalo aplica a mudança aos dias da combinação. Para mudar somente um dia, retire-o da combinação original e crie outra para ele. Salvar sem alterações preserva os identificadores dos horários existentes; remover/adicionar dias conserva os identificadores dos demais intervalos.
 
 Escolha os alunos habituais e salve. É permitido salvar sem alunos e vincular depois. Um aluno pode estar em mais de uma turma. Apenas alunos ativos podem receber um vínculo novo. Se um aluno for inativado posteriormente, seu vínculo permanece até a remoção explícita.
 
@@ -40,9 +58,12 @@ O responsável é um nome cadastral. Não há login ou acesso exclusivo do profe
 | `apps/api/src/database/sqlite/migrations/002_turmas.sql` | Acrescenta as três tabelas locais sem mudar as quatro anteriores |
 | `prisma/schema.prisma` e `prisma/migrations/202610190001_turmas/` | Mantêm o caminho equivalente para PostgreSQL, ainda sem execução externa comprovada |
 | `apps/web/src/pages/TurmasPage.tsx` | Exibe lista, formulário, detalhes, filtros, confirmação de situação e grade semanal |
+| `apps/web/src/turma-horarios.ts` e `turma-horarios.test.ts` | Agrupa dias pelo conjunto completo de intervalos ao editar, expande a seleção para o contrato da API e verifica preservação/limites |
 | `apps/web/src/data.ts`, `load-data.ts` e `App.tsx` | Acrescentam o recurso e a navegação; falha em turmas não derruba as outras áreas |
 
 A transação é como salvar a ficha inteira em um envelope: ou todas as partes são guardadas, ou o sistema mantém o conjunto anterior. Isso evita cadastrar a turma e perder metade dos horários se um aluno selecionado tiver um vínculo inválido.
+
+O agrupamento novo é apenas uma forma mais rápida de preencher o envelope: o formulário mostra Seg/Qua/Sex juntos, mas envia três itens de horário. O banco continua guardando uma linha por dia e intervalo. As regras existentes de sobreposição e preservação de IDs continuam na API.
 
 ## Rotas da API
 

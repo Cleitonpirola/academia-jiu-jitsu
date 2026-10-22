@@ -31,6 +31,15 @@ class AnalyticsTests(unittest.TestCase):
         self.assertEqual(result["alunosInadimplentes"], 0)
         self.assertEqual(result["riscos"][0]["pontos"], 0)
 
+    def test_multiple_classes_in_same_day_count_training_not_days(self):
+        rows = [attendance('2026-10-08'), attendance('2026-10-08'),
+                {**attendance('2026-10-08'), 'presente': False}, attendance('2026-10-01')]
+        result = metrics(presencas=rows)
+        self.assertEqual(result['presencasNoMes'], 3)
+        self.assertEqual(result['riscos'][0]['frequenciaAtual'], 3)
+        self.assertEqual(result['riscos'][0]['diasSemTreinar'], 1)
+        self.assertEqual(result['frequenciaMedia'], 3.0)
+
     def test_equal_windows_and_exact_50_percent(self):
         rows = [attendance("2026-09-01"), attendance("2026-09-03"), attendance("2026-09-20"), attendance("2026-10-02")]
         result = metrics(presencas=rows)

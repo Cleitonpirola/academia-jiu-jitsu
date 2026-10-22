@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
-import request from 'supertest';
-import { createApp } from './app.js';
+
+import { createApp, request } from './test-auth-helper.js';
 import { SqliteRepository } from './repository.js';
 import type { Aula, AulaExtraInput, TurmaInput } from '@tatame/shared';
 

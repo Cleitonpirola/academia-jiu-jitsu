@@ -2,6 +2,8 @@
 
 Implementado em 19/10/2026. O SQLite continua sendo o banco local do MVP. Não há transferência automática para Supabase nesta alteração.
 
+**Atualização de 22/10/2026:** schema atual 5. `004_chamada.sql` acrescentou PresencaAula; `005_acesso_aluno.sql` acrescenta Usuario, Sessao e CheckinAula sem modificar as dez tabelas de negócio anteriores. As referências abaixo a versões anteriores são registros históricos. Número do produto e tag v1.0.0 permanecem preservados.
+
 ## O que é uma migração
 
 É uma instrução versionada para mudar a estrutura do banco que já existe. Pense em uma reforma: acrescentar um cômodo à academia preservando as pessoas e os registros que já estão lá. Criar outra academia vazia e mudar o endereço da conexão é um trabalho diferente de transportar os registros.
@@ -11,6 +13,8 @@ Implementado em 19/10/2026. O SQLite continua sendo o banco local do MVP. Não h
 - `apps/api/src/database/sqlite/migrations/001_initial.sql`: estrutura inicial das quatro tabelas, equivalente à versão 1.0.
 - `apps/api/src/database/sqlite/migrations/002_turmas.sql`: acrescenta Turma, HorarioTurma e AlunoTurma, sem modificar registros das tabelas anteriores.
 - `apps/api/src/database/sqlite/migrations/003_aulas.sql`: acrescenta Aula e AulaAlunoPrevisto, com referências opcionais que preservam o histórico ao excluir cadastros.
+- `apps/api/src/database/sqlite/migrations/004_chamada.sql`: acrescenta PresencaAula, única por aula/aluno, sem converter ou modificar presenças antigas.
+- `apps/api/src/database/sqlite/migrations/005_acesso_aluno.sql`: acrescenta identidade de acesso, sessões com validade/versão da credencial e avisos de check-in únicos por aula/aluno. Não cria contas ou senhas padrão.
 - `apps/api/src/database/sqlite/migrate.ts`: lista ordenada de versões, checksum, backup, transação e verificação da estrutura.
 - `apps/api/src/repository.ts`: executa o runner ao abrir SQLite e fecha a conexão se a migração falhar.
 - `apps/api/src/sqlite-migrations.test.ts`: testes de adoção, evolução, preservação e falhas.
@@ -19,8 +23,8 @@ Ao iniciar `npm run dev` ou `npm start`, o repositório abre o arquivo definido 
 
 | Situação | Comportamento |
 | --- | --- |
-| Banco novo | Aplica as versões 1, 2 e 3; não precisa de backup de registros inexistentes |
-| Banco 1.0 compatível, sem histórico | Faz backup, adota a versão 1 e aplica as versões 2 e 3, conservando seus registros |
+| Banco novo | Aplica as versões 1, 2, 3 e 4; não precisa de backup de registros inexistentes |
+| Banco 1.0 compatível, sem histórico | Faz backup, adota a versão 1 e aplica as versões 2, 3 e 4, conservando seus registros |
 | Banco já atualizado | Confere histórico e estrutura; não reaplica as instruções nem cria cópias a cada início |
 | Nova versão registrada no código | Cria backup e executa as versões pendentes em uma transação |
 | Erro de SQL ou estrutura incompatível | Reverte a transação e interrompe a abertura; a versão não avança |
@@ -39,7 +43,7 @@ O backup é anterior à migração, não uma cópia contínua de alterações fu
 ## Como acrescentar uma alteração futura
 
 1. Descrever a necessidade, a transformação dos registros existentes e como conferir o resultado. Se um campo novo for obrigatório, definir a origem legítima do valor dos registros antigos.
-2. Criar o próximo arquivo SQL, por exemplo `004_<descricao>.sql`, sem alterar os arquivos já aplicados.
+2. Criar o próximo arquivo SQL, por exemplo `005_<descricao>.sql`, sem alterar os arquivos já aplicados.
 3. Acrescentá-lo a `sqliteMigrations` em `migrate.ts`, com número consecutivo, nome e leitura do novo SQL.
 4. Manter o SQL compatível com a transação do runner: não incluir BEGIN, COMMIT, VACUUM ou comandos que desativem a proteção transacional. Para mudanças que exijam reconstruir tabela, copiar e conferir os registros explicitamente.
 5. Atualizar os contratos TypeScript, validações, mapa de colunas do repositório e telas envolvidos. Se o campo também existir no caminho PostgreSQL, atualizar o schema e criar sua migration Prisma correspondente; SQL SQLite não é intercambiável com PostgreSQL.
@@ -73,3 +77,14 @@ Na base local, imediatamente antes de aplicar a versão 2, havia 20 alunos, 110 
 Nova execução: dez testes de migração aprovados, incluindo arquivo v2 com registros nas sete tabelas, evolução para v3, backup da versão anterior e persistência de aula, previstos e cancelamento após reabrir. A suíte completa passou a 61 testes TypeScript aprovados. Os arquivos SQL das versões 1 e 2 não foram alterados.
 
 O servidor real aplicou somente a versão 3 e gerou `data/backups/academia.sqlite.antes-v3-e9728ccb-27a4-465b-ac19-870f4e83bcf6.sqlite`. Antes/depois, as sete tabelas mantiveram contagens e hashes: 20 alunos, 110 mensalidades, 432 presenças, zero análises, turmas, horários e vínculos. As duas novas tabelas ficaram vazias e não houve vínculo inválido. Esse estado zero das turmas já existia antes do reinício; não foi produzido por teste destrutivo. Conferências temporárias estão em data/, fora do Git. Guia da entrega: [AULAS.md](AULAS.md).
+
+
+## Evolução v4→v5 — 22/10/2026
+
+005_acesso_aluno.sql acrescenta Usuario, Sessao e CheckinAula. Não altera as dez tabelas anteriores nem inventa credenciais/check-ins. Check-in e chamada são registros separados; somente a chamada alimenta frequência. Sessões possuem validade e impressão da credencial para impedir reuso após redefinição. O SQL PostgreSQL correspondente está em prisma/migrations/202610210002_acesso_aluno, ainda sem execução externa.
+
+O teste acesso-migration.test.ts preenche as dez tabelas da versão 4, abre com a versão atual e verifica backup anterior, igualdade das linhas, tabelas novas vazias e persistência após reabrir com registros de acesso/check-in. A suíte atual possui 112 casos TypeScript aprovados.
+
+Na retomada, a base local já havia sido aberta com o código novo e estava em v5. O backup automático v4 é data/backups/academia.sqlite.antes-v5-007fadd2-a0d2-4505-a297-3a14ac28e2df.sqlite. Comparação de hashes SHA-256 das linhas ordenadas com o banco atual: dez tabelas iguais, 20 alunos, 110 mensalidades, 433 presenças antigas, uma turma, três horários e demais tabelas anteriores vazias; zero vínculos inválidos. Usuario, Sessao e CheckinAula vazias, aguardando configuração pessoal do administrador. Reinício adicional também preservou esses dados.
+
+As diferentes contagens de turmas/horários em registros históricos pertencem a observações anteriores: a turma já existia no backup v4. Nenhum dado fictício da conferência visual foi inserido na base do usuário. Esta evolução altera o schema, não o número de versão do produto ou a tag v1.0.0.

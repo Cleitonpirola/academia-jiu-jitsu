@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
-import type { Aula, AulaAlunoPrevisto, AulaView, Turma } from '@tatame/shared';
+import type { Aula, AulaAlunoPrevisto, AulaView, PresencaAula, Turma, CheckinAula } from '@tatame/shared';
 import type { Repository } from '../../repository.js';
 import { HttpError } from '../../http-error.js';
 import { aulaExtraSchema, aulaGradeSchema, cancelarAulaSchema, filtroAulasSchema } from './schema.js';
@@ -12,10 +12,12 @@ export function createAulasService(repo: Repository) {
     if (!aula) throw new HttpError(404, 'Aula não encontrada.');
     return aula;
   };
-  const view = (aula: Aula, alunos: AulaAlunoPrevisto[]): AulaView => ({ ...aula,
+  const view = (aula: Aula, alunos: AulaAlunoPrevisto[], chamada: PresencaAula[] = [], checkins: CheckinAula[] = []): AulaView => ({ ...aula,
     alunosPrevistos: alunos.filter(aluno => aluno.aulaId === aula.id).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')),
+    chamada: chamada.filter(registro => registro.aulaId === aula.id).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')),
+    checkins: checkins.filter(registro => registro.aulaId === aula.id).sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR')),
   });
-  const detail = async (id: string) => view(await find(id), await repo.list('AulaAlunoPrevisto'));
+  const detail = async (id: string) => view(await find(id), await repo.list('AulaAlunoPrevisto'), await repo.list('PresencaAula'), await repo.list('CheckinAula'));
   const activeTurma = async (id: string) => {
     const turma = await repo.get('Turma', id);
     if (!turma) throw new HttpError(404, 'Turma não encontrada.');
@@ -38,11 +40,11 @@ export function createAulasService(repo: Repository) {
     detail,
     async list(query: unknown = {}) {
       const filter = filtroAulasSchema.parse(query);
-      const [aulas, alunos] = await Promise.all([repo.list('Aula'), repo.list('AulaAlunoPrevisto')]);
+      const [aulas, alunos, chamada, checkins] = await Promise.all([repo.list('Aula'), repo.list('AulaAlunoPrevisto'), repo.list('PresencaAula'), repo.list('CheckinAula')]);
       return aulas.filter(aula => (!filter.dataInicio || aula.dataAula >= filter.dataInicio) && (!filter.dataFim || aula.dataAula <= filter.dataFim) &&
         (!filter.turmaId || aula.turmaId === filter.turmaId) && (!filter.situacao || aula.situacao === filter.situacao))
         .sort((a, b) => a.dataAula.localeCompare(b.dataAula) || a.horaInicio.localeCompare(b.horaInicio) || a.titulo.localeCompare(b.titulo, 'pt-BR'))
-        .map(aula => view(aula, alunos));
+        .map(aula => view(aula, alunos, chamada, checkins));
     },
     async createFromGrade(body: unknown) {
       const { horarioId, dataAula } = aulaGradeSchema.parse(body);

@@ -12,12 +12,13 @@ import { AttendancePage } from './pages/AttendancePage';
 import { IntelligencePage } from './pages/IntelligencePage';
 import { TurmasPage } from './pages/TurmasPage';
 import { AulasPage } from './pages/AulasPage';
+import type { UsuarioView } from '@tatame/shared';
 const navigation=[{id:'dashboard',label:'Visão geral',icon:LayoutDashboard},{id:'alunos',label:'Alunos',icon:Users},{id:'turmas',label:'Turmas',icon:CalendarDays},{id:'aulas',label:'Aulas',icon:Clock3},{id:'mensalidades',label:'Mensalidades',icon:CreditCard},{id:'presencas',label:'Presenças',icon:CalendarCheck},{id:'inteligencia',label:'Inteligência',icon:Sparkles}];
 const requiredResources: Record<string, Resource[]> = {
   dashboard: ['dashboard', 'alunos', 'mensalidades'], alunos: ['alunos'],
-  mensalidades: ['mensalidades', 'alunos'], presencas: ['alunos', 'presencas'], inteligencia: [], turmas: ['turmas', 'alunos'], aulas: ['aulas', 'turmas'],
+  mensalidades: ['mensalidades', 'alunos'], presencas: ['alunos'], inteligencia: [], turmas: ['turmas', 'alunos'], aulas: ['aulas', 'turmas'],
 };
-export default function App() {
+export default function App({ usuario, onLogout }: { usuario: UsuarioView; onLogout: () => void }) {
   const [page,setPage]=useState('dashboard');const [month,setMonth]=useState(today().slice(0,7));
   const [data,setData]=useState(initialData);const [resourceStatus,setResourceStatus]=useState(initialResourceStatus);
   const [toast,setToast]=useState('');const [revision,setRevision]=useState(0);const [studentForm,setStudentForm]=useState(false);const [paymentStudent,setPaymentStudent]=useState('');
@@ -44,6 +45,13 @@ export default function App() {
     if(version===loadId.current)setRevision(value=>value+1);
   },[month]);
   useEffect(()=>{void reload();},[reload]);
+  useEffect(()=>{
+    const refresh=()=>{if(!document.hidden)void reload();};
+    const timer=window.setInterval(refresh,30000);
+    window.addEventListener('focus',refresh);
+    document.addEventListener('visibilitychange',refresh);
+    return()=>{clearInterval(timer);window.removeEventListener('focus',refresh);document.removeEventListener('visibilitychange',refresh);};
+  },[reload]);
   useEffect(()=>{if(!toast)return;const timer=setTimeout(()=>setToast(''),5000);return()=>clearTimeout(timer);},[toast]);
   const mutate=async(path:string,method:string,body:unknown,message:string)=>{const result=await api(path,{method,...(body!==undefined?{body:JSON.stringify(body)}:{})});setToast(message);void reload();return result;};
   const goto=(id:string)=>{setPage(id);if(id==='mensalidades')setPaymentStudent('');};
@@ -73,15 +81,16 @@ export default function App() {
             <p>Mais tempo para ensinar.<br/>Mais clareza para gerir.</p>
             <button onClick={()=>goto('presencas')}>Registrar um treino <ArrowUpRight size={16}/></button>
           </div>
-          <div className="admin"><div className="admin-avatar">AD</div><div><strong>Administrador</strong><small>Academia de Jiu-Jitsu</small></div><span className="online-dot"/></div>
+          <div className="admin"><div className="admin-avatar">AD</div><div><strong>{usuario.nome}</strong><small>Administrador · Tatame</small></div><span className="online-dot"/></div>
         </div>
       </aside>
       <div className="workspace">
         <header className="topbar">
           <div className="breadcrumb">Academia <ChevronRight size={14}/><strong>{navigation.find(item=>item.id===page)?.label}</strong></div>
           <div className="topbar-actions">
+            <Button variant="ghost" onClick={onLogout} aria-label={`Sair da conta de ${usuario.nome}`}>Sair</Button>
             <span className={`env-badge ${data.health?'':'is-offline'}`}><i/>{data.health?(data.health.database==='supabase'?'Supabase conectado':'Banco local'):(resourceStatus.health.loading?'Conferindo conexão…':'Conexão indisponível')}</span>
-            {!['turmas','aulas'].includes(page)&&<MonthPicker value={month} onChange={setMonth}/>}
+            {!['turmas','aulas','presencas'].includes(page)&&<MonthPicker value={month} onChange={setMonth}/>}
           </div>
         </header>
         <main>
@@ -93,7 +102,7 @@ export default function App() {
             {page==='turmas'&&<TurmasPage/>}
             {page==='aulas'&&<AulasPage/>}
             {page==='mensalidades'&&<PaymentsPage initialStudent={paymentStudent}/>}
-            {page==='presencas'&&<AttendancePage/>}
+            {page==='presencas'&&<AttendancePage onAgenda={()=>goto('aulas')}/>}
             {page==='inteligencia'&&<IntelligencePage/>}
           </>}
           <footer className="app-footer">

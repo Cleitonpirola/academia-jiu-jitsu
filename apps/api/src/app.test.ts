@@ -4,8 +4,8 @@ import { randomUUID } from 'node:crypto';
 import { mkdtempSync, unlinkSync, rmdirSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import request from 'supertest';
-import { createApp } from './app.js';
+
+import { createApp, request } from './test-auth-helper.js';
 import { SqliteRepository } from './repository.js';
 import { currentMonth, today, dateAt } from './domain.js';
 const student={nome:'João Silva',telefone:'11999991234',email:'joao@example.com',dataNascimento:'2000-01-10',faixa:'Branca',dataMatricula:'2026-01-01',situacao:'ativo'};

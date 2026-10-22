@@ -1,5 +1,7 @@
 # Plano de evolução para o desafio técnico
 
+**Aprovação posterior — 22/10/2026:** chamada, horários combinados, aniversários, login/portal e bloqueio financeiro aprovados para commit/envio após nova validação bem-sucedida. As pendências de aprovação nos registros anteriores são históricas. Main, tag v1.0.0 e integrações externas não fazem parte do envio. Registro em [PROCESSO.md](PROCESSO.md).
+
 Data: 10/10/2026. Referência preservada: tag `v1.0.0`, commit `618c1b3`.
 
 Este documento analisa as duas imagens fornecidas pelo usuário e o código atual. É um plano; não implementa as mudanças propostas. A delimitação final de funcionalidades dos projetos deve ser conferida com as demais páginas do desafio antes da separação.
@@ -11,6 +13,8 @@ Este documento analisa as duas imagens fornecidas pelo usuário e o código atua
 **Evolução posterior:** a entrega 1A de turmas, grade e vínculos foi implementada e testada, incluindo a exclusão definitiva solicitada na validação. O usuário aprovou o conjunto e seus documentos para commit/envio com “pode commitar”. As demais funções da proposta continuam planejadas; este registro não autoriza sua implementação automática. Guia: [TURMAS.md](TURMAS.md).
 
 **Entrega seguinte:** após 1A ser enviada em `507d260`, o usuário autorizou começar 1B com “bora”. Agenda de aulas fixas/extras, cancelamento e exclusão de extras foram implementados/testados localmente; o conjunto foi aprovado para commit/envio em 20/10/2026. A chamada por aula continua para 1C. Estado detalhado em [AULAS.md](AULAS.md); as seções iniciais abaixo são históricas.
+
+**Entrega 1C — 21/10/2026:** chamada por aula implementada e testada localmente após nova autorização para começar as melhorias. Permite vários treinos no dia, inclusão pontual e correção/limpeza, com migração aditiva e proteção do histórico. Aguarda validação do usuário antes de commit/push na branch `codex/evolucao-tatame`. Guia: [CHAMADA.md](CHAMADA.md). As referências abaixo a chamada futura pertencem ao diagnóstico inicial; o estado posterior de login/portal está em [ACESSO_ALUNO.md](ACESSO_ALUNO.md). Planos e validações externas continuam pendentes.
 
 No detalhamento posterior, o usuário confirmou grade fixa com aulas extras e várias presenças no dia, e acrescentou o objetivo de comercializar para outras equipes. O plano funcional agora prevê regras de planos configuráveis por academia, distingue aula extra de cobrança adicional e registra a necessidade futura de isolamento entre clientes. O sistema atual permanece de uma academia local, sem essas novas funções implementadas.
 

@@ -31,7 +31,26 @@ export interface Aula {
   motivoCancelamento: string | null; canceladaEm: string | null; criadoEm: string;
 }
 export interface AulaAlunoPrevisto { id: string; aulaId: string; alunoId: string | null; nome: string }
-export interface AulaView extends Aula { alunosPrevistos: AulaAlunoPrevisto[] }
+export interface PresencaAula {
+  id: string; aulaId: string; alunoId: string; nome: string; presente: boolean;
+  criadoEm: string; atualizadoEm: string;
+}
+export interface CheckinAula { id: string; aulaId: string; alunoId: string; nome: string; criadoEm: string }
+export interface AulaView extends Aula { alunosPrevistos: AulaAlunoPrevisto[]; chamada: PresencaAula[]; checkins: CheckinAula[] }
+export interface UsuarioView { id: string; nome: string; email: string; perfil: 'admin' | 'aluno'; alunoId: string | null }
+export interface AuthState { configuracaoInicial: boolean; usuario: UsuarioView | null }
+export interface AulaAlunoView extends Aula { checkin: CheckinAula | null; presenca: PresencaAula | null }
+export interface PortalAluno {
+  bloqueado: false;
+  aluno: Aluno; aulas: AulaAlunoView[];
+  mensalidades: (Mensalidade & { status: Status })[];
+  historicoAntigo: Presenca[];
+}
+export interface BloqueioAluno {
+  bloqueado: true; mensagem: string;
+  pendencias: Pick<Mensalidade, 'id' | 'competencia' | 'valorCentavos' | 'dataVencimento'>[];
+}
+export type RespostaPortalAluno = PortalAluno | BloqueioAluno;
 export interface AulaGradeInput { horarioId: string; dataAula: string }
 export interface AulaExtraInput {
   titulo: string; dataAula: string; horaInicio: string; horaFim: string;

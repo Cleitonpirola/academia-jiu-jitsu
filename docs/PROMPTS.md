@@ -1,5 +1,9 @@
 # Registro de prompts
 
+## Aprovação condicionada aos testes — 22/10/2026
+
+Pedido do usuário: “testa e se tudo estiver ok, pode commitar”. Codex repetiu a suíte completa antes de preparar commit/envio do conjunto já apresentado, sem ampliar funcionalidades: 121 testes TypeScript, 13 Python, build/typecheck e geração/validação Prisma aprovados. Documentação atualizada para diferenciar essa nova execução das evidências anteriores de navegador. Não houve nova execução externa de Supabase/IA, merge, release ou mudança de versão. Autoria do código e textos: Codex; requisitos e autorização: usuário.
+
 ## Mentoria e modelagem
 O usuário pediu mentoria do zero com React/TypeScript/Tailwind, Node/TypeScript, Supabase/Prisma, FastAPI/Pandas e IA, em micro-passos, com defesa técnica. Criou manualmente docs/ARQUITETURA.md e definiu campos de Aluno, chaves e relacionamentos.
 
@@ -93,3 +97,41 @@ Pedido do usuário: “teria como mudar esse nome da branch aí de reestruturaç
 Codex executou a renomeação nativa no GitHub e atualizou o nome/acompanhamento local, mantendo o mesmo commit e árvore de código, a main e a tag v1.0.0. Em seguida preparou a documentação afetada, preservando os registros históricos do nome antigo e explicando como consultar a nova branch na conversa de estudo. A implementação e os testes da aplicação não mudaram; não foi atribuída ao usuário uma aprovação para novo commit de documentação. O conjunto documental é apresentado para validação conforme PROCESSO.md.
 
 Após essa apresentação, o usuário respondeu “pode commitar”, aprovando o registro e envio dos sete documentos apresentados. Codex segue o fluxo de revisão, commit descritivo e push normal para `codex/evolucao-tatame`, sem incluir código, merge, release ou outra mudança de escopo.
+
+## Chamada por aula — 21/10/2026
+
+Contexto: o usuário pediu sugestões de funcionalidades e confirmou o interesse na chamada por aula. Depois autorizou começar as alterações. A mensagem recebida foi: “Beleza Chat, vamos começar as alterações e você ver que você colocasse foi é por além de importantes.” Pelo contexto das prioridades discutidas, Codex iniciou o primeiro incremento de chamada; não interpretou o trecho impreciso como autorização para todas as funções sugeridas ou para commit/push.
+
+Escopo comunicado: marcar presença/ausência na aula específica, permitir vários horários no mesmo dia e incluir outros alunos, preservando o histórico. Codex consultou Git, instruções e contratos, registrou o desenho e implementou o conjunto. Decisão revisada: acrescentar PresencaAula e preservar Presenca, porque o formato anterior não contém o horário necessário para converter o passado. Exclusão/cancelamento passaram a proteger aulas com chamada; a limpeza é explícita e confirmada.
+
+Uso consciente de IA: a primeira compilação mostrou que uma asserção aplicada à expressão `variavel ?? null` não estreitava o tipo da variável original. Codex guardou o valor normalizado e validou essa variável antes de usá-la, em vez de desativar o TypeScript. O script visual inicial também usou `create` para turmas, mas o serviço existente expunha `save`; a consulta do módulo corrigiu o roteiro de teste sem mudar a API do produto para acomodar o erro da IA.
+
+Verificações novas: 81 testes TypeScript, 13 Python, build/typecheck e schema Prisma aprovados; navegador com base fictícia e integração local real Node/Python. A revisão final acrescentou proteção/teste de analytics para consulta inconsistente durante alteração concorrente da chamada e repetiu TypeScript/build. Backup/migração local preservaram nove tabelas por contagem/hash. Resultado e limites em CHAMADA.md e REVISAO_IA.md. Sem validação externa PostgreSQL/IA. Código/testes/documentação escritos por Codex; regras do usuário. O conjunto aguarda sua validação antes de commit/push.
+
+## Vários dias para o mesmo horário — 21/10/2026
+
+Pedido: em vez de preencher repetidamente o mesmo intervalo por dia, selecionar segunda, quarta e sexta e informar meio-dia até uma hora uma única vez. Codex adotou seleção múltipla por bloco no formulário e manteve o payload atual da API, com um horário por dia. Ao editar, intervalos iguais são agrupados; outros intervalos continuam independentes. A autorização foi para implementar essa melhoria, sem aprovação antecipada de commit/push.
+
+Codex escreveu helper, formulário, estilos, seis testes e documentação. 87 testes TypeScript e build aprovados; navegador isolado conferiu criação, edição, dados mantidos, nenhum dia e sobreposição. Não foi necessário criar outra migração. O usuário forneceu o exemplo da rotina; não atribuir a ele escrita manual do código ou testes não relatados. A entrega 1C anterior continua preservada e pendente, junto com este incremento.
+
+
+## Incrementos de horários, aniversário e portal — 21–22/10/2026
+
+**Contexto fornecido pelo usuário:** queria combinar vários horários nos mesmos dias, sem repetir cadastro; pediu mensagem simbólica de aniversário no dia; depois autorizou iniciar a área do aluno com check-in e funções pertinentes, perguntando se login ou portal deveria vir primeiro. Em 22/10, pediu continuidade após a interrupção por limite de uso.
+
+**Decisões produzidas por Codex para revisão:** combinação de dias com uma lista de intervalos, preservando o contrato atual; data de nascimento já existente para homenagem; login integrado antes do portal; contas admin/aluno e vínculo validado no servidor; convite temporário para o aluno escolher senha; check-in como aviso aguardando confirmação, mantendo várias aulas no dia. Planos/limites e cobranças extras não foram inventados nem incluídos silenciosamente.
+
+**Como o contexto foi delimitado:** preservar as pendências da chamada 1C, cadastros, main e tag v1.0.0; nenhuma conta/senha padrão, mensagem externa, validação fictícia de Supabase/IA ou commit antes da validação. Escrever migração nova, proteger API, testar isolamento e separar previsto/check-in/presença.
+
+**Revisão e correção:** acrescentada impressão da credencial à sessão para impedir login antigo de continuar válido após redefinição concorrente. Ajustada a fixture de cancelamento para respeitar o CHECK já existente no banco; a regra do produto não foi removida. Capturas inicialmente cortadas pela API de screenshot foram refeitas com a captura visível do navegador e dimensões verificadas. Extensões das novas capturas corrigidas para JPEG, formato efetivamente retornado pela ferramenta.
+
+**Evidências:** 112 testes TypeScript e 13 Python aprovados na retomada, build/typecheck, geração/schema Prisma, navegador e HTTP local Node→Python. Documentos atuais: ACESSO_ALUNO.md, TURMAS.md, ARQUITETURA.md e REVISAO_IA.md. Código e textos gerados por Codex; o usuário definiu necessidades e ainda validará esta entrega. Sem atribuir ao usuário escrita manual de código ou testes não relatados.
+
+
+## Pedido de bloqueio financeiro — 22/10/2026
+
+O usuário pediu bloquear o acesso após o dia de vencimento combinado e mostrar mensagem de débito em aberto, orientando procurar o professor. Codex definiu vencimento hoje ainda permitido, restrição a partir do dia seguinte em São Paulo, quitação de todos os vencidos para liberação e ausência de mudança no cadastro/senha. A regra usa mensalidades realmente cadastradas, sem criar cobranças a partir de datas presumidas.
+
+Durante o trabalho, o usuário pediu deixar para o final a confirmação automática por serviço de pagamentos e os avisos destacados de paga/a vencer perto da jornada de login/check-in. Essa instrução foi tratada como planejamento adicional, preservando a execução do bloqueio já autorizado. Nenhuma integração bancária/e-mail ou banner futuro foi apresentado como pronto.
+
+O contexto enviado à implementação incluiu preservar login, dados anteriores, chamadas e main/tag, proteger API e gravação transacional, não testar em cobranças reais e aguardar validação antes de commit/push. O teste de reversão inicialmente usou endpoint incompatível; corrigido para edição existente sem enfraquecer validações. Evidências: 121 testes TypeScript, build/typecheck, navegador fictício e treze hashes locais preservados.

@@ -1,6 +1,10 @@
 # Aulas datadas — entrega 1B
 
+**Evolução em 22/10/2026:** área administrativa protegida por login; aluno possui portal próprio para consulta e check-in no dia da aula. A agenda mostra avisos pendentes e a chamada permite confirmá-los. Extra com check-in não pode ser excluída; o cancelamento preserva os avisos se ainda não houver chamada. As referências abaixo a ausência de login descrevem a entrega original. Guia: [ACESSO_ALUNO.md](ACESSO_ALUNO.md). Novo conjunto local aguarda validação antes de commit/push.
+
 Implementada e testada localmente em 19/10/2026, após o usuário responder “bora” à proposta de agenda. O conjunto, incluindo a exclusão de extras, foi aprovado para commit/envio com “pode commitar” em 20/10/2026, na branch `codex/reestruturacao`. Essa aprovação não atribui ao usuário testes manuais que ele não relatou. Não foi criada tag/release nem alterado o número de versão do produto. A versão 3 mencionada na migração é da estrutura SQLite.
+
+**Atualização 1C — 21/10/2026:** cada aula agora possui botão **Chamada**, também acessível em Presenças. Permite vários horários por aluno/dia, inclusão pontual, correção e limpeza. **Aula com qualquer marcação não pode ser cancelada ou excluída.** O bloqueio está na API e no repositório, além dos botões desabilitados. Os previstos e registros antigos são preservados. As referências abaixo a chamada futura e exclusão sem esse bloqueio registram a entrega 1B. Guia atual: [CHAMADA.md](CHAMADA.md); esta nova entrega aguarda validação antes de commit/push.
 
 ## Entenda com uma agenda de papel
 

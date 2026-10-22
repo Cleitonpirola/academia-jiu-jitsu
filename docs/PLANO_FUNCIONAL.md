@@ -1,12 +1,14 @@
 # Evolução funcional do Tatame
 
+**Aprovação posterior — 22/10/2026:** o usuário autorizou commit/envio das implementações locais de chamada, horários combinados, aniversários, login/portal e bloqueio financeiro, condicionado aos testes. A nova execução passou; pendências de aprovação anteriores são históricas. As funcionalidades futuras deste plano continuam planejadas, sem autorização automática de implementação. Registro em [PROCESSO.md](PROCESSO.md).
+
 Data: 19/10/2026. Base consultada: commit `fb7600a`, branch `codex/reestruturacao`.
 
-**Situação: prioridade e rotina de turmas confirmadas; detalhamento ainda em planejamento.** O usuário escolheu começar por turmas, horários e chamada dos professores. Confirmou turmas fixas com participação em outras turmas, várias presenças por aluno no mesmo dia e criação de aulas extras fora da grade. Este documento não implementa as funções abaixo nem representa aprovação para enviar alterações ao GitHub. A tag `v1.0.0` continua preservando o MVP inicial; não estamos criando uma nova versão neste planejamento.
+**Situação atualizada em 22/10/2026:** turmas, aulas, chamada, horários combinados, aniversários, login e primeiro portal implementados localmente; validação do usuário pendente. As demais propostas abaixo continuam em planejamento. O usuário escolheu começar por turmas, horários e chamada dos professores. Confirmou turmas fixas com participação em outras turmas, várias presenças por aluno no mesmo dia e criação de aulas extras fora da grade. Este documento não implementa as funções abaixo nem representa aprovação para enviar alterações ao GitHub. A tag `v1.0.0` continua preservando o MVP inicial; não estamos criando uma nova versão neste planejamento.
 
 **Objetivo comercial futuro:** o usuário pretende vender a plataforma para outras equipes. O planejamento deve permitir que cada academia configure planos ilimitados, limites de treinos e turmas incluídas, com tratamento de participações excedentes. A academia atual usa mensalidade com treinos ilimitados. Regras detalhadas de excedente e operação com várias academias ainda precisam de definição; não estão implementadas.
 
-**Estado de execução posterior ao planejamento:** entrega 1A implementada, testada, aprovada e enviada no commit `507d260` da branch `codex/reestruturacao`. Guia: [TURMAS.md](TURMAS.md). Após “bora”, a parte 1B de aulas datadas, extras e cancelamento foi implementada/testada localmente, incluindo a exclusão de extras; o usuário aprovou esse conjunto para commit/push em 20/10/2026 com “pode commitar”. Guia: [AULAS.md](AULAS.md). A parte 1C e demais etapas continuam planejadas. A proposta de versionamento está em [VERSIONAMENTO.md](VERSIONAMENTO.md); nenhuma nova tag foi criada.
+**Estado de execução posterior ao planejamento:** entrega 1A implementada, testada, aprovada e enviada no commit `507d260`; 1B, incluindo exclusão de extras, enviada em `dd3212e` após aprovação em 20/10/2026. O nome histórico era `codex/reestruturacao`; a branch atual é `codex/evolucao-tatame`. Em 21/10/2026, o usuário autorizou começar as melhorias, priorizando a chamada por aula. **1C implementada e testada localmente, aguardando validação antes de commit/push.** Guias: [TURMAS.md](TURMAS.md), [AULAS.md](AULAS.md), [CHAMADA.md](CHAMADA.md). Demais etapas continuam propostas. A proposta de versionamento está em [VERSIONAMENTO.md](VERSIONAMENTO.md); nenhuma nova tag foi criada.
 
 ## 1. O objetivo da próxima evolução
 
@@ -14,7 +16,7 @@ Conectar as funções existentes à rotina da academia: organizar aulas, fazer a
 
 Exemplo do fluxo desejado: o administrador cadastra um aluno e seu plano; vincula o aluno a uma turma; o professor abre a aula do dia e registra presenças; o financeiro gera as cobranças do mês; os indicadores mostram frequência e inadimplência; a IA explica os resultados calculados.
 
-Esse fluxo completo ainda não existe. Hoje há cadastro de alunos, turmas com grade fixa e vínculos habituais, agenda de aulas datadas/extra com cancelamento, cobranças criadas individualmente, registro de pagamento, dashboard, chamada por data/tipo, analytics Python e integração de IA configurável. Ainda não há nova chamada por aula, planos, login ou portal do aluno.
+Esse fluxo completo ainda não existe. Hoje há cadastro de alunos, turmas com grade fixa e vínculos habituais, agenda de aulas datadas/extra com cancelamento, cobranças criadas individualmente, registro de pagamento, dashboard, chamada por aula e formato anterior por data/tipo, analytics Python e integração de IA configurável. Login e portal do aluno foram implementados posteriormente, com check-in no dia e validação administrativa; guia em [ACESSO_ALUNO.md](ACESSO_ALUNO.md). Ainda não há planos, reservas futuras, cobrança de excedentes nem perfil separado de professor. Chamada, horários combinados, aniversário e acesso individual continuam em validação local, sem envio ao GitHub.
 
 ## 2. O que precisa ser concluído para o desafio
 
@@ -34,7 +36,7 @@ O planejamento inicial não executou testes. A implementação posterior da entr
 
 ## 3. Ordem proposta das melhorias
 
-O usuário confirmou a prioridade em turmas, horários e chamada dos professores. As etapas posteriores continuam como proposta. Login deve preceder qualquer acesso individual de alunos.
+O usuário confirmou a prioridade em turmas, horários e chamada dos professores. As etapas posteriores continuam como proposta. Login foi implementado antes do primeiro portal individual; funções adicionais de professor e planos continuam propostas.
 
 | Entrega | O que o usuário verá | Por que acrescentar | Dependências |
 | --- | --- | --- | --- |
@@ -95,9 +97,9 @@ No exemplo da academia atual, os três treinos estão incluídos na mensalidade.
 | --- | --- | --- |
 | 1A — Turmas, implementada localmente | Listagem, cadastro/edição, professor responsável, grade fixa de dias/horários, situação, vínculos habituais e exclusão definitiva | Testes e navegador conferidos; usuário aprovou commit/push |
 | 1B — Aulas, implementada localmente | Listagem por dia/turma, encontros criados da grade fixa, aula extra avulsa/vinculada, previstos, cancelamento com motivo e exclusão definitiva de extras com confirmação | Testes e navegador conferidos; usuário aprovou commit/push em 20/10/2026 |
-| 1C — Chamada | Alunos habituais, inclusão pontual de aluno de outra turma e marcação explícita por aula fixa ou extra | Registrar três presenças do mesmo aluno nas três aulas do dia; impedir duplicação apenas dentro da mesma aula; conferir indicadores |
+| 1C — Chamada, implementada localmente | Previstos, inclusão pontual, marcação/correção/limpeza por aula e proteção do histórico | 81 testes TypeScript, 13 Python, build, navegador e integração local conferidos; aguardando validação do usuário antes de commit/push |
 
-As partes 1A e 1B estão disponíveis localmente; 1A foi enviada ao GitHub e 1B foi aprovada para envio. A parte 1C continua proposta. A parte 1B já guarda os habituais ativos previstos no momento de criar a aula; a chamada deverá usar esse histórico sem aplicar vínculos atuais retroativamente. Login e autorização por professor continuam na entrega 2; identificar o responsável na tela não restringe o acesso sozinho.
+As partes 1A e 1B foram enviadas ao GitHub. A parte 1C está implementada/testada localmente e usa o histórico de previstos de 1B sem aplicar vínculos atuais retroativamente. As marcações antigas não foram associadas a aulas presumidas. Login e autorização por professor continuam na entrega 2; identificar o responsável na tela não restringe o acesso sozinho.
 
 ### Escopo inicial
 
@@ -124,7 +126,7 @@ O nome do professor cadastrado nesta etapa não equivale a uma conta autenticada
 
 **Cuidado com o histórico:** as presenças atuais não informam turma, horário ou professor. Não inventar esses vínculos durante a migração. Preservar os registros como históricos sem aula identificada e documentar sua participação nos indicadores. A regra atual de frequência conta registros de treino; qualquer mudança para contagem por dia ou taxa sobre aulas oferecidas deve ser uma decisão específica.
 
-**Mudança necessária na implementação futura:** hoje a unicidade é por aluno, data e tipo de treino. Essa restrição impediria dois treinos da mesma modalidade no dia. As novas presenças devem ter unicidade por aluno e aula, com data/horário vinculados ao encontro. Será necessária uma migração explícita da estrutura e dos índices, preservando os registros antigos e sem inventar horários para eles. Este planejamento não aplicou essa migração.
+**Decisão implementada em 1C:** a unicidade aluno/data/tipo permanece somente no formato anterior. A migração 004 acrescenta `PresencaAula` com unicidade aula/aluno, data/horário obtidos do encontro e proteção das FKs. Nenhum registro antigo foi reescrito ou associado a horário presumido. Os indicadores recebem ambos os formatos, sem deduplicar por dia; o mesmo evento não deve ser lançado nas duas formas. Justificativa, testes e limites em [CHAMADA.md](CHAMADA.md).
 
 **Perguntas para a defesa:** por que separar turma de aula? Por que a presença deve apontar para a aula específica?
 
@@ -154,6 +156,10 @@ Definir a forma de autenticação antes de implementar, incluindo criação de c
 - Registrar quem confirmou ou corrigiu um pagamento e o motivo; manter rastreabilidade financeira.
 
 Gerar uma cobrança no sistema não realiza um débito bancário. PIX, boleto e confirmação automática por instituição financeira seriam uma integração posterior, com conciliação e prevenção de confirmações duplicadas. Não fazem parte deste primeiro incremento financeiro.
+
+**Pedido adicional em 22/10 — etapa final:** o usuário quer confirmação automática de pagamento por integração externa e um aviso destacado de mensalidade paga/a vencer na área do aluno, próximo ao acesso e ao check-in. Essa integração e esse novo banner foram deixados para a etapa mais sofisticada, junto ao envio de e-mails, sem confundir os dois serviços. A informação financeira aparecerá depois da identificação, sem revelar débitos publicamente na tela de login. Definir antecedência do aviso, cobrança de referência, provedor, vínculo de transação, validação da confirmação, idempotência e estornos antes da implementação. Nada disso foi conectado ou enviado nesta etapa.
+
+**Bloqueio financeiro inicial — implementado localmente em 22/10:** consulta as cobranças existentes; vencida sem pagamento restringe o portal/check-in a partir do dia seguinte. Registro administrativo de todos os pagamentos vencidos libera na próxima consulta. Sem depender de API bancária ou e-mail, sem criar mensalidades, multa ou flag persistida. Guia e testes: [BLOQUEIO_FINANCEIRO.md](BLOQUEIO_FINANCEIRO.md). Aguarda validação do usuário.
 
 #### Configuração dos planos de treino
 
@@ -217,7 +223,7 @@ O usuário solicitou que o aluno veja as aulas do dia e possa se registrar nelas
 
 Definir a forma de confirmação da presença antes de implementar; não presumir que clicar em uma aula futura significa que o aluno já treinou. Controle de capacidade, lista de espera e check-in por QR code continuam como incrementos posteriores, não como decisões já aprovadas. Não permitir que um aluno marque presença por outro ou altere os próprios pagamentos.
 
-O portal é planejado, não existe no MVP atual. Publicação e acesso pela internet também exigem planejamento próprio; criar uma tela de login não torna a aplicação automaticamente publicada.
+Atualização de 22/10: o primeiro portal está implementado/testado localmente, com consulta própria e check-in no dia. Reservas futuras e aplicação de planos permanecem planejadas. Publicação e acesso pela internet também exigem planejamento próprio; criar uma tela de login não torna a aplicação automaticamente publicada.
 
 ### Relatórios e IA
 
