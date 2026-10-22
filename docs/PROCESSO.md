@@ -122,3 +122,17 @@ Ao atualizar os servidores, contagens e hashes das nove tabelas foram iguais ant
 Após consultar novamente se o botão Excluir funcionava e receber os resultados e limites, o usuário autorizou com “pode commitar”. A aprovação abrange o conjunto apresentado: agenda de aulas da grade e extras, previstos, cancelamento, exclusão de extras, migrações, testes, capturas fictícias e documentação. Conforme o fluxo permanente, Codex revisa o diff e envia à branch `codex/reestruturacao`, sem nova pergunta para esse mesmo envio. Não inclui tag/release, merge, implantação ou implementação da chamada 1C.
 
 Na revisão para registro, foram conferidos Git e remoto em `507d260`, mantendo v1.0.0 na referência inicial; as alterações correspondiam ao conjunto apresentado. Atualizados os registros de aprovação sem mudar comportamento. Não houve nova execução de testes da aplicação nesta etapa: os 65 TypeScript e build são da última execução do incremento; os 12 Python foram executados antes desse incremento. Não atribuir aprovação de integração externa ou testes manuais ao usuário. A confirmação do envio depende do resultado real do push.
+
+## Renomeação da branch de trabalho — 21/10/2026
+
+O usuário pediu um nome mais adequado para `codex/reestruturacao` e escolheu `codex/evolucao-tatame` entre as opções apresentadas. Essa escolha autorizou a renomeação. Antes da operação, Codex conferiu Git limpo, remoto, ausência do nome novo e de PRs abertos associados, além das referências da main e da tag inicial.
+
+A renomeação foi realizada pelo recurso nativo do GitHub (HTTP 201), preservando o commit `dd3212ea3df57c01ac268d1ebd04509b111b0bbf`. O nome local e o acompanhamento remoto foram atualizados para `codex/evolucao-tatame` e `origin/codex/evolucao-tatame`. A referência local de acompanhamento do nome antigo foi removida com conferência do SHA esperado; o histórico não foi reescrito.
+
+Verificação antes/depois: mesmo HEAD e árvore de arquivos, main local/remota em `618c1b3`, tag v1.0.0 preservada e nenhum arquivo do projeto alterado pela renomeação. O GitHub passou a responder com redirecionamento para a consulta do nome anterior. Não houve novo commit, push de arquivos, PR, merge, release ou execução dos testes da aplicação.
+
+Após a operação, foram preparados ajustes nas orientações atuais do README, guia GitHub, plano de evolução e versionamento, além dos registros de prompts/revisão/processo. Os nomes usados em entregas anteriores e os pacotes de estudo exportados permanecem como histórico. O usuário recebe o novo nome para atualizar a conversa de estudo. Esses ajustes de documentação ainda aguardam sua validação antes de commit/push; a escolha do nome não foi tratada como aprovação antecipada desse conjunto de arquivos.
+
+### Aprovação dos ajustes documentais — 21/10/2026
+
+Após a apresentação dos sete documentos e das verificações, o usuário autorizou com “pode commitar”. Codex revisou o conjunto aprovado para registrar e enviar somente README, GITHUB, PLANO_EVOLUCAO, PROCESSO, PROMPTS, REVISAO_IA e VERSIONAMENTO na branch `codex/evolucao-tatame`. Atualizar este registro de aprovação não muda o comportamento da aplicação. O envio deve ser confirmado pelo resultado real do push; as menções anteriores à validação pendente são históricas.

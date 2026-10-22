@@ -145,4 +145,4 @@ Isso é uma evolução opcional, não uma condição para validar o núcleo do d
 | 6 | Fechar a entrega dos dois projetos | Dois repositórios públicos, instalação a partir de clone limpo, diferenças e processo documentados |
 | 7 | Avaliar n8n | Obrigatórios concluídos; automação demonstrável e útil |
 
-O trabalho estrutural deve continuar na branch `codex/reestruturacao`. A tag v1.0.0 não deve ser movida, substituída ou apagada. Este planejamento não cria um novo número de versão do sistema.
+O trabalho deve continuar na branch `codex/evolucao-tatame`, nome escolhido pelo usuário em 21/10/2026 para substituir `codex/reestruturacao`. A renomeação preservou código e histórico; não cria uma branch `develop` nem altera o fluxo de integração. A tag v1.0.0 não deve ser movida, substituída ou apagada. Este planejamento não cria um novo número de versão do sistema.

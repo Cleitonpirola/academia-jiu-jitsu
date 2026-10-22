@@ -1,6 +1,8 @@
 # Tatame — Academia de Jiu-Jitsu
 
-A tag **v1.0.0** preserva o MVP inicial. A branch `codex/reestruturacao` contém as correções descritas abaixo, aprovadas pelo usuário para finalização e envio ao GitHub. Veja o [guia de envio ao GitHub](docs/GITHUB.md).
+A tag **v1.0.0** preserva o MVP inicial. A branch `codex/evolucao-tatame` contém as correções descritas abaixo, aprovadas pelo usuário para finalização e envio ao GitHub. Veja o [guia de envio ao GitHub](docs/GITHUB.md).
+
+**Branch renomeada — 21/10/2026:** `codex/reestruturacao` passou a se chamar [`codex/evolucao-tatame`](https://github.com/Cleitonpirola/academia-jiu-jitsu/tree/codex/evolucao-tatame), no GitHub e no computador. Código e histórico foram preservados no commit `dd3212e`. Os registros datados abaixo mantêm o nome usado na época. Para estudar as próximas atualizações, consulte o novo nome; os materiais já exportados continuam sendo retratos dos commits indicados neles.
 
 **Entrega 1A aprovada — 19/10/2026:** cadastro de turmas, grade semanal, vínculos habituais de alunos e exclusão definitiva com confirmação. Após a apresentação das telas e verificações, o usuário autorizou o commit e envio desta entrega na branch `codex/reestruturacao`. Guia: [TURMAS.md](docs/TURMAS.md).
 

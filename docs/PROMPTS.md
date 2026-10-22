@@ -85,3 +85,11 @@ Validação nova: 65 testes TypeScript e build/typecheck aprovados; quatro teste
 ### Aprovação do conjunto 1B — 20/10/2026
 
 O usuário perguntou “o botão de excluir já está funcionando?” e, após a resposta com funcionamento e testes, autorizou com “pode commitar”. Codex revisou o conjunto aprovado, a branch e o remoto e atualizou os registros de aprovação para criar o commit e fazer push conforme PROCESSO.md. Não houve nova mudança de lógica ou execução dos testes nesta etapa de registro, nem autorização para tag/release ou para implementar 1C. Os relatos acima de aprovação pendente registram o momento anterior à autorização.
+
+## Nome da branch de trabalho — 21/10/2026
+
+Pedido do usuário: “teria como mudar esse nome da branch aí de reestruturação? teria como colocar outro nome? reestruturação tá meio estranho.” Codex apresentou nomes e o usuário selecionou “codex/evolucao-tatame (recomendado)”.
+
+Codex executou a renomeação nativa no GitHub e atualizou o nome/acompanhamento local, mantendo o mesmo commit e árvore de código, a main e a tag v1.0.0. Em seguida preparou a documentação afetada, preservando os registros históricos do nome antigo e explicando como consultar a nova branch na conversa de estudo. A implementação e os testes da aplicação não mudaram; não foi atribuída ao usuário uma aprovação para novo commit de documentação. O conjunto documental é apresentado para validação conforme PROCESSO.md.
+
+Após essa apresentação, o usuário respondeu “pode commitar”, aprovando o registro e envio dos sete documentos apresentados. Codex segue o fluxo de revisão, commit descritivo e push normal para `codex/evolucao-tatame`, sem incluir código, merge, release ou outra mudança de escopo.

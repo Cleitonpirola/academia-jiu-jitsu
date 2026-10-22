@@ -136,3 +136,13 @@ Limite para a próxima implementação: as presenças atuais ainda não têm aul
 ### Revisão para commit da entrega 1B — 20/10/2026
 
 O usuário aprovou com “pode commitar” após os esclarecimentos sobre a exclusão. Revisados os diffs de código, migrações, testes e documentação do conjunto apresentado; Git/remoto conferidos em `507d260` antes do envio, tag v1.0.0 preservada. Apenas registros de aprovação foram atualizados nesta etapa, sem nova mudança de comportamento ou reexecução da aplicação/testes. Os resultados de 65 TypeScript, build e 12 Python permanecem associados às execuções identificadas acima. PostgreSQL/Supabase/IA externa continuam sem validação. A aprovação não inclui tag/release, merge ou implantação; os registros de pendência anteriores são históricos.
+
+## Revisão da renomeação de branch — 21/10/2026
+
+Após o usuário escolher `codex/evolucao-tatame`, Codex conferiu o estado local e remoto e utilizou a renomeação nativa do GitHub (HTTP 201), seguida da atualização da branch/acompanhamento local. As conferências comprovaram HEAD `dd3212e` e árvore de arquivos idênticos, main local/remota em `618c1b3`, mesma tag inicial e ausência de alterações em arquivos ao concluir a renomeação. Não havia PR aberto associado; a consulta do nome antigo passou a retornar redirecionamento HTTP 301.
+
+Revisão documental: as instruções atuais passam a usar o nome novo, enquanto registros datados de entregas anteriores mantêm o nome usado na época. Os pacotes de estudo são fotografias dos commits originais; o usuário precisa informar o novo nome na conversa que consulta o GitHub, sem regenerar o manual. Os ajustes ficam locais para validação antes de commit/push.
+
+Não foram modificados código, dependências, configuração de execução ou banco, nem executados novamente os testes TypeScript/Python/build. Esta conferência verifica a renomeação e a coerência documental; não representa um novo teste funcional ou validação de integrações externas. Não foram criadas develop, PR, release, nova tag ou implantação.
+
+Após a validação do conjunto apresentado, o usuário autorizou seu commit/push com “pode commitar”. A revisão para registro abrange os sete documentos relacionados e os registros dessa aprovação; não altera a aplicação nem reapresenta resultados históricos de testes como execução nova. O resultado remoto será confirmado após o envio.

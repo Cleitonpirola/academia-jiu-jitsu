@@ -4,6 +4,8 @@
 
 Desde 19/10/2026, o usuário valida cada alteração antes do commit. Após a aprovação explícita do conjunto apresentado, o Codex cria o commit descritivo, envia a branch de trabalho ao GitHub e confirma hash, branch e link do resultado. As etapas detalhadas estão em [PROCESSO.md](PROCESSO.md) e as instruções para próximas sessões estão em [AGENTS.md](../AGENTS.md).
 
+Desde 21/10/2026, a branch de trabalho é [`codex/evolucao-tatame`](https://github.com/Cleitonpirola/academia-jiu-jitsu/tree/codex/evolucao-tatame), anteriormente `codex/reestruturacao`. A renomeação preservou o código e os commits, com acompanhamento local de `origin/codex/evolucao-tatame`. A `main` e a tag inicial não mudaram. Atualize os pedidos da conversa de estudo para consultar o novo nome; isso não exige gerar outro manual. O tutorial histórico abaixo conserva a criação original da branch.
+
 O tutorial abaixo continua como referência para entender a instalação e o primeiro envio. Para alterações futuras, a execução de commit/push fica com o Codex depois da validação do usuário. A tag v1.0.0 permanece preservada.
 
 Git registra versões no computador. GitHub guarda uma cópia desses registros na sua conta. Um **commit** é um registro dos arquivos; a **tag v1.0.0** identifica o registro desta primeira versão.
