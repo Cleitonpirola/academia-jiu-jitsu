@@ -1,5 +1,23 @@
 # Revisão de IA
 
+## Nova verificação dos planos antes de commit — 22/10/2026
+
+Autorização explícita: “testa e commita”. Nova execução concluída com 136 testes TypeScript e 13 Python aprovados, zero falhas; build/typecheck, geração do Prisma Client e validação de schema aprovados. Revisão do diff e arquivos novos: regras, transações, permissões, UI, migrações aditivas, testes e documentação correspondem ao conjunto apresentado. Não houve mudança de lógica nesta etapa de envio.
+
+Pendências de aprovação abaixo passam a ser históricas. Conferências visuais e preservação dos dados da implementação não foram repetidas nesta etapa; PostgreSQL/Supabase, IA e hospedagem externos continuam não validados. Commit/envio autorizado somente à branch de trabalho, sem merge, nova tag ou implantação.
+
+## Planos e liberações — 22/10/2026
+
+Nova entrega local, após commit 32dcd35. **136 testes TypeScript aprovados**, zero falhas; 15 casos novos de regra/HTTP/migração. **13 Python aprovados** em nova execução; build/typecheck, geração de Prisma Client e schema aprovados. Execuções intermediárias tiveram 134/135 (fixture de cancelamento inválida) e 135/136 (consulta/fechamento da fixture de migração); testes corrigidos conforme o banco, sem alterar restrições do produto, e suíte completa repetida com sucesso.
+
+Revisados: cota derivada da semana/data da aula, check-in e chamada unidos por aula, exclusão de ausências/cancelamentos, registros antigos presentes, contagem extra separada, idempotência, disputa HTTP pela última vaga e isolamento de dados/permissões. O servidor valida na transação de check-in; SQLite BEGIN IMMEDIATE sem awaits na gravação; Prisma bloqueia aluno e usa bloqueios compatíveis para configuração/liberação/limpeza. PostgreSQL gerado, mas concorrência/SQL externo não executados.
+
+Navegador com banco em memória verificou cota 1/1, mudança para três preservando uso, retorno para um, autorização administrativa da aula das 15h e check-in do aluno nessa aula; outra aula permaneceu restrita. Resumo mostrou 1/1 mais uma extra. Tela estreita sem overflow: ficha/documento 390/390, diálogo 343/343, cartão 302/302; portal 375/375, cartão 342/342 px. Override restaurado. Capturas fictícias em PLANOS.md; sem telefone físico.
+
+Migração real 5→6 criou backup academia.sqlite.antes-v6-3ae53d88-c3c2-4988-915a-343b777562d8.sqlite. Treze hashes/contagens iguais antes/depois, duas tabelas novas vazias, zero violações de FK. Nenhum plano/cota/cobrança/senha foi atribuído aos alunos reais. Servidores locais reiniciados para carregar backend atualizado após identificar instância anterior na porta 5173.
+
+Limites: administração pode registrar presença real acima da cota; alteração de plano afeta a semana atual sem reset; pendentes antigos da semana ocupam vaga até resolução. Não há catálogo de planos, cobrança/valor de excedente, limite por turma, reserva futura, pagamento/e-mail/hospedagem ou validação externa de Supabase/IA. Consultas ainda percorrem coleções completas. Código e docs aguardam validação do usuário antes de commit/push; aprovação anterior não cobre esta entrega.
+
 ## Verificação final autorizada — 22/10/2026
 
 O usuário autorizou commit/envio se os testes passassem. Nova execução concluída: 121 testes TypeScript aprovados, zero falhas/cancelamentos/ignorados; 13 testes Python aprovados; typecheck das duas aplicações e build Vite aprovados; Prisma Client gerado e schema válido. Verificação documental: 16 documentos, 82 links locais, nenhum destino ausente. Escopo: chamada, horários combinados, aniversários, login/portal e bloqueio financeiro. Sem alteração de lógica nesta etapa de envio.

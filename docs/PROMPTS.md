@@ -1,5 +1,17 @@
 # Registro de prompts
 
+## Aprovação e repetição dos testes dos planos — 22/10/2026
+
+Pedido: “testa e commita”, após a entrega de planos ter sido apresentada. Codex repetiu a suíte (136 TypeScript e 13 Python aprovados), build/typecheck e geração/validação Prisma, revisou o conjunto e atualizou o estado de aprovação documental para preparar commit/push na branch de trabalho. Não ampliou funcionalidades. As evidências anteriores de navegador e banco permanecem identificadas como anteriores; nenhuma execução externa de Supabase/IA foi presumida. A autorização supera a pendência de commit da implementação abaixo, sem autorizar merge, tag ou implantação.
+
+## Planos e extras — 22/10/2026
+
+Contexto: usuário pediu uma melhoria pertinente antes da hospedagem. Sugestão de Codex: plano ilimitado ou semanal, resumo de uso e autorização de participação excedente, mantendo pagamento automático para depois. Autorização recebida: “Então pode fazer essas implementações pra agora e as outras a gente deixa pra depois, que são as mais complexas, beleza?”.
+
+Codex adotou e comunicou semana segunda/domingo em São Paulo; check-in pendente ocupa vaga e confirmação não duplica; ausência/cancelamento libera. Não houve confirmação separada dessas escolhas; são decisões de implementação apresentadas para validação do usuário. Configuração individual em ficha, sem atribuir limite automaticamente aos cadastros existentes. Extra nominal, motivo/administrador registrados, sem cobrar e sem ignorar inadimplência. Desenho registrado em PLANOS.md antes do código.
+
+Código, testes e documentação produzidos por Codex; requisitos e autorização pelo usuário. Erros de fixtures e patch foram corrigidos consultando contratos reais, sem enfraquecer regras do produto. Evidências novas: 136 testes TypeScript, 13 Python, build/Prisma, navegador fictício e preservação por hash das treze tabelas reais. Esta autorização de implementação não é aprovação de commit/push.
+
 ## Aprovação condicionada aos testes — 22/10/2026
 
 Pedido do usuário: “testa e se tudo estiver ok, pode commitar”. Codex repetiu a suíte completa antes de preparar commit/envio do conjunto já apresentado, sem ampliar funcionalidades: 121 testes TypeScript, 13 Python, build/typecheck e geração/validação Prisma aprovados. Documentação atualizada para diferenciar essa nova execução das evidências anteriores de navegador. Não houve nova execução externa de Supabase/IA, merge, release ou mudança de versão. Autoria do código e textos: Codex; requisitos e autorização: usuário.

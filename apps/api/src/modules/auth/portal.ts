@@ -5,6 +5,7 @@ import { HttpError } from '../../http-error.js';
 import { statusOf } from '../../domain.js';
 import { usuarioAtual } from './routes.js';
 import { bloqueioFinanceiro } from './financial-access.js';
+import { usoPlano } from '../planos/rules.js';
 
 export function portalRouter(repo: Repository) {
   const router = Router();
@@ -19,12 +20,13 @@ export function portalRouter(repo: Repository) {
     const mensalidades = await repo.list('Mensalidade');
     const bloqueio = bloqueioFinanceiro(mensalidades, id);
     if (bloqueio) { res.json(bloqueio); return; }
-    const [aulas, checkins, chamada, antigas] = await Promise.all([repo.list('Aula'), repo.list('CheckinAula'), repo.list('PresencaAula'), repo.list('Presenca')]);
+    const [aulas, checkins, chamada, antigas, planos, liberacoes] = await Promise.all([repo.list('Aula'), repo.list('CheckinAula'), repo.list('PresencaAula'), repo.list('Presenca'), repo.list('PlanoAluno'), repo.list('LiberacaoAula')]);
     const meusCheckins = new Map(checkins.filter(item => item.alunoId === id).map(item => [item.aulaId, item]));
     const minhasPresencas = new Map(chamada.filter(item => item.alunoId === id).map(item => [item.aulaId, item]));
     res.json({ bloqueado: false, aluno, aulas: aulas.filter(aula => aula.dataAula >= aluno.dataMatricula).map(aula => ({ ...aula, checkin: meusCheckins.get(aula.id) ?? null, presenca: minhasPresencas.get(aula.id) ?? null })).sort((a, b) => (a.dataAula + a.horaInicio).localeCompare(b.dataAula + b.horaInicio)),
       mensalidades: mensalidades.filter(item => item.alunoId === id).map(item => ({ ...item, status: statusOf(item) })).sort((a, b) => b.dataVencimento.localeCompare(a.dataVencimento)),
       historicoAntigo: antigas.filter(item => item.alunoId === id).sort((a, b) => b.dataTreino.localeCompare(a.dataTreino)),
+      plano: usoPlano({ plano: planos.find(item => item.alunoId === id) ?? null, aulas, checkins, chamada, antigas, liberacoes }, id),
     });
   });
   router.put('/aulas/:id/checkin', async (req, res) => {

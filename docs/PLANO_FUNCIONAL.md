@@ -1,5 +1,7 @@
 # Evolução funcional do Tatame
 
+**Planos — incremento aprovado em 22/10/2026:** configurador individual de plano ilimitado/limite semanal na ficha, resumo no portal, restrição transacional de check-in e liberação administrativa por aula implementados e aprovados para commit/envio após nova validação automatizada bem-sucedida. [PLANOS.md](PLANOS.md) distingue as regras atuais das propostas abaixo. Catálogo compartilhado, turmas incluídas, preço/cobrança de excedentes e geração mensal continuam futuros. Hospedagem ficou para outra ocasião, conforme pedido do usuário. Autorização registrada em PROCESSO.md.
+
 **Aprovação posterior — 22/10/2026:** o usuário autorizou commit/envio das implementações locais de chamada, horários combinados, aniversários, login/portal e bloqueio financeiro, condicionado aos testes. A nova execução passou; pendências de aprovação anteriores são históricas. As funcionalidades futuras deste plano continuam planejadas, sem autorização automática de implementação. Registro em [PROCESSO.md](PROCESSO.md).
 
 Data: 19/10/2026. Base consultada: commit `fb7600a`, branch `codex/reestruturacao`.

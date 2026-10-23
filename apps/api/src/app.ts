@@ -13,6 +13,7 @@ import { turmasRouter } from './modules/turmas/routes.js';
 import { aulasRouter } from './modules/aulas/routes.js';
 import { authModule, protectWrites } from './modules/auth/routes.js';
 import { portalRouter } from './modules/auth/portal.js';
+import { planosRouter } from './modules/planos/routes.js';
 const fold = (text: string) => text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 export function createApp(repo: Repository, options: { apiKey?: string; analyticsUrl?: string } = {}) {
   const app = express();
@@ -23,6 +24,7 @@ export function createApp(repo: Repository, options: { apiKey?: string; analytic
   app.use('/api', auth.requireLogin);
   app.use('/api/portal', portalRouter(repo));
   app.use('/api', auth.requireAdmin);
+  app.use('/api/alunos', planosRouter(repo));
   const analyticsUrl = options.analyticsUrl || process.env.ANALYTICS_URL || 'http://127.0.0.1:8000';
   const apiKey = options.apiKey ?? process.env.OPENAI_API_KEY;
   const find = async (table: Table, id: string) => { if (!z.string().uuid().safeParse(id).success) throw new HttpError(404,'Registro não encontrado.'); const row = await repo.get(table,id); if(!row) throw new HttpError(404,'Registro não encontrado.'); return row; };
@@ -48,6 +50,7 @@ export function createApp(repo: Repository, options: { apiKey?: string; analytic
     if((await repo.list('AlunoTurma')).some(v=>v.alunoId===req.params.id)) throw new HttpError(409,'Este aluno está vinculado a uma turma. Remova os vínculos antes de excluir ou apenas inative o cadastro para preservá-lo.');
     if((await repo.list('PresencaAula')).some(v=>v.alunoId===req.params.id)) throw new HttpError(409,'Este aluno possui chamada vinculada a aulas. Inative o cadastro para preservar o histórico.');
     if((await repo.list('Usuario')).some(v=>v.alunoId===req.params.id) || (await repo.list('CheckinAula')).some(v=>v.alunoId===req.params.id)) throw new HttpError(409,'Este aluno possui acesso ou check-ins. Inative o cadastro para preservar seus vínculos.');
+    if((await repo.list('PlanoAluno')).some(v=>v.alunoId===req.params.id) || (await repo.list('LiberacaoAula')).some(v=>v.alunoId===req.params.id)) throw new HttpError(409,'Este aluno possui plano ou liberações extras. Inative o cadastro para preservar seus vínculos.');
     await repo.remove('Aluno',req.params.id); res.status(204).end();
   });
   app.get('/api/mensalidades',async(req,res)=>{

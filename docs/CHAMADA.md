@@ -1,5 +1,7 @@
 # Chamada por aula — entrega 1C
 
+**Planos — incremento local em 22/10/2026:** cota semanal restringe novos check-ins do aluno, preservando o direito da administração de registrar presença real. Check-in e confirmação da mesma aula ocupam uma vaga; ausência/cancelamento libera. Limpar uma ausência com check-in faz a vaga voltar a ser ocupada. O histórico e a fórmula Python são preservados. Regras e limites em [PLANOS.md](PLANOS.md). Entrega aprovada para commit/envio após nova execução automatizada bem-sucedida.
+
 **Estado em 22/10/2026:** conjunto aprovado para commit/envio após nova execução bem-sucedida de 121 testes TypeScript, 13 Python, build/typecheck e validação Prisma. Essa autorização supera as pendências históricas abaixo. Registro em [PROCESSO.md](PROCESSO.md).
 
 **Evolução em 22/10:** login/área do aluno acrescentam CheckinAula e levam o schema a 5. O aviso do aluno aparece na chamada, inclusive para participante de outra turma, com “Check-in · aguardando validação”. O administrador confirma presente/ausente; o check-in sozinho não entra nos indicadores. Ao limpar uma marcação, o aluno com check-in continua como pendente; sem check-in nem previsão, sai da lista. Extra com check-in fica protegida contra exclusão; cancelar preserva avisos quando não há chamada. As descrições abaixo do fluxo sem login são históricas. Guia atual: [ACESSO_ALUNO.md](ACESSO_ALUNO.md).

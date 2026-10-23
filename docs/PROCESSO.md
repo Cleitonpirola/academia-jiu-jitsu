@@ -1,5 +1,25 @@
 # Processo
 
+## Aprovação dos planos para commit/envio — 22/10/2026
+
+Após a apresentação da entrega de planos, o usuário autorizou “testa e commita”. Foram repetidos `npm test` (136 aprovados, zero falhas/cancelamentos/ignorados), `npm run test:analytics` (13 aprovados), `npm run build` (typecheck/Vite aprovados), `npm run db:generate` e `prisma validate` (aprovados). Revisão de arquivos modificados/novos e links documentais antes da seleção. A autorização atual supera a pendência de aprovação registrada na implementação abaixo.
+
+Escopo aprovado: plano individual ilimitado/semanal, cota transacional de check-in, resumo na ficha/portal, liberação extra nominal, proteção de vínculos, migração SQLite 6/Prisma, testes e documentação. Nenhuma nova mudança de comportamento nesta etapa. As conferências de navegador e treze hashes do banco real são evidências anteriores, não novas execuções. Supabase/IA externos não foram executados; hospedagem, e-mail e pagamento continuam para depois.
+
+Procedimento: selecionar somente os arquivos aprovados, criar commit descritivo em português e fazer push normal para codex/evolucao-tatame; conferir o hash remoto e comunicar o resultado real. Sem alterar main, tag v1.0.0 ou versão dos manifests. Este registro é anterior ao envio e não substitui a confirmação do GitHub.
+
+## Planos de treino — nova entrega em 22/10/2026
+
+O usuário pediu deixar hospedagem para outra ocasião e autorizou implementar agora plano ilimitado/limite semanal, resumo de uso e autorização administrativa de aula extra; integrações complexas ficaram para depois. Estado inicial limpo em codex/evolucao-tatame, commit 32dcd35. Antes do código, foram registrados o desenho em PLANOS.md e as regras comunicadas: semana segunda/domingo, pendente ocupa uma vaga, confirmação não duplica, ausência/cancelamento libera, aluno atual segue ilimitado até configuração.
+
+Implementados módulo de planos, tabelas/migração 6 aditivas SQLite/Prisma, verificação transacional de novo check-in e editor/resumo nas duas áreas. Autorização por aluno/aula inclui motivo/administrador, sem cobrar nem quitar mensalidades. Planos são individuais, sem catálogo compartilhado ou preço de excedente. Mudança de plano preserva uso; presença real continua registrável pelo administrador. Documentação e defesa oral em PLANOS.md.
+
+Verificação final: 136 testes TypeScript, 13 Python, build/typecheck e geração/validação Prisma aprovados. Navegador fictício confirmou edição sem zerar uso, autorização e check-in de extra, restrição nas outras aulas e tela estreita sem transbordamento. Banco real migrou 5→6 com backup automático; treze tabelas mantiveram contagens/hashes e duas novas permaneceram vazias. Inicialmente um segundo npm run dev encontrou porta 5173 ocupada; a sessão anterior foi identificada/encerrada e os servidores próprios reiniciados corretamente. Não foi alterado outro projeto.
+
+Falhas de desenvolvimento: teste de aula cancelada omitiu os campos obrigatórios de motivo/data; a fixture foi corrigida sem relaxar o CHECK. Na nova fixture de migração, escape incorreto no filtro de nomes e conexão aberta mascararam a falha com EPERM na limpeza Windows; consulta e fechamento em finally foram corrigidos, e a suíte completa passou. Tentativas de patch com contexto inexato foram recusadas sem gravar; trechos reais conferidos antes de repetir. Nenhuma tentativa com falha foi apresentada como teste aprovado.
+
+Entrega local para validação. Não criar commit/push antes de nova aprovação explícita para este conjunto. Main, tag v1.0.0 e versão dos manifests preservadas. Sem execução externa de Supabase, IA, hospedagem, e-mail ou pagamento nesta etapa.
+
 ## Aprovação para envio e verificação final — 22/10/2026
 
 Após a apresentação das entregas locais, o usuário autorizou: “testa e se tudo estiver ok, pode commitar”. A autorização contempla chamada por aula, horários combinados, aniversários, autenticação/portal, bloqueio financeiro, migrações, testes e documentação correspondente. Supera as pendências de aprovação nos registros anteriores. Não autoriza merge na main, release, nova tag ou implantação.

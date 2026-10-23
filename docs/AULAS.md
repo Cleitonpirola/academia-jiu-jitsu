@@ -1,5 +1,7 @@
 # Aulas datadas — entrega 1B
 
+**Planos — incremento local em 22/10/2026:** autorização extra nominal também impede excluir definitivamente uma aula, mesmo antes do check-in; pode revogar a autorização ainda não usada ou cancelar quando permitido. A liberação não cria cobrança nem presença. A chamada continua registrando participação real; o limite comercial atua nos novos check-ins. Guia e validação: [PLANOS.md](PLANOS.md). Entrega aprovada para commit/envio após nova execução automatizada bem-sucedida.
+
 **Evolução em 22/10/2026:** área administrativa protegida por login; aluno possui portal próprio para consulta e check-in no dia da aula. A agenda mostra avisos pendentes e a chamada permite confirmá-los. Extra com check-in não pode ser excluída; o cancelamento preserva os avisos se ainda não houver chamada. As referências abaixo a ausência de login descrevem a entrega original. Guia: [ACESSO_ALUNO.md](ACESSO_ALUNO.md). Novo conjunto local aguarda validação antes de commit/push.
 
 Implementada e testada localmente em 19/10/2026, após o usuário responder “bora” à proposta de agenda. O conjunto, incluindo a exclusão de extras, foi aprovado para commit/envio com “pode commitar” em 20/10/2026, na branch `codex/reestruturacao`. Essa aprovação não atribui ao usuário testes manuais que ele não relatou. Não foi criada tag/release nem alterado o número de versão do produto. A versão 3 mencionada na migração é da estrutura SQLite.

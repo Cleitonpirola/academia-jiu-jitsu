@@ -1,5 +1,7 @@
 # Migrações do banco local
 
+**Planos — 22/10/2026:** schema atual 6. `006_planos.sql` acrescenta PlanoAluno e LiberacaoAula, sem modificar as treze tabelas anteriores nem atribuir limites aos alunos. Backup antes da evolução; teste v5→v6 compara as treze tabelas e reabre plano/liberação persistidos. As menções a schema 5 ou anteriores abaixo são históricas. PostgreSQL equivalente preparado, ainda sem aplicação externa. Guia: [PLANOS.md](PLANOS.md).
+
 Implementado em 19/10/2026. O SQLite continua sendo o banco local do MVP. Não há transferência automática para Supabase nesta alteração.
 
 **Atualização de 22/10/2026:** schema atual 5. `004_chamada.sql` acrescentou PresencaAula; `005_acesso_aluno.sql` acrescenta Usuario, Sessao e CheckinAula sem modificar as dez tabelas de negócio anteriores. As referências abaixo a versões anteriores são registros históricos. Número do produto e tag v1.0.0 permanecem preservados.
@@ -23,8 +25,8 @@ Ao iniciar `npm run dev` ou `npm start`, o repositório abre o arquivo definido 
 
 | Situação | Comportamento |
 | --- | --- |
-| Banco novo | Aplica as versões 1, 2, 3 e 4; não precisa de backup de registros inexistentes |
-| Banco 1.0 compatível, sem histórico | Faz backup, adota a versão 1 e aplica as versões 2, 3 e 4, conservando seus registros |
+| Banco novo | Aplica todas as versões conhecidas, atualmente 1 a 6; não precisa de backup de registros inexistentes |
+| Banco 1.0 compatível, sem histórico | Faz backup, adota a versão 1 e aplica as versões posteriores, atualmente até 6, conservando seus registros |
 | Banco já atualizado | Confere histórico e estrutura; não reaplica as instruções nem cria cópias a cada início |
 | Nova versão registrada no código | Cria backup e executa as versões pendentes em uma transação |
 | Erro de SQL ou estrutura incompatível | Reverte a transação e interrompe a abertura; a versão não avança |

@@ -5,6 +5,7 @@ import { useAcademia } from '../store';
 import { Badge, Belt, Button, Empty, Field, FormError, Modal, Pagination, Person } from '../components';
 import { dateLabel, fold, money, today } from '../lib';
 import { AcessoAluno } from '../components/AcessoAluno';
+import { PlanoAlunoEditor } from '../components/PlanoAluno';
 export function StudentForm({aluno,onClose}:{aluno?:Aluno;onClose:()=>void}) {
   const {mutate}=useAcademia();const [form,setForm]=useState<AlunoInput>(aluno?{nome:aluno.nome,telefone:aluno.telefone,email:aluno.email,dataNascimento:aluno.dataNascimento,faixa:aluno.faixa,dataMatricula:aluno.dataMatricula,situacao:aluno.situacao}:{nome:'',telefone:'',email:'',dataNascimento:'',faixa:'Branca',dataMatricula:today(),situacao:'ativo'});const [error,setError]=useState('');const [busy,setBusy]=useState(false);
   const set=(field:keyof AlunoInput,value:string)=>setForm(v=>({...v,[field]:value}));
@@ -25,6 +26,7 @@ export function StudentsPage({onPayments}:{onPayments:(id:string)=>void}) {
       !resourceStatus.mensalidades.loaded?<p className="helper">Carregando informações financeiras…</p>:
       <div className="detail-billing"><Users size={19}/><div><strong>{detailBills.length} mensalidades registradas</strong><span>{money(detailBills.filter(m=>m.status!=='pago').reduce((sum,bill)=>sum+bill.valorCentavos,0))} em aberto</span></div></div>}
     <AcessoAluno aluno={details}/>
+    <PlanoAlunoEditor key={details.id} aluno={details}/>
     <div className="form-actions"><Button variant="secondary" onClick={()=>{setEdit(details);setDetails(null);}}>Editar ficha</Button><Button onClick={()=>{onPayments(details.id);setDetails(null);}}>Ver mensalidades <ArrowRight size={16}/></Button></div>
   </Modal>}
   {remove&&<Modal title="Excluir aluno" onClose={()=>{if(!busy)setRemove(null);}}><p className="confirm-text">Você deseja excluir o cadastro de <strong>{remove.nome}</strong>?</p><p className="helper">Alunos com cobranças devem ser inativados para preservar o histórico financeiro.</p><FormError message={deleteError}/><div className="form-actions"><Button variant="secondary" disabled={busy} onClick={()=>setRemove(null)}>Cancelar</Button><Button variant="danger" disabled={busy} onClick={()=>void deleteStudent()}>{busy?'Excluindo…':'Excluir cadastro'}</Button></div></Modal>}</>;

@@ -36,6 +36,14 @@ export interface PresencaAula {
   criadoEm: string; atualizadoEm: string;
 }
 export interface CheckinAula { id: string; aulaId: string; alunoId: string; nome: string; criadoEm: string }
+export interface PlanoAluno { id: string; alunoId: string; nome: string; limiteSemanal: number | null; criadoEm: string; atualizadoEm: string }
+export interface LiberacaoAula { id: string; aulaId: string; alunoId: string; motivo: string; usuarioId: string; criadoEm: string }
+export interface UsoPlano {
+  nome: string; limiteSemanal: number | null; inicioSemana: string; fimSemana: string;
+  utilizadas: number; extrasUtilizadas: number; restantes: number | null; limiteAtingido: boolean;
+  aulasLiberadas: string[];
+}
+export interface GestaoPlano { plano: PlanoAluno | null; uso: UsoPlano; aulasHoje: Aula[]; liberacoes: (LiberacaoAula & { aula: Aula; utilizada: boolean })[] }
 export interface AulaView extends Aula { alunosPrevistos: AulaAlunoPrevisto[]; chamada: PresencaAula[]; checkins: CheckinAula[] }
 export interface UsuarioView { id: string; nome: string; email: string; perfil: 'admin' | 'aluno'; alunoId: string | null }
 export interface AuthState { configuracaoInicial: boolean; usuario: UsuarioView | null }
@@ -45,6 +53,7 @@ export interface PortalAluno {
   aluno: Aluno; aulas: AulaAlunoView[];
   mensalidades: (Mensalidade & { status: Status })[];
   historicoAntigo: Presenca[];
+  plano: UsoPlano;
 }
 export interface BloqueioAluno {
   bloqueado: true; mensagem: string;

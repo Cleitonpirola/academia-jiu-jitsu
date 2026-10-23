@@ -21,6 +21,8 @@ model Aluno {
   chamadas       PresencaAula[]
   usuario        Usuario?
   checkins       CheckinAula[]
+  plano          PlanoAluno?
+  liberacoes     LiberacaoAula[]
 }
 model Mensalidade {
   id             String @id @default(uuid()) @db.Uuid
@@ -101,6 +103,7 @@ model Aula {
   alunosPrevistos    AulaAlunoPrevisto[]
   chamada            PresencaAula[]
   checkins           CheckinAula[]
+  liberacoes         LiberacaoAula[]
   @@unique([origemHorarioId, dataAula])
   @@index([dataAula])
   @@index([turmaId])
@@ -142,6 +145,7 @@ model Usuario {
   conviteExpiraEm String?
   criadoEm String
   sessoes Sessao[]
+  liberacoes LiberacaoAula[]
 }
 model Sessao {
   id String @id @default(uuid()) @db.Uuid
@@ -160,6 +164,29 @@ model CheckinAula {
   alunoId String @db.Uuid
   aluno Aluno @relation(fields: [alunoId], references: [id], onDelete: Restrict)
   nome String
+  criadoEm String
+  @@unique([aulaId, alunoId])
+  @@index([alunoId])
+}
+
+model PlanoAluno {
+  id String @id @default(uuid()) @db.Uuid
+  alunoId String @unique @db.Uuid
+  aluno Aluno @relation(fields: [alunoId], references: [id], onDelete: Restrict)
+  nome String
+  limiteSemanal Int?
+  criadoEm String
+  atualizadoEm String
+}
+model LiberacaoAula {
+  id String @id @default(uuid()) @db.Uuid
+  aulaId String @db.Uuid
+  aula Aula @relation(fields: [aulaId], references: [id], onDelete: Restrict)
+  alunoId String @db.Uuid
+  aluno Aluno @relation(fields: [alunoId], references: [id], onDelete: Restrict)
+  motivo String
+  usuarioId String @db.Uuid
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Restrict)
   criadoEm String
   @@unique([aulaId, alunoId])
   @@index([alunoId])

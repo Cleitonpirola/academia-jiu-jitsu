@@ -1,5 +1,7 @@
 # Acesso e área do aluno
 
+**Incremento local de planos — 22/10/2026:** o portal mostra plano/uso semanal e restringe novos check-ins quando a cota acaba, com exceção de aula nominal autorizada pela administração. Sem plano mantém ilimitado. Check-in pendente ocupa vaga, ausência/cancelamento libera; frequência continua dependendo de presença confirmada. Bloqueio por mensalidade vencida permanece prioritário. Guia e limites: [PLANOS.md](PLANOS.md). Entrega aprovada para commit/envio após nova execução bem-sucedida de 136 testes TypeScript, 13 Python, build/typecheck e Prisma; a aprovação abaixo pertence à entrega anterior.
+
 **Estado em 22/10/2026:** conjunto aprovado para commit/envio após nova execução bem-sucedida de 121 testes TypeScript, 13 Python, build/typecheck e validação Prisma. Essa autorização supera as pendências históricas abaixo. Registro em [PROCESSO.md](PROCESSO.md).
 
 ## Decisão de arquitetura — 21/10/2026

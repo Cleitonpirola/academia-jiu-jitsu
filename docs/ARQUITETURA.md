@@ -1,5 +1,15 @@
 # Arquitetura — Academia de Jiu-Jitsu
 
+## Planos individuais — desenho e implementação local em 22/10/2026
+
+Modelo e regras registrados antes do código em [PLANOS.md](PLANOS.md). `PlanoAluno` guarda nome e limite semanal opcional, com aluno único; ausência de configuração mantém ilimitado. `LiberacaoAula` registra autorização nominal por aula/aluno, motivo, administrador e data. Migração SQLite 6 e equivalente Prisma/PostgreSQL adicionam somente essas duas tabelas; nenhuma alteração nas mensalidades ou migrações antigas.
+
+O módulo `modules/planos` calcula uso semanal pela data da aula (segunda a domingo em São Paulo), une check-in e chamada por aula sem duplicar, respeita ausência/cancelamento e conta o legado presente por registro. Extras autorizadas usadas aparecem separadamente da cota regular. Alterar plano não apaga consumo. A API administrativa edita o plano/libera uma aula do dia quando a cota terminou; portal retorna somente resumo próprio e IDs próprios autorizados. Bloqueio financeiro continua prioritário.
+
+Limite é aplicado na gravação de novo check-in: transação SQLite síncrona `BEGIN IMMEDIATE`; PostgreSQL bloqueia linha do aluno, como na chamada, para serializar aulas distintas concorrentes. Edição de plano, autorização/revogação e limpeza de chamada usam bloqueios compatíveis. Presença real pode ser registrada pela administração mesmo acima da cota; não se falsifica a frequência para impor um contrato comercial. Autorizações usadas são preservadas e impedem exclusão da aula. Não há catálogo compartilhado de planos, cobrança de excedente, cotas por turma, reserva futura ou integração externa neste incremento.
+
+Implementação local testada e aprovada para commit/envio em 22/10/2026, após nova execução de 136 testes TypeScript, 13 Python, build/typecheck e Prisma. PostgreSQL preparado/gerado, sem execução externa. Login e fluxo de dados mantidos; check-in não vira presença Python automaticamente.
+
 ## Objetivo
 Construir um sistema para cadastrar alunos e controlar mensalidades.
 
