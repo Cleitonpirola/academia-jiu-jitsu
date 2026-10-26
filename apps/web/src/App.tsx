@@ -1,5 +1,6 @@
+import { GraduacoesPage } from './pages/GraduacoesPage';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { LayoutDashboard, Users, CreditCard, CalendarCheck, CalendarDays, Clock3, Sparkles, ArrowUpRight, X, RotateCw, CheckCircle2, Activity, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Award, Users, CreditCard, DollarSign, CalendarCheck, CalendarDays, Clock3, Sparkles, ArrowUpRight, X, RotateCw, CheckCircle2, Activity, ChevronRight } from 'lucide-react';
 import { MonthPicker, Button } from './components';
 import { api, today } from './lib';
 import { StoreContext } from './store';
@@ -12,11 +13,12 @@ import { AttendancePage } from './pages/AttendancePage';
 import { IntelligencePage } from './pages/IntelligencePage';
 import { TurmasPage } from './pages/TurmasPage';
 import { AulasPage } from './pages/AulasPage';
+import { DebitosPage } from './pages/DebitosPage';
 import type { UsuarioView } from '@tatame/shared';
-const navigation=[{id:'dashboard',label:'Visão geral',icon:LayoutDashboard},{id:'alunos',label:'Alunos',icon:Users},{id:'turmas',label:'Turmas',icon:CalendarDays},{id:'aulas',label:'Aulas',icon:Clock3},{id:'mensalidades',label:'Mensalidades',icon:CreditCard},{id:'presencas',label:'Presenças',icon:CalendarCheck},{id:'inteligencia',label:'Inteligência',icon:Sparkles}];
+const navigation=[{id:'dashboard',label:'Visão geral',icon:LayoutDashboard},{id:'alunos',label:'Alunos',icon:Users},{id:'graduacoes',label:'Faixas e graus',icon:Award},{id:'turmas',label:'Turmas',icon:CalendarDays},{id:'aulas',label:'Aulas',icon:Clock3},{id:'mensalidades',label:'Mensalidades',icon:DollarSign},{id:'debitos',label:'Débitos',icon:CreditCard},{id:'presencas',label:'Presenças',icon:CalendarCheck},{id:'inteligencia',label:'Inteligência',icon:Sparkles}];
 const requiredResources: Record<string, Resource[]> = {
   dashboard: ['dashboard', 'alunos', 'mensalidades'], alunos: ['alunos'],
-  mensalidades: ['mensalidades', 'alunos'], presencas: ['alunos'], inteligencia: [], turmas: ['turmas', 'alunos'], aulas: ['aulas', 'turmas'],
+  graduacoes: [], debitos: [], mensalidades: ['mensalidades', 'alunos'], presencas: ['alunos'], inteligencia: [], turmas: ['turmas', 'alunos'], aulas: ['aulas', 'turmas'],
 };
 export default function App({ usuario, onLogout }: { usuario: UsuarioView; onLogout: () => void }) {
   const [page,setPage]=useState('dashboard');const [month,setMonth]=useState(today().slice(0,7));
@@ -90,7 +92,7 @@ export default function App({ usuario, onLogout }: { usuario: UsuarioView; onLog
           <div className="topbar-actions">
             <Button variant="ghost" onClick={onLogout} aria-label={`Sair da conta de ${usuario.nome}`}>Sair</Button>
             <span className={`env-badge ${data.health?'':'is-offline'}`}><i/>{data.health?(data.health.database==='supabase'?'Supabase conectado':'Banco local'):(resourceStatus.health.loading?'Conferindo conexão…':'Conexão indisponível')}</span>
-            {!['turmas','aulas','presencas'].includes(page)&&<MonthPicker value={month} onChange={setMonth}/>}
+            {!['turmas','aulas','presencas','graduacoes'].includes(page)&&<MonthPicker value={month} onChange={setMonth}/>}
           </div>
         </header>
         <main>
@@ -99,9 +101,11 @@ export default function App({ usuario, onLogout }: { usuario: UsuarioView; onLog
           {!pageError&&pageLoading&&!pageHasData?<div className="loading-screen"><div className="spinner"/><h2>Preparando sua academia</h2><p>Carregando os dados desta área…</p></div>:pageError?null:<>
             {page==='dashboard'&&<DashboardPage onNewStudent={()=>setStudentForm(true)} onPayments={()=>goto('mensalidades')} onStudents={()=>goto('alunos')}/>}
             {page==='alunos'&&<StudentsPage onPayments={viewPayments}/>}
+            {page==='graduacoes'&&<GraduacoesPage/>}
             {page==='turmas'&&<TurmasPage/>}
             {page==='aulas'&&<AulasPage/>}
             {page==='mensalidades'&&<PaymentsPage initialStudent={paymentStudent}/>}
+            {page==='debitos'&&<DebitosPage/>}
             {page==='presencas'&&<AttendancePage onAgenda={()=>goto('aulas')}/>}
             {page==='inteligencia'&&<IntelligencePage/>}
           </>}

@@ -1,5 +1,58 @@
 # Evolução funcional do Tatame
 
+## Configuração de graduação e turmas coringa — 26/10/2026
+
+Implementados cadastro de faixas e graus por faixa, atribuição administrativa ao aluno e uso de faixas personalizadas no serviço de dados. Criação/exclusão de avulsas retiradas; publicação parte dos horários das turmas, inclusive coringa. Usuário confirmou manter cobrança de aula adicional após esgotar o plano, agora para novas reservas de aulas por turma. Ícone de Mensalidades alterado para $. Testes e autorização de commit/envio registrados no README e PROCESSO.md. Edição individual do título da aula foi pedida depois e é o próximo incremento separado para validação.
+
+## Integrações complexas futuras — envio de e-mail (25/10/2026)
+
+Pedido do usuário: fazer funcionar o envio de e-mail ou, sendo complexo, registrar nas opções complexas futuras. **Estado: planejado, não implementado.** Conferidos código da API, dependências e configuração de exemplo: existem e-mails de cadastro e convites temporários, mas nenhum serviço de entrega de e-mail integrado. A alternativa futura foi utilizada; nenhum envio real foi realizado.
+
+### Escopo proposto
+
+1. Enviar convite de primeiro acesso e recuperação de acesso para aluno ou responsável, usando o fluxo de link temporário de uso único já existente. O destinatário escolhe a senha; não enviar senha em texto no e-mail.
+2. Integrar avisos e pedidos de autorização, mantendo o registro e a resposta dentro do Tatame. Definir com a academia quais mensagens devem também sair por e-mail.
+3. Acrescentar lembretes de vencimento e confirmação de pagamento registrado, depois de definir frequência, destinatário e preferências. Enviar um e-mail não comprova nem reconhece pagamento bancário: essa integração continua sendo uma etapa separada.
+
+### O que precisa estar preparado
+
+- Provedor de e-mail, conta/configuração do remetente e domínio, quando necessário; avaliar condições e custos atuais na implementação, sem contratar nada nesta etapa.
+- Endereço público HTTPS da plataforma para que os links funcionem fora do computador local. Não enviar convites com endereço 127.0.0.1 para uso externo.
+- Credenciais somente no backend e em configuração privada, nunca no frontend, GitHub ou documentação pública.
+- Regra de destinatário vinculada ao acesso: menor sem celular recebe o convite principal no e-mail do responsável; aluno com acesso próprio recebe seu convite no próprio endereço. Comunicados preservam o destinatário definido no registro; não enviar ao identificador interno cadastro.invalid nem divulgar dados de outros dependentes.
+- Registro de tentativa, aceite pelo provedor e falha, com reenvio controlado e prevenção de duplicação. Não registrar tokens de convite ou senhas nos logs; aceite pelo provedor não será apresentado como leitura pelo destinatário.
+- Para lembretes agendados, execução disponível, horário/fuso e conferência da situação financeira imediatamente antes de enviar. Sem lembrete de atraso para cobrança já paga.
+
+### Critérios para considerar a entrega pronta
+
+- Verificar primeiro em ambiente de testes, depois em uma caixa de e-mail autorizada para homologação, sem disparar mensagens para alunos reais durante o desenvolvimento.
+- Confirmar destinatário correto, link público, ativação/recuperação, expiração, uso único, reenvio, ausência de duplicidade e tratamento de indisponibilidade do provedor.
+- Conferir os dois acessos de menores e as transferências de responsabilidade, evitando mensagens para um responsável que perdeu acesso ou contato sem permissão.
+- Apresentar telas/resultados para validação do usuário antes de commit/envio. Entrega real de e-mail só será declarada depois de comprovada; testes simulados serão identificados como simulados.
+
+Enquanto essa integração não for implementada, os convites são copiados e entregues manualmente, e os avisos/autorizações aparecem dentro da plataforma. Nenhum provedor, credencial, disparo ou automação foi configurado por este planejamento.
+
+## Acesso familiar implementado — 25/10/2026
+
+Menores com/sem celular, responsável para múltiplos dependentes, check-in delegado quando sem celular, acompanhamento financeiro, avisos/autorizações internos e transferências própria/maioridade implementados e testados. Contato após maioridade não concede acesso. [RESPONSAVEIS.md](RESPONSAVEIS.md) registra regras, decisões e validação. Aguarda validação do usuário antes de commit/envio. Múltiplos responsáveis operacionais por aluno, conta com vários perfis e envios externos ficam para evolução posterior; e-mail/WhatsApp não foram conectados.
+
+## Integrações complexas futuras — parabéns por WhatsApp (25/10/2026)
+
+Pedido do usuário: enviar parabéns pelo WhatsApp; se não for viável agora, registrar nas adições complexas futuras. **Estado: planejado, não implementado.** A homenagem no dashboard e no próprio portal já existe; o módulo de aniversários atualmente apenas seleciona os aniversariantes e prepara o texto exibido na plataforma. Não foi encontrado serviço de envio WhatsApp no código/configuração de exemplo conferidos.
+
+O envio automático fica para a etapa de integrações externas, junto das evoluções de e-mail e reconhecimento de pagamento, porque depende de serviço de mensagens conectado, número remetente/configuração da academia e execução agendada em ambiente disponível. Não é necessário manter WhatsApp Web aberto como parte do desenho proposto. Provedor, condições atuais, credenciais e eventual custo devem ser avaliados na implementação; não foi contratado serviço nesta etapa.
+
+Escopo proposto para a entrega futura:
+
+- A academia poderá habilitar/desabilitar o envio, escolher horário e editar a mensagem simbólica, reutilizando a lógica de aniversário já existente.
+- Selecionar alunos ativos aniversariantes no dia em America/Sao_Paulo, com telefone validado (país/DDD) e preferência de recebimento registrada. Permitir retirar a autorização de recebimento.
+- Gerar uma mensagem personalizada com o primeiro nome, sem incluir dados financeiros ou informações desnecessárias.
+- Registrar processamento por aluno, aniversário/ano e tipo de mensagem, impedindo reenvio duplicado após reinício ou nova tentativa do job.
+- Guardar resultado/erro e permitir revisão pelo administrador; tentativas de falha não podem virar confirmação falsa de entrega. Sucesso de uma API e leitura pelo destinatário devem ser apresentados conforme o que o provedor realmente informar.
+- Decidir entre job do backend e n8n conforme a hospedagem disponível; manter credenciais no servidor, fora do Git. Verificar requisitos do serviço escolhido antes de conectar.
+
+Critérios de aceite futuros: testes com datas/fuso, aluno inativo, telefone ausente/inválido, preferência desativada, prevenção de duplicação, indisponibilidade/repetição e mensagem personalizada. Primeiro validar em destino de teste autorizado; depois conferir uma execução real com evidência do provedor. Nenhum envio, conexão de conta, agendamento ou validação de WhatsApp foi executado por este registro. Implementação futura será apresentada para validação antes de commit/envio.
+
 **Planos — incremento aprovado em 22/10/2026:** configurador individual de plano ilimitado/limite semanal na ficha, resumo no portal, restrição transacional de check-in e liberação administrativa por aula implementados e aprovados para commit/envio após nova validação automatizada bem-sucedida. [PLANOS.md](PLANOS.md) distingue as regras atuais das propostas abaixo. Catálogo compartilhado, turmas incluídas, preço/cobrança de excedentes e geração mensal continuam futuros. Hospedagem ficou para outra ocasião, conforme pedido do usuário. Autorização registrada em PROCESSO.md.
 
 **Aprovação posterior — 22/10/2026:** o usuário autorizou commit/envio das implementações locais de chamada, horários combinados, aniversários, login/portal e bloqueio financeiro, condicionado aos testes. A nova execução passou; pendências de aprovação anteriores são históricas. As funcionalidades futuras deste plano continuam planejadas, sem autorização automática de implementação. Registro em [PROCESSO.md](PROCESSO.md).

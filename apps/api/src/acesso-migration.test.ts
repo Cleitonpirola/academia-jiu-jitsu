@@ -28,16 +28,16 @@ it('migra v4 para acesso preservando as dez tabelas, backup, autenticação e ch
     old.prepare('INSERT INTO Aula VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)').run(aula,'Aula','2026-10-21','12:00','13:00','Mestre','grade',slot,group,'Turma','agendada',null,null,now);
     old.prepare('INSERT INTO AulaAlunoPrevisto VALUES (?,?,?,?)').run(randomUUID(),aula,id,'Nome previsto');
     old.prepare('INSERT INTO PresencaAula VALUES (?,?,?,?,?,?,?)').run(randomUUID(),aula,id,'Nome histórico',1,now,now);
-    const original = tables.map(table => old.prepare(`SELECT * FROM "${table}" ORDER BY id`).all()); old.close();
+    const original = tables.map(table => old.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()); old.close();
     repo = new SqliteRepository(file);
-    assert.deepEqual(repo.migration.applied,[5,6]); assert.equal(repo.migration.version,6); assert.ok(repo.migration.backupPath);
-    assert.deepEqual(tables.map(table => repo!.db.prepare(`SELECT * FROM "${table}" ORDER BY id`).all()), original);
+    assert.deepEqual(repo.migration.applied,[5,6,7,8,9,10]); assert.equal(repo.migration.version,10); assert.ok(repo.migration.backupPath);
+    assert.deepEqual(tables.map(table => repo!.db.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()), original);
     for (const table of ['Usuario','Sessao','CheckinAula'] as const) assert.equal((await repo.list(table)).length,0);
     const backup = new DatabaseSync(repo.migration.backupPath, { readOnly:true });
     try {
       assert.equal(backup.prepare('SELECT MAX(version) version FROM _tatame_migrations').get()?.version,4);
       assert.equal(backup.prepare("SELECT name FROM sqlite_master WHERE name='Usuario'").get(),undefined);
-      assert.deepEqual(tables.map(table => backup.prepare(`SELECT * FROM "${table}" ORDER BY id`).all()),original);
+      assert.deepEqual(tables.map(table => backup.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()),original);
     } finally { backup.close(); }
     const userId = randomUUID();
     await repo.insert('Usuario',{id:userId,nome:'Aluno preservado',email:'aluno@teste.invalid',perfil:'aluno',alunoId:id,senhaHash:'hash-ficticio',conviteHash:null,conviteExpiraEm:null,criadoEm:now});
@@ -47,7 +47,7 @@ it('migra v4 para acesso preservando as dez tabelas, backup, autenticação e ch
     await repo.close(); repo = new SqliteRepository(file);
     assert.deepEqual(repo.migration.applied,[]); assert.equal(repo.migration.backupPath,null);
     assert.deepEqual(await repo.list('CheckinAula'),[checkin]); assert.equal((await repo.list('Sessao')).length,1);
-    assert.deepEqual(tables.map(table => repo!.db.prepare(`SELECT * FROM "${table}" ORDER BY id`).all()),original);
+    assert.deepEqual(tables.map(table => repo!.db.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()),original);
     assert.deepEqual(repo.db.prepare('PRAGMA foreign_key_check').all(),[]);
   } finally {
     if(repo)await repo.close();

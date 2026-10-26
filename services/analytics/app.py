@@ -10,7 +10,7 @@ app = FastAPI(title="Tatame Analytics", version="0.1.0")
 class StudentInput(BaseModel):
     id: str = Field(min_length=1)
     nome: str = Field(min_length=1)
-    faixa: Literal['Branca', 'Cinza', 'Amarela', 'Laranja', 'Verde', 'Azul', 'Roxa', 'Marrom', 'Preta']
+    faixa: str = Field(min_length=1, max_length=80)
     dataMatricula: date
     situacao: Literal['ativo', 'inativo']
 

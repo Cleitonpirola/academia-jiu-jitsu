@@ -48,6 +48,8 @@
 .turma-weekdays label:has(input:disabled){cursor:not-allowed;opacity:.5}
 .turma-weekdays label:has(input:focus-visible){outline:2px solid #3f9672;outline-offset:2px}
 .turma-weekdays input[type=checkbox]{width:14px;height:14px;min-height:0;margin:0;accent-color:#34855d}
+.turma-name-field{display:grid;gap:8px;min-width:0}.turma-name-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:11px;font-weight:550;color:#75858f}.turma-auto-name{display:inline-flex;align-items:center;gap:7px;cursor:pointer;color:#496650}.turma-auto-name input[type=checkbox]{width:15px;height:15px;min-height:0;margin:0;flex-shrink:0}.turma-name-field>input{width:100%;min-width:0}.turma-name-field>input[readonly]{background:#f5f8f6;color:#496650}.turma-name-field>.helper{font-size:11px;line-height:1.6}
+.debitos-list{display:grid;gap:16px}.debito-card{padding:22px;margin:16px 0}.debito-card h2{margin-bottom:16px}.debito-toggle{display:flex;align-items:center;gap:9px;margin:15px 0;font-size:13px}.sidebar{overflow-y:auto}.badge-cancelado{background:#f1f3f5;color:#73838e}@media(max-width:760px){.mobile-nav{overflow-x:auto;justify-content:flex-start;gap:8px}.mobile-nav button{flex:0 0 auto;min-width:58px}.debito-card{padding:17px}}
 .turma-time-inputs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
 .turma-time-inputs input{min-width:0;width:100%}
 .turma-time-footer{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
@@ -59,3 +61,11 @@
 .plan-summary-title{display:flex;align-items:center;gap:12px;min-width:0;flex:1 1 180px}.plan-summary-title strong{display:block;overflow-wrap:anywhere}.plan-summary-title small{display:block;color:#617b72;margin-top:4px}
 .plan-usage{display:flex;flex-direction:column;gap:4px}.plan-usage>strong{font-size:26px;letter-spacing:-1px}.plan-usage span,.plan-usage small{font-size:12px;color:#617b72}.plan-summary-note{flex-basis:100%;margin:0!important;line-height:1.65}
 .plan-extra{border-top:1px solid var(--line);margin-top:24px;padding-top:20px}.plan-extra h3{display:flex;align-items:center;gap:8px}.plan-extra form{display:grid;gap:14px}.plan-extra form>.btn{justify-self:start}.plan-release-list{display:grid;gap:12px;margin-top:18px}.plan-release-list>div{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding-top:14px}.plan-release-list>div>div{min-width:0;overflow-wrap:anywhere}.plan-release-list small{display:block;color:#7c8e98;margin-top:5px}.plan-release-list p{font-size:12px;margin:6px 0;color:#617b72}.plan-release-list .btn{flex-shrink:0}
+
+/* Acesso familiar: seletor sempre visível, sem misturar dados entre dependentes. */
+.responsavel-selector{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:18px max(24px,calc((100vw - 1120px)/2));background:#eaf3ee;border-bottom:1px solid #cbded4;flex-wrap:wrap}.responsavel-selector p{font-size:13px;margin:5px 0}.responsavel-selector .field{min-width:230px}.checkbox-label{display:flex;align-items:center;gap:10px;margin:14px 0;font-size:14px}.checkbox-label input{width:18px;height:18px;flex-shrink:0;accent-color:var(--primary,#377363)}.student-access form+form{margin-top:26px;border-top:1px solid var(--line,#e5ece8);padding-top:14px}.student-access details{margin-top:20px}.student-access textarea{width:100%;min-height:95px;border:1px solid #dce5df;border-radius:10px;padding:12px;font:inherit}
+
+/* A turma começa com um intervalo; controles extras dependem da opção explícita. */
+.turma-extra-hours{display:flex;align-items:center;gap:8px;margin:0 0 16px;font-size:12px;color:#496650;cursor:pointer}.turma-extra-hours input[type=checkbox]{width:16px;height:16px;min-height:0;margin:0;accent-color:#34855d}.turma-interval-row.is-single{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+
+.graduacao-actions .btn{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;padding:8px 10px;width:auto;height:auto}

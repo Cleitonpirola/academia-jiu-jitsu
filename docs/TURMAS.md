@@ -1,5 +1,35 @@
 # Turmas e grade fixa — entrega 1A
 
+## Horários adicionais opcionais — 26/10/2026
+
+Em **Turmas → Nova turma → Grade fixa**, o checkbox **Incluir mais horários** começa desmarcado. O formulário mostra um intervalo de início/término, que pode valer para vários dias selecionados. Os botões **Adicionar horário** e **Adicionar outra combinação**, assim como os controles de remoção dos extras, ficam ocultos. Ao marcar, os controles e os horários adicionais ficam disponíveis.
+
+Ao desmarcar, somente o primeiro intervalo da primeira combinação participa da tela, da contagem, do nome automático e do salvamento. Ele continua valendo para todos os dias selecionados nessa combinação. O rascunho dos extras fica guardado enquanto o formulário estiver aberto: marcar novamente restaura os campos. Se houver extras ocultos, uma orientação informa que eles não serão incluídos ao salvar. Fechar/cancelar descarta o rascunho sem modificar o cadastro salvo.
+
+Na edição, turmas que já possuem mais de uma combinação ou mais de um intervalo começam com a opção marcada, preservando a grade. Um único intervalo repetido em vários dias continua sendo modo simples. A preferência é de interface; o banco recebe a grade efetivamente selecionada pelo contrato já existente, sem coluna ou migração nova. Nome manual e vínculos anteriores continuam preservados.
+
+Verificação desta mudança: build/typecheck e os oito testes existentes de combinação de horários aprovados. Navegador com SQLite em memória confirmou opção inicialmente desmarcada, ausência dos botões, exibição ao marcar, inclusão/ocultação/restauração de um segundo intervalo e edição de grade múltipla inicialmente marcada. Salvar sem mudanças preservou os cinco horários, seus IDs, nome e vínculo. Após incluir um intervalo vazio e desmarcar, salvar considerou somente 12h–13h de Seg/Qua; o campo vazio oculto não bloqueou o formulário nem foi enviado, e os IDs mantidos/vínculo foram preservados. Reabrir essa turma mostrou a opção desmarcada. Dados somente fictícios, sem alteração de turmas reais. Suíte completa, Python e Supabase não foram reexecutados neste incremento de interface. Aguardando validação antes de commit/envio.
+
+![Modo simples com um horário por dia selecionado, em dados fictícios](screenshots/turma-horario-unico.png)
+
+## Remoção da seleção de alunos no formulário — 25/10/2026
+
+A pedido do usuário, Nova turma e Editar turma não exibem mais Alunos habituais, sua busca ou os checkboxes de alunos. O formulário contém nome, responsável, situação e grade fixa. Novas turmas enviam alunoIds vazio; na edição, o formulário reenvia os vínculos já existentes para não removê-los por estarem ocultos. A API, tabela de vínculos, cartões, detalhes e previsão de alunos em aulas continuam com seu comportamento existente; não foi solicitada exclusão de dados ou remoção completa desse modelo.
+
+Verificação nova: build/typecheck aprovados; navegador com identidade fictícia e SQLite em memória confirmou ausência da seção em criação/edição. Salvar professor alterado em turma com um aluno vinculado preservou exatamente seu alunoIds, conferido por consulta posterior. Nenhum dado real foi alterado. Não se repetiu a suíte completa nesta mudança de apresentação. Incremento aguardando validação para commit/envio; descrições históricas abaixo que orientam selecionar alunos no formulário foram superadas por esta seção.
+
+![Formulário de turma simplificado com dados fictícios](screenshots/turma-sem-alunos-habituais.png)
+
+## Nome automático — 25/10/2026
+
+Ao abrir **Nova turma**, **Nome automático** aparece marcado ao lado do rótulo Nome da turma. Escolha o início na grade para preencher o nome: 13:00 gera **Turma das: 13h**, 13:30 gera **Turma das: 13h30** e 09:00 gera **Turma das: 9h**. Antes de escolher um início, o campo fica vazio com orientação. No modo automático, ele é somente leitura e acompanha alterações de horário. Com múltiplos intervalos/combinações, o início mais cedo é a referência; adicionar ou remover o início mais cedo também atualiza o nome.
+
+Desmarque a opção para digitar outro nome. Dentro da mesma edição, alternar novamente entre os modos preserva o texto manual. Ao reabrir uma turma, a opção fica marcada se o nome salvo corresponde ao nome calculado pela grade; nomes personalizados são preservados em modo manual. A preferência não é uma nova coluna no banco: somente o nome final é salvo pelo contrato existente. Por isso, um nome manual idêntico ao sugerido será reconhecido como automático ao reabrir. Não há renomeação em lote das turmas existentes.
+
+Validação desta alteração: build/typecheck aprovados, oito testes existentes de horários aprovados; navegador com identidade fictícia e SQLite em memória conferiu marcação inicial, campo somente leitura, horas/minutos, nome manual independente da grade, retorno ao automático, horário mais cedo entre vários intervalos, remoção do intervalo, gravação e reabertura de nomes automáticos e personalizados. Uma entrada de hora pela automação não preencheu o controle nativo; a conferência foi concluída com entrada pelo teclado. Dados reais e Supabase não foram alterados nesse teste. Pendência: validação visual pelo usuário e aprovação para commit/envio.
+
+![Nome automático marcado em uma nova turma com dados fictícios](screenshots/turma-nome-automatico.png)
+
 **Estado em 22/10/2026:** as melhorias posteriores de horários combinados foram aprovadas para commit/envio, junto da chamada e portal. Nova validação passou com 121 testes TypeScript, 13 Python, build/typecheck e Prisma. As pendências de aprovação nos registros anteriores são históricas; autorização em [PROCESSO.md](PROCESSO.md).
 
 Implementação em 19/10/2026, aprovada pelo usuário para commit e envio na branch `codex/reestruturacao` após a apresentação das telas e verificações. A tag v1.0.0 está preservada. Esta entrega não cria uma nova tag ou número de versão do produto; a versão 2 é somente a versão da estrutura SQLite.
@@ -20,9 +50,9 @@ Primeira verificação, anterior à ampliação para múltiplos intervalos por c
 
 ## O que você pode fazer
 
-No menu **Turmas**, clique em **Nova turma**. Informe nome, professor responsável e situação. Em **Grade fixa**, marque os dias que compartilham os mesmos intervalos. Preencha início e término e use **Adicionar horário** dentro da combinação para incluir outros intervalos nesses mesmos dias. Exemplo: **Seg, Qua e Sex**, das **12:00 às 13:00** e das **18:00 às 19:00**. Ao salvar, os seis horários entram juntos na grade.
+No menu **Turmas**, clique em **Nova turma**. Informe nome, professor responsável e situação. Em **Grade fixa**, marque os dias e preencha início e término. Para adicionar outros intervalos, marque **Incluir mais horários** e use **Adicionar horário** dentro da combinação. Exemplo: **Seg, Qua e Sex**, das **12:00 às 13:00** e das **18:00 às 19:00**. Ao salvar com a opção marcada, os seis horários entram juntos na grade.
 
-Use **Adicionar outra combinação** quando outros dias tiverem uma programação diferente. Uma segunda-feira pode ter vários intervalos na mesma combinação, e terça/quinta podem ter outro conjunto. Cada combinação precisa de pelo menos um dia e um intervalo. O limite de 100 considera dias × intervalos, somados entre as combinações.
+Com **Incluir mais horários** marcado, use **Adicionar outra combinação** quando outros dias tiverem uma programação diferente. Uma segunda-feira pode ter vários intervalos na mesma combinação, e terça/quinta podem ter outro conjunto. Cada combinação precisa de pelo menos um dia e um intervalo. O limite de 100 considera dias × intervalos, somados entre as combinações.
 
 Ao **Editar**, só são agrupados dias que possuem o mesmo conjunto completo de intervalos. Assim, se segunda tem 12h e 18h, mas quarta apenas 12h, o formulário não inventa quarta às 18h. Mudar um intervalo aplica a mudança aos dias da combinação. Para mudar somente um dia, retire-o da combinação original e crie outra para ele. Salvar sem alterações preserva os identificadores dos horários existentes; remover/adicionar dias conserva os identificadores dos demais intervalos.
 

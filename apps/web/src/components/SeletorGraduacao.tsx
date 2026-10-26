@@ -1,0 +1,6 @@
+import { Field, FormError } from '../components';
+import { nomeGrau, useGraduacoes } from '../graduacoes';
+export function SeletorGraduacao({faixa,grauId,onChange}:{faixa:string;grauId?:string|null;onChange:(faixa:string,grauId:string|null)=>void}){
+  const catalogo=useGraduacoes(),atual=catalogo?.faixas.find(f=>f.nome===faixa);
+  return <><Field label="Faixa"><select required disabled={!catalogo||Boolean(catalogo.error)||catalogo.loading&&!catalogo.faixas.length} value={faixa} onChange={e=>onChange(e.target.value,null)}><option value="">Selecione uma faixa</option>{!atual&&faixa&&<option value={faixa}>{faixa} · cadastro anterior</option>}{catalogo?.faixas.filter(f=>f.situacao==='ativo'||f.nome===faixa).map(f=><option key={f.id} value={f.nome}>{f.nome}{f.situacao==='inativo'?' · Inativa':''}</option>)}</select></Field><Field label="Grau na faixa"><select value={grauId??''} disabled={!atual||Boolean(catalogo?.error)} onChange={e=>onChange(faixa,e.target.value||null)}><option value="">Não informado</option>{atual?.graus.filter(g=>g.situacao==='ativo'||g.id===grauId).map(g=><option key={g.id} value={g.id}>{nomeGrau(g.numero)}{g.situacao==='inativo'?' · Inativo':''}</option>)}</select></Field>{catalogo?.error&&<div className="field-full"><FormError message={'Não foi possível consultar faixas e graus. '+catalogo.error}/></div>}</>;
+}

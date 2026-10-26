@@ -1,3 +1,4 @@
+import { criarAulaDeTeste } from './test-aula-helper.js';
 import { it } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
@@ -112,7 +113,7 @@ it('projeta chamadas de duas aulas no mesmo dia junto ao legado sem incluir nome
     const app = createApp(repo, { apiKey: '' });
     await repo.insert('Presenca', { id: randomUUID(), alunoId, dataTreino: '2026-10-01', tipoTreino: 'Com kimono', presente: true });
     for (const [horaInicio, horaFim, presente] of [['12:00', '13:00', true], ['15:00', '16:00', false], ['18:00', '19:00', true]] as const) {
-      const aula = (await request(app).post('/api/aulas/extras').send({ titulo: 'Aula teste', professor: 'Mestre', turmaId: null, dataAula: '2026-10-19', horaInicio, horaFim }).expect(201)).body;
+      const aula = await criarAulaDeTeste(repo,{ titulo: 'Aula teste', professor: 'Mestre', turmaId: null, dataAula: '2026-10-19', horaInicio, horaFim });
       await request(app).put(`/api/aulas/${aula.id}/chamada/${alunoId}`).send({ presente }).expect(201);
     }
     await withService(validMetrics(), async (url, received) => {
@@ -132,7 +133,7 @@ it('interrompe indicadores com erro controlado se consultas concorrentes observa
     const alunoId = randomUUID();
     await repo.insert('Aluno', { id: alunoId, nome: 'Aluno teste', telefone: '11999991234', email: 'teste@example.com', dataNascimento: '2000-01-01', faixa: 'Branca', dataMatricula: '2026-01-01', situacao: 'ativo', criadoEm: today() });
     const app = createApp(repo, { apiKey: '' });
-    const aula = (await request(app).post('/api/aulas/extras').send({ titulo: 'Aula teste', professor: 'Mestre', turmaId: null, dataAula: '2026-10-19', horaInicio: '12:00', horaFim: '13:00' }).expect(201)).body;
+    const aula = await criarAulaDeTeste(repo,{ titulo: 'Aula teste', professor: 'Mestre', turmaId: null, dataAula: '2026-10-19', horaInicio: '12:00', horaFim: '13:00' });
     await repo.savePresencaAula(aula.id, alunoId, true, new Date().toISOString());
     const list = repo.list.bind(repo);
     // Simula a limpeza/exclusão entre respostas de consultas distintas, sem violar FKs do SQLite.

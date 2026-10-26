@@ -1,5 +1,93 @@
 # Processo
 
+## Graduações configuráveis, retirada de avulsas e autorização de envio — 26/10/2026
+
+Usuário solicitou cadastro de faixas e graus, esclareceu a retirada de páginas/funções de avulsas em favor de turmas coringa e pediu ícone $ em Mensalidades. À pergunta sobre cobrança por excesso de aulas, respondeu “Sim, manter a cobrança de aula adicional”. Implementados catálogo/modelos/validações, migração 10, tela administrativa, selects/exibição do aluno, compatibilidade do Python, retirada dos endpoints/formulários/métodos específicos de avulsas e ícones nos dois portais. Histórico não apagado nem convertido; reservas antigas confirmadas preservadas. Cadastro familiar valida graduação na mesma transação. Retomada salva a pedido do usuário.
+
+Verificação nova: 206 testes TypeScript, 15 Python, 3 de configuração aprovados; build/typecheck, Prisma gerado e validado. Migração SQLite local com backup e hashes dos campos anteriores das 20 tabelas iguais; Supabase migrado com TLS verificado e mesma preservação. Prova sintética externa de concorrência de graus, coerência relacional, renomeação e turma coringa/rotas removidas passou; limpeza restrita com hashes das 22 tabelas iguais ao início. Sem login/ativação nessa prova externa. Navegador em memória confirmou criar faixa/grau, atribuir ao aluno, exibir e publicar 15h pela turma. Capturas somente fictícias. Testes antigos de criação/exclusão removida foram substituídos por cobertura do novo fluxo e preservação, sem fingir que o comportamento antigo continua válido.
+
+O usuário autorizou “depois de testar e der certo os testes, pode commitar”. Codex comunicou revisão das pendências integradas e envio à branch codex/evolucao-tatame. Depois dessa autorização, pediu edição individual do nome da aula; Codex informou que esse incremento ficaria separado para validação após concluir o commit já autorizado. Não há autorização implícita para tag/release, merge ou publicação online. O resultado efetivo de Git deve ser conferido no histórico/remoto e informado ao usuário.
+
+## Edição de nome, telefone e e-mail pelo aluno — 26/10/2026
+
+Usuário pediu edição dos dados básicos pelo próprio aluno. Consultados Git/instruções, portal, autenticação e persistência; pendências anteriores preservadas. Codex comunicou que e-mail também é login e precisa de confirmação com senha atual. Implementados contratos de perfil próprio, validação estrita, atualização Aluno/Usuario atômica, revalidação sob trava, limite de tentativas, invalidação de convites/outras sessões na troca de e-mail, auditoria sem segredos e formulário com cancelar/salvar. Perfil acessível durante bloqueio financeiro, sem alteração do bloqueio de aulas. Detalhes em ACESSO_ALUNO.md. Nenhuma migração ou alteração de conta real foi necessária.
+
+Validação nova: 12 testes específicos e suíte completa com 195 testes TypeScript aprovados; build/typecheck aprovados após correção de tipo da fixture de teste. Navegador fictício confirmou nome/telefone salvos, cancelamento e edição de contato durante atraso. Troca de e-mail/senha foi verificada na API, sem digitar credencial de usuário real no navegador. Supabase sintético confirmou transação, exclusividade concorrente, login e revogação. Primeira comparação integral diferiu em Sessao devido à limpeza de sessões expiradas já existente no login; demais 19 tabelas iguais. Repetição desse fluxo foi rejeitada pela revisão automática. Foi preparada alternativa sem login/ativação/limpeza global, somente IDs sintéticos; execução aprovada e concluída, limpeza com hashes das 20 tabelas iguais ao início dessa prova. Não se repetiu Python por não haver alteração em analytics. Aguardando validação antes de commit/push.
+
+## Opção Incluir mais horários — 26/10/2026
+
+Usuário pediu checkbox desmarcado por padrão para manter um único horário e ocultar os botões extras até marcar. Consultados Git/instruções, formulário e documentação; alterações pendentes anteriores preservadas. Codex manteve seleção de vários dias, condicionou controles/combinações extras ao checkbox e definiu grade ativa para contagem, nome automático e salvamento. Desmarcar guarda o rascunho, mas informa que somente o primeiro intervalo da primeira combinação será salvo. Edição múltipla começa marcada para evitar redução involuntária. Sem mudança na API/banco.
+
+Verificações novas: build/typecheck e oito testes existentes do helper aprovados. Navegador isolado em memória confirmou os estados, restauração do rascunho, edição múltipla, salvamento sem mudança com cinco IDs/vínculo preservados e redução explícita ao primeiro intervalo com campo extra vazio oculto fora do envio/validação. Reabertura confirmou modo simples. Captura fictícia em TURMAS.md. Não se repetiram suíte completa, Python ou Supabase porque o incremento está no formulário/CSS. Sem cadastros reais alterados; aguardando validação antes de commit/push.
+
+## Planejamento de envio de e-mail — 25/10/2026
+
+Pedido: fazer funcionar o envio ou, sendo complexo, registrar nas opções complexas futuras. Consultados Git/instruções, código da API, dependências e exemplo de configuração; encontrados convites temporários, sem serviço de entrega integrado. Codex adotou a alternativa autorizada e registrou a etapa em PLANO_FUNCIONAL.md, com referências no README, PLANO_EVOLUCAO.md e ACESSO_ALUNO.md. Escopo proposto inclui convites, avisos e lembretes; depende de provedor/remetente, endereço público, credenciais privadas e controle de destinatário/falhas/duplicidade. Não foi contratado serviço, conectada conta, criada automação ou enviada mensagem. Alteração documental: verificar links/diff, sem apresentar as suítes funcionais anteriores como testes novos. Pendências anteriores preservadas; sem commit/push antes da validação.
+
+## Responsáveis e controle de acesso de menores — 25/10/2026
+
+Usuário solicitou acesso pelo responsável quando menor não tem celular, acompanhamento com acesso próprio quando tem, ativação futura e transferência aos 18 sem perda de histórico. À pergunta se o responsável poderia fazer check-in pelo menor sem celular, respondeu: “Sim, poderá fazer check-in”. Git/instruções foram consultados; alterações pendentes anteriores preservadas. Implementados novo perfil, cadastro/vínculo atômicos, portal por dependente, controle de permissões no servidor/gravação, convites, revogação, transferências auditadas e avisos/autorizações internos. Decisões e caminhos em RESPONSAVEIS.md.
+
+Nova verificação final: 183 testes TypeScript, 13 Python e 3 de configuração aprovados; build/typecheck e Prisma gerado/validado. SQLite real migrou para v9 com backup e hashes das 17 tabelas anteriores preservados. Supabase migrou com TLS verificado e preservação; QA concorrente/isolamento/ativação/check-in/respostas/transferências sintética foi executada, repetida após reforço da resposta e removida, com hashes das 20 tabelas iguais ao início. Navegador em memória confirmou cadastro sem contato próprio, vínculo compartilhado, seleção de filho, check-in/cota, débito imediato, resposta e transferência. Sem teste físico de celular ou envio externo. Conjunto aguarda validação antes de commit/push.
+
+## Planejamento de parabéns por WhatsApp — 25/10/2026
+
+Usuário pediu envio de parabéns no WhatsApp e autorizou deixar nas adições complexas futuras se não fosse viável agora. Conferidos estado do Git/instruções e código de aniversários: a seleção/texto existem para exibição interna, sem módulo de envio externo. Registrado escopo futuro em PLANO_FUNCIONAL.md e referência em PLANO_EVOLUCAO.md/README, com configuração da academia, preferência de recebimento, fuso, execução agendada, prevenção de duplicação e critérios de teste. Nenhuma conta/provedor conectado, mensagem enviada, automação criada ou custo contratado. Mudança apenas documental; conferir links/diff, sem repetir suítes funcionais. Mantidas alterações pendentes anteriores; sem commit/push antes da validação.
+
+## Aula adicional com débito automático — 25/10/2026
+
+Usuário ampliou pedido do saldo mensal: oferta de aula por valor configurável, escolha de dia/aula, confirmação, débito automático e menu próprio, prazo 3 editável e baixa administrativa. Confirmou explicitamente bloquear novos check-ins com débito vencido, mantendo login/lista. Codex comunicou reserva distinta de presença e prazo a partir da confirmação. Implementados migração 8, configuração/valor sem padrão inventado, reserva idempotente com aceite e preço congelados, débito auditado, baixa e cancelamentos, cotas/financeiro integrados e menus nas duas áreas.
+
+Nova suíte completa: 166 testes TypeScript aprovados (13 novos de débitos e uma prova de migração), 13 Python, Prisma gerado/validado e build/typecheck aprovados. Um fechamento JSX, tipo da fixture e comparação de protótipo SQLite foram corrigidos durante as verificações; sucesso reportado somente após repetição. Conjunto direcionado de 13 testes passou novamente com aula já incluída/passada/cancelada. SQLite real migrado com backup, hashes das 15 tabelas anteriores preservados e FK check vazio. Supabase migrado, prova concorrente/financeira feita com dados sintéticos, removidos ao final, hashes anteriores preservados.
+
+Navegador isolado: configuração fictícia R$25/3 dias; aula futura escolhida; consulta confirmou zero cobranças antes do aceite; confirmação criou um débito completo e abriu Débitos; baixa administrativa refletida como Pago para ambos os perfis. Capturas fictícias. Nenhuma cobrança ou preço de teste aplicado a alunos reais. Mensalidades/relatórios anteriores mantidos separados, pagamento automático futuro. Alterações prévias preservadas; aguardando validação antes de commit/push.
+
+## Saldo mensal por aluno — 25/10/2026
+
+Usuário pediu campo de aulas restantes no mês, débito por check-in e aviso ao esgotar. Confirmou explicitamente renovação no dia 1, sem débito duplicado e devolução em cancelamento. Implementados três campos opcionais no Aluno, migração 7 aditiva SQLite/Prisma, configuração administrativa, coluna na listagem, resumo/aviso no portal e débito atômico. Mantidos limite semanal e financeiro; liberação semanal não ignora cota mensal. Regras e defesa em SALDO_MENSAL.md.
+
+Validações novas: 152 testes TypeScript (11 novos), 13 Python, geração/validação Prisma e build/typecheck aprovados. Testes históricos de migração passaram a projetar as colunas anteriores e esperar versão 7, preservando a comparação do conteúdo original; novo teste verifica as colunas novas nulas, backup e persistência do saldo. SQLite real migrado com backup e hashes anteriores das 15 tabelas preservados, nenhuma FK inválida. Supabase de homologação recebeu migração 7; prova externa de concorrência/idempotência/cancelamento/configuração com dados sintéticos, removidos ao final; hashes anteriores das 15 tabelas preservados.
+
+Navegador isolado: configuradas duas aulas; aluno fez dois check-ins, saldo 2→1→0, aviso e bloqueio da terceira aula; listagem administrativa exibiu zero. Nenhum aluno real teve limite alterado para testar. Capturas com dados fictícios. Suíte/contagens antigas continuam identificadas como históricas. Conjuntos prévios preservados. Entrega pronta para validação; sem commit/push, merge, tag ou hospedagem pública.
+
+## Remoção de Alunos habituais do formulário — 25/10/2026
+
+Usuário pediu “remover alunos habituais” durante os ajustes de turmas. Codex comunicou remoção da seção do formulário, preservando vínculos existentes. Retirados seleção, busca e estados associados de TurmaForm; mantido envio dos vínculos originais na edição e lista vazia na criação. Descrição do modal atualizada. Build/typecheck aprovados; navegador isolado com SQLite em memória confirmou criação/edição sem a seção e edição salva mantendo o vínculo fictício anterior. Sem migração, escrita em dados reais, repetição da suíte completa ou commit/push. Alterações pendentes anteriores preservadas.
+
+## Acesso administrativo local sem senha — 25/10/2026
+
+Usuário solicitou retirar a digitação de senha temporariamente para entrar como administrador. Codex informou que limitaria a conveniência a este computador. Implementada flag privada com padrão false no exemplo, guardas de loopback/ambiente/origem e prioridade para sessões normais de aluno. Senhas e cadastros não foram apagados. O .env local estava ausente; criado com HOST de loopback e flag ativa. A flag foi definida explicitamente como false em .env.homologacao para impedir herança do .env por dotenv; conexões e credenciais privadas foram conferidas como preservadas.
+
+Primeira execução de testes na sandbox teve EACCES ao conectar às portas efêmeras do Supertest; não foi apresentada como resultado funcional. Reexecução com acesso às conexões locais: suíte completa, 141 aprovados, zero falhas. Build/typecheck aprovados. API local reiniciada com SQLite preservado; frontend e Python recolocados em execução após encerramento dos filhos pelo supervisor anterior. Conferência real sem cookie nas portas 3333 e 5173: admin/estado e turmas 200; encaminhamento simulado bloqueado 401; Python /health 200. Nenhuma migração ou teste funcional externo Supabase nesta alteração. Documentação de reversão atualizada. Conjuntos anteriores pendentes preservados; sem commit/push e aguardando validação.
+
+## Nome automático de turmas — 25/10/2026
+
+Pedido: checkbox Nome automático ao lado do nome das turmas, selecionado por padrão, preenchendo Turma das: conforme a hora escolhida. Estado inicial da branch codex/evolucao-tatame já continha o conjunto pendente de homologação; ele foi preservado. Implementado no formulário/helper/CSS, com sugestão derivada do início mais cedo da grade, minutos quando necessários e modo manual. Nova turma começa automática; edição preserva nomes personalizados e reconhece nomes calculados, sem migração ou alteração de rotas.
+
+Executados build/typecheck (aprovados), oito testes existentes do helper de horários (aprovados) e criação/edição no navegador usando servidor descartável, identidade fictícia e SQLite em memória. Conferidos horas/minutos, vários intervalos, mudança e remoção do mais cedo, nome manual preservado e nomes salvos/reabertos. Evidência em screenshots/turma-nome-automatico.png. Build atualizado para a tela normal; servidores locais existentes em 3333/5173 conferidos. Sem nova execução de Python/Prisma ou suíte completa, pois esta alteração afeta somente o preenchimento do frontend. Aguardando validação; sem commit/push para este incremento nem para o conjunto prévio pendente.
+
+## Usuário comum no ambiente de testes — 23/10/2026
+
+Usuário pediu uma conta sem permissão de administrador. Conferidos administrador existente e configuração inicial encerrada; criados Aluno de Teste e Usuario/perfil aluno no Supabase de homologação, sem alterar administrador ou SQLite. Teste real: login/portal próprios 200, 13 acessos/escritas administrativas bloqueados com 403, logout 204. Removidas senha e sessões temporárias; convite de ativação de 24h gerado para escolha pessoal da senha, guardado em arquivo ignorado. Nenhum convite/senha versionado ou enviado por e-mail. Ativação humana, hospedagem pública e commit/push pendentes.
+
+## Autenticação e migrações externas concluídas — 23/10/2026
+
+Após nova entrada da senha pelo usuário, autenticação Supabase aceita e socket TLS cliente autorizado com a CA oficial. Confirmado novamente destino e banco vazio; Prisma migrate deploy aplicou as seis migrações existentes com saída 0. Conferidos seis registros concluídos, 16 tabelas públicas e nenhum usuário. Sem reset, seed ou transferência do SQLite. API local alternada para homologação sem modificar .env; tela e estado de configuração retornaram 200 em 127.0.0.1:3333, aguardando criação pessoal do administrador. Porta 5173 não acessível nessa etapa; Python não revalidado. Ainda sem hospedagem pública ou novo commit/push.
+
+## Instalação do certificado — 23/10/2026
+
+Após o usuário baixar a CA oficial, Codex a copiou para data/certificados, conferiu que é uma CA válida e configurou sslrootcert na URI de homologação. Arquivos privados continuam ignorados. Nova tentativa confirmou TLS, mas retornou 28P01 (credenciais recusadas). Próximo passo humano: informar novamente a senha do banco no configurador local. Ainda sem migrações externas, conta inicial, hospedagem ou novo commit/push.
+
+## Tentativa de conexão externa — 23/10/2026
+
+Usuário concluiu a entrada privada da senha pelo configurador. A tentativa real com TLS completo retornou SELF_SIGNED_CERT_IN_CHAIN. Autenticação e estrutura do banco ainda não comprovadas; nenhuma migração ou escrita executada. Orientado download da CA oficial em Database Settings > SSL Configuration para configurar a confiança do cliente e repetir o teste. Mantida a verificação TLS.
+
+## Início da homologação — 23/10/2026
+
+Usuário autorizou começar o ambiente online para Gabriel testar; informou não possuir contas Render/Supabase. Criou pessoalmente o projeto Supabase tatame-homologacao gratuito, North Virginia, e copiou a URI do Session pooler para .env.homologacao. Esse arquivo foi preparado separado do .env e confirmado como ignorado pelo Git; a URI foi conferida por indicadores, sem imprimir conexão/senha. Na conferência ainda havia marcador YOUR-PASSWORD, sem teste externo de autenticação.
+
+Preparado utilitário de senha oculta no terminal, codificação de símbolos e TLS verify-full, sem rede nem alterações no banco local. Guia em HOMOLOGACAO.md. Não foi criada conta ou senha pelo agente. Render, migrações externas, administrador e implantação continuam pendentes; nenhuma etapa foi presumida como concluída. Novo conjunto ainda precisa de validação antes de commit/push.
+
 ## Aprovação dos planos para commit/envio — 22/10/2026
 
 Após a apresentação da entrega de planos, o usuário autorizou “testa e commita”. Foram repetidos `npm test` (136 aprovados, zero falhas/cancelamentos/ignorados), `npm run test:analytics` (13 aprovados), `npm run build` (typecheck/Vite aprovados), `npm run db:generate` e `prisma validate` (aprovados). Revisão de arquivos modificados/novos e links documentais antes da seleção. A autorização atual supera a pendência de aprovação registrada na implementação abaixo.

@@ -1,5 +1,63 @@
 # Arquitetura — Academia de Jiu-Jitsu
 
+## Catálogo de graduações e agenda por turmas — 26/10/2026
+
+FaixaGraduacao e GrauFaixa substituem a lista fixa como fonte de seleção. Aluno recebe faixaId/grauId, mantendo o texto faixa por compatibilidade; renomear atualiza os alunos em transação. Chave normalizada impede nomes equivalentes e grau é único dentro de cada faixa. Inativação preserva atribuições, exclusão protege vínculos. SQLite usa FKs/triggers; PostgreSQL acrescenta FK composta/check e trigger para coerência do nome. Migração 10 conserva campos antigos e não presume grau dos alunos. [GRADUACOES.md](GRADUACOES.md) detalha modelos, contratos, validação e limites.
+
+GET /api/graduacoes é leitura autenticada; manutenção é administrativa. Cadastro do aluno e transação familiar validam a graduação no servidor. GraduacoesProvider compartilha o catálogo com selects e indicadores visuais; Python aceita nomes configuráveis mantendo o algoritmo de indicadores. O perfil básico do aluno continua impedido de alterar graduação.
+
+A agenda cria novos encontros exclusivamente por POST /api/aulas/da-grade, com origem grade e horário de turma. Rotas de criar/excluir avulsas e métodos específicos foram removidos. Origem extra continua no contrato persistido apenas para leitura e operação de históricos já existentes; não se reescrevem registros antigos. Novas reservas pagas exigem origem grade; reservas legadas já confirmadas são preservadas. Essa retirada não remove o cálculo de saldo, os débitos ou as liberações de participação. [AULAS.md](AULAS.md) registra o fluxo atual.
+
+## Edição do perfil pelo próprio aluno — 26/10/2026
+
+Novos contratos `GET/PUT /api/portal/perfil`, exclusivos de conta de aluno com acesso próprio. A identidade é derivada da sessão; o corpo aceita somente nome, telefone, e-mail e, para mudança de e-mail, senha atual. Não altera faixa, cadastro administrativo, plano, financeiro ou vínculo familiar. Consulta/edição do perfil continuam disponíveis durante bloqueio financeiro; check-in permanece bloqueado.
+
+`modules/auth/perfil.ts` concentra validação, autorização e plano de alteração. `Repository.savePerfilAluno` atualiza Aluno e Usuario na mesma transação, verifica exclusividade nas duas entidades e revalida sessão/prova de senha sob a trava de gravação. SQLite usa BEGIN IMMEDIATE; PostgreSQL bloqueia Aluno e Usuario nessa ordem, consistente com as transferências familiares. E-mail novo invalida convites e outras sessões; senha e sessão atual são preservadas. Colisão ou falha de auditoria reverte tudo.
+
+`EventoAcessoAluno` também recebe ações de perfil com o aluno como autor e somente a lista de campos alterados, sem contatos anteriores/senha. Não há alteração no modelo ou migração nova. `PerfilAluno.tsx` implementa consulta/formulário/cancelamento/confirmação; `StudentPortal.tsx` atualiza os dados após salvar. Regras, testes reais e limite da prova externa em [ACESSO_ALUNO.md](ACESSO_ALUNO.md). Confirmação de posse do novo e-mail por serviço externo continua futura.
+
+## Acesso familiar e migração 9 — 25/10/2026
+
+Detalhes, contratos e decisões em [RESPONSAVEIS.md](RESPONSAVEIS.md). Usuário e aluno continuam entidades distintas: novo perfil responsavel se liga a vários menores por ResponsavelAluno. Aluno recebe possuiCelular/acessoPrincipal/responsabilidadeTransferidaEm; EventoAcessoAluno registra autor/data/tipo da alteração e ComunicadoAluno registra destinatário, autor, texto e primeira resposta. Vínculo operacional, contato e arquivo são estados distintos; apenas o primeiro concede acesso, e somente durante a menoridade/cadastro ativo.
+
+A identificação de sessão/ativação revalida acesso. O portal é reutilizado em /api/responsavel/:alunoId/portal, após verificar perfil, vínculo e idade; não confia no ID escolhido pelo cliente. Check-in e resposta a comunicado repetem a verificação dentro da transação. Menor com celular usa a própria conta para check-in; responsável pode consultar finanças, confirmar adicional com débito e responder suas autorizações, sem poderes administrativos. Ao completar 18, acesso parental é recusado imediatamente; administrador prepara conta própria e decide preservar contato. Mesmo Aluno.id e histórico são mantidos.
+
+familia.ts monta um plano de alterações comum aos repositórios, aplicado atomicamente. SQLite reconstrói a restrição de perfil do Usuario com cópia integral, backup e verificação/restauração de FKs. PostgreSQL altera constraints e serializa operações familiares com trava transacional, evitando usuários duplicados entre irmãos. Convites continuam únicos/24h e senha é escolhida pelo destinatário. Troca para responsável ou transferência própria invalida as credenciais antigas do aluno; a conta de responsável compartilhada não é apagada.
+
+Alunos antigos continuam com acesso próprio. Sem e-mail próprio, identificador único em cadastro.invalid mantém o contrato SQL anterior e é exibido como Sem e-mail próprio. Ativação própria exige e-mail válido; não há envio para identificador interno. Um e-mail pertence a um perfil, e cada menor tem um responsável operacional nesta entrega. Mensagens ficam dentro do Tatame, com destinatário fixado no envio; integrações externas continuam futuras. Migração 9 local/homologação e testes aprovados; validação humana pendente.
+
+## Reservas de aulas adicionais e débitos — 25/10/2026
+
+Migração aditiva 8 cria ConfiguracaoAcademia (singleton principal, preço em centavos, prazo e auditoria) e DebitoAula (aluno+aula únicos, motivo, condições/datas congeladas, status e baixa auditada). Aluno mantém o saldo mensal já implementado. DebitoAula ativo representa a reserva/autorização de uma aula adicional; não é check-in ou presença, não aumenta cota genérica e não altera mensalidades. Configuração começa sem preço e com prazo 3. O professor usa conta administrativa para configurar/baixar; não foi criado novo perfil.
+
+Confirmar requer aceite explícito de preço e prazo; backend compara com configuração atual, valida alvo/limite mensal do mês da aula e grava uma única cobrança. Reserva e check-in serializam aula/aluno: BEGIN IMMEDIATE em SQLite, FOR UPDATE no PostgreSQL. A mesma aula confirmada novamente retorna o débito existente. Adicionais ativos são excluídos do consumo das cotas mensais/semanais regulares e permitem check-in daquela aula no dia, respeitando situação cadastral e financeiro. Débito pendente vencido bloqueia novas reservas/check-ins sem impedir login ou consulta de débitos próprios.
+
+GET /api/portal/debitos filtra pelo aluno da sessão, mesmo com bloqueio de mensalidade. POST /api/portal/aulas/:id/adicional recebe somente aceite/condições esperadas, nunca aluno/valor/vencimento/status finais. /api/debitos e configuração/baixa são administrativos. Baixa bloqueia a linha do débito e é idempotente. Cancelar aula cancela pendências; pagamentos preservados recebem indicação de cancelamento para acerto manual, sem reembolso automático. FK e regras de exclusão preservam a rastreabilidade.
+
+Menus de gestão/aluno consultam esses endpoints; confirmação abre preço/data/prazo antes de gerar débito e depois mostra a lista imediatamente. Mensalidades/receita analítica continuam separadas; não há banco/gateway/notificação externa. Migrações reais e testes de concorrência/snapshots em SQLite e Supabase registrados em [DEBITOS.md](DEBITOS.md).
+
+## Saldo mensal armazenado no aluno — 25/10/2026
+
+Migração aditiva 7 acrescenta limiteAulasMensal, aulasRestantesMes e mesSaldoAulas ao Aluno; null mantém ilimitado e a competência identifica o mês do saldo. AlunoInput exclui esses campos: somente a rota administrativa de saldo configura limite, nunca um cliente define o saldo resultante. O ledger CheckinAula confere consumo de aulas não canceladas por mês do calendário em São Paulo. Consultas calculam competência atual; check-in, ajuste de limite e cancelamento persistem saldo/competência na mesma transação. Não há dependência de cron ou da data de pagamento.
+
+O módulo modules/planos/saldo-mensal.ts contém cálculo/validação. SQLite usa BEGIN IMMEDIATE; Prisma/PostgreSQL usa bloqueio da linha Aluno, compatível com o limite semanal existente. Criação do check-in e débito são atômicos, e repetição não debita novamente. Cancelamento sincroniza alunos afetados, com bloqueios em ordem; não apaga o aviso. Uma liberação semanal extra não ignora o limite mensal. A confirmação da presença não debita, e ausência após check-in não devolve crédito mensal automaticamente. Backend segue prioritário para bloqueio financeiro e demais regras.
+
+API GET/PUT /api/alunos/:id/saldo-mensal é administrativa; portal retorna apenas o saldo próprio. A listagem de alunos mostra o saldo mensal; a ficha permite limite de 1 a 1000 ou ilimitado. Textos semanais foram ajustados para distinguir ausência de limite semanal de ausência de limite mensal. SQLite e Supabase de homologação tiveram migração, preservação e verificações reais registradas em [SALDO_MENSAL.md](SALDO_MENSAL.md), sem assumir validação completa de outras integrações.
+
+## Formulário sem seleção de alunos — 25/10/2026
+
+TurmaForm não edita mais os vínculos habituais. Para manter o contrato atual sem apagar dados existentes, envia alunoIds vazio na criação e a lista já cadastrada na edição. AlunoTurma e o uso dos vínculos na previsão de aulas permanecem no backend. Remoção solicitada é de interface, sem migração ou mudança de permissões.
+
+## Administrador local temporário — 25/10/2026
+
+`server.ts` lê a opção privada TATAME_ADMIN_LOCAL e a passa explicitamente à fábrica da aplicação; o padrão é desligado. Após tentar a sessão normal, `auth.identify` pode identificar o administrador inicial existente somente quando `modules/auth/local-admin.ts` comprova requisição e configuração locais. Não cria cookie, sessão ou usuário e não substitui uma sessão válida de aluno. Essa é uma exceção temporária solicitada pelo usuário, com efeitos administrativos completos para quem acessa localmente sem sessão; não é um método de autenticação para publicação.
+
+Guardas: loopback no bind, hostname e socket, sem origem publicada ou modo production, sem encaminhamento por proxy nem origem externa/cross-site. Desativar a flag e reiniciar remove a exceção sem deixar sessão automática válida. Contratos HTTP, modelo de dados e senhas permanecem os mesmos. Decisão e procedimento de reversão em [ACESSO_ALUNO.md](ACESSO_ALUNO.md).
+
+## Nome automático no formulário de turmas — 25/10/2026
+
+Responsabilidade do frontend: `nomeAutomaticoDaTurma`, em `apps/web/src/turma-horarios.ts`, calcula uma sugestão com o início mais cedo da grade; `TurmasPage.tsx` controla checkbox e alternância manual/automática. O nome é derivado dos horários atuais, evitando guardar duas cópias que poderiam divergir durante o preenchimento. A API recebe o mesmo campo `nome` de antes e mantém suas validações. Não há novo contrato ou coluna: ao editar, o formulário compara nome salvo e sugestão para reconhecer o modo automático, preservando nomes personalizados. Essa opção é conveniência de preenchimento; o banco guarda o resultado escolhido pelo administrador. Detalhes e limite dessa inferência em [TURMAS.md](TURMAS.md).
+
 ## Planos individuais — desenho e implementação local em 22/10/2026
 
 Modelo e regras registrados antes do código em [PLANOS.md](PLANOS.md). `PlanoAluno` guarda nome e limite semanal opcional, com aluno único; ausência de configuração mantém ilimitado. `LiberacaoAula` registra autorização nominal por aula/aluno, motivo, administrador e data. Migração SQLite 6 e equivalente Prisma/PostgreSQL adicionam somente essas duas tabelas; nenhuma alteração nas mensalidades ou migrações antigas.

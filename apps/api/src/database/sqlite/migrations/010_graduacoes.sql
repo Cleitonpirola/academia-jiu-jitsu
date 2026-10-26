@@ -1,0 +1,17 @@
+CREATE TABLE FaixaGraduacao (id TEXT PRIMARY KEY NOT NULL,nome TEXT NOT NULL UNIQUE,chave TEXT NOT NULL UNIQUE,cor TEXT NOT NULL,ordem INTEGER NOT NULL CHECK(ordem BETWEEN 0 AND 9999),situacao TEXT NOT NULL CHECK(situacao IN ('ativo','inativo')),criadoEm TEXT NOT NULL,atualizadoEm TEXT NOT NULL);
+CREATE TABLE GrauFaixa (id TEXT PRIMARY KEY NOT NULL,faixaId TEXT NOT NULL REFERENCES FaixaGraduacao(id) ON DELETE RESTRICT,numero INTEGER NOT NULL CHECK(numero BETWEEN 0 AND 99),situacao TEXT NOT NULL CHECK(situacao IN ('ativo','inativo')),criadoEm TEXT NOT NULL,atualizadoEm TEXT NOT NULL,UNIQUE(faixaId,numero),UNIQUE(faixaId,id));
+INSERT INTO FaixaGraduacao VALUES ('00000000-0000-4000-8100-000000000001','Branca','branca','#F3F4F6',1,'ativo','2026-10-26T00:00:00.000Z','2026-10-26T00:00:00.000Z'),
+('00000000-0000-4000-8100-000000000002','Cinza','cinza','#9CA3AF',2,'ativo','2026-10-26T00:00:00.000Z','2026-10-26T00:00:00.000Z'),
+('00000000-0000-4000-8100-000000000003','Amarela','amarela','#EAB308',3,'ativo','2026-10-26T00:00:00.000Z','2026-10-26T00:00:00.000Z'),
+('00000000-0000-4000-8100-000000000004','Laranja','laranja','#F97316',4,'ativo','2026-10-26T00:00:00.000Z','2026-10-26T00:00:00.000Z'),
+('00000000-0000-4000-8100-000000000005','Verde','verde','#22C55E',5,'ativo','2026-10-26T00:00:00.000Z','2026-10-26T00:00:00.000Z'),
+('00000000-0000-4000-8100-000000000006','Azul','azul','#3B82F6',6,'ativo','2026-10-26T00:00:00.000Z','2026-10-26T00:00:00.000Z'),
+('00000000-0000-4000-8100-000000000007','Roxa','roxa','#8B5CF6',7,'ativo','2026-10-26T00:00:00.000Z','2026-10-26T00:00:00.000Z'),
+('00000000-0000-4000-8100-000000000008','Marrom','marrom','#92400E',8,'ativo','2026-10-26T00:00:00.000Z','2026-10-26T00:00:00.000Z'),
+('00000000-0000-4000-8100-000000000009','Preta','preta','#1F2937',9,'ativo','2026-10-26T00:00:00.000Z','2026-10-26T00:00:00.000Z');
+ALTER TABLE Aluno ADD COLUMN faixaId TEXT REFERENCES FaixaGraduacao(id) ON DELETE RESTRICT;
+ALTER TABLE Aluno ADD COLUMN grauId TEXT REFERENCES GrauFaixa(id) ON DELETE RESTRICT;
+INSERT INTO FaixaGraduacao SELECT lower(hex(randomblob(4)))||'-'||lower(hex(randomblob(2)))||'-4'||substr(lower(hex(randomblob(2))),2)||'-8'||substr(lower(hex(randomblob(2))),2)||'-'||lower(hex(randomblob(6))),a.faixa,'legada:'||lower(trim(a.faixa)),'#64748B',100,'ativo','2026-10-26T00:00:00.000Z','2026-10-26T00:00:00.000Z' FROM (SELECT DISTINCT faixa FROM Aluno) a WHERE NOT EXISTS(SELECT 1 FROM FaixaGraduacao f WHERE f.nome=a.faixa);
+UPDATE Aluno SET faixaId=(SELECT id FROM FaixaGraduacao WHERE nome=Aluno.faixa);
+CREATE TRIGGER Aluno_graduacao_insert BEFORE INSERT ON Aluno WHEN (NEW.faixaId IS NOT NULL AND NOT EXISTS(SELECT 1 FROM FaixaGraduacao WHERE id=NEW.faixaId AND nome=NEW.faixa)) OR (NEW.grauId IS NOT NULL AND (NEW.faixaId IS NULL OR NOT EXISTS(SELECT 1 FROM GrauFaixa WHERE id=NEW.grauId AND faixaId=NEW.faixaId))) BEGIN SELECT RAISE(ABORT,'Graduacao incompativel'); END;
+CREATE TRIGGER Aluno_graduacao_update BEFORE UPDATE OF faixa,faixaId,grauId ON Aluno WHEN (NEW.faixaId IS NOT NULL AND NOT EXISTS(SELECT 1 FROM FaixaGraduacao WHERE id=NEW.faixaId AND nome=NEW.faixa)) OR (NEW.grauId IS NOT NULL AND (NEW.faixaId IS NULL OR NOT EXISTS(SELECT 1 FROM GrauFaixa WHERE id=NEW.grauId AND faixaId=NEW.faixaId))) BEGIN SELECT RAISE(ABORT,'Graduacao incompativel'); END;

@@ -1,5 +1,17 @@
 # Aulas datadas — entrega 1B
 
+## Fluxo atual: aulas publicadas pelas turmas — 26/10/2026
+
+**Criação e exclusão de aulas avulsas retiradas a pedido do usuário.** Em Turmas, configure os dias e intervalos, usando Incluir mais horários quando necessário. Uma turma coringa pode reunir 12h, 15h e 18h. Em **Aulas → Adicionar aula da turma**, escolha o horário e publique o encontro na data correspondente.
+
+ExtraForm, botão Aula extra, filtro de avulsas, exclusão e funções específicas foram retirados. POST /api/aulas/extras e DELETE /api/aulas/:id retornam 404. A origem extra continua legível somente para conservar registros anteriores; não houve exclusão ou conversão de aulas, presenças, check-ins ou débitos existentes. Consulta, chamada, cancelamento e utilização de avisos/reservas já existentes permanecem compatíveis. O rótulo desses encontros é Registro anterior.
+
+O usuário confirmou **manter cobrança de aula adicional ao esgotar o plano**. Novas reservas pagas exigem uma aula publicada a partir de turma. Uma reserva antiga de avulsa já confirmada continua idempotente e utilizável, evitando perda de crédito/histórico. Isso não reativa a criação de aulas avulsas. Liberações de participação do plano continuam distintas da origem da aula.
+
+Verificação: suíte completa de 206 testes TypeScript, 15 Python e build/typecheck aprovados; provas de retirada dos endpoints, publicação coringa, preservação do legado e adicionais. Navegador em memória publicou 15h a partir da turma e confirmou ausência dos botões de avulsas/exclusão. Supabase sintético publicou os três horários, validou rotas removidas e foi limpo com hashes das 22 tabelas iguais ao início. Detalhes do catálogo em [GRADUACOES.md](GRADUACOES.md). Registros de entregas anteriores abaixo são históricos e devem ser lidos à luz deste fluxo atual.
+
+![Agenda por turma e ícone de mensalidades atualizado, em dados fictícios](screenshots/agenda-somente-turmas.png)
+
 **Planos — incremento local em 22/10/2026:** autorização extra nominal também impede excluir definitivamente uma aula, mesmo antes do check-in; pode revogar a autorização ainda não usada ou cancelar quando permitido. A liberação não cria cobrança nem presença. A chamada continua registrando participação real; o limite comercial atua nos novos check-ins. Guia e validação: [PLANOS.md](PLANOS.md). Entrega aprovada para commit/envio após nova execução automatizada bem-sucedida.
 
 **Evolução em 22/10/2026:** área administrativa protegida por login; aluno possui portal próprio para consulta e check-in no dia da aula. A agenda mostra avisos pendentes e a chamada permite confirmá-los. Extra com check-in não pode ser excluída; o cancelamento preserva os avisos se ainda não houver chamada. As referências abaixo a ausência de login descrevem a entrega original. Guia: [ACESSO_ALUNO.md](ACESSO_ALUNO.md). Novo conjunto local aguarda validação antes de commit/push.
@@ -18,7 +30,7 @@ Ao criar a aula, copiamos os dados daquele momento. Se o professor ou a grade mu
 
 1. Em **Turmas**, crie uma turma ativa, professor, horários e alunos habituais. Ela pode ter 12h–13h e 18h–19h na mesma segunda-feira.
 2. Entre em **Aulas** e escolha a segunda-feira desejada, inclusive futura. **Da grade fixa** mostra os horários ativos compatíveis com esse dia. Crie cada encontro desejado. O sistema não gera um calendário inteiro sozinho.
-3. Clique em **Aula extra**, informe título, professor, data e início/término. Deixe avulsa ou escolha uma turma ativa. Crie, por exemplo, 15h–16h. A grade continua às 12h e 18h.
+3. Para um encontro às 15h, inclua 15h–16h na turma (marcando Incluir mais horários, se necessário) e publique esse horário em Adicionar aula da turma. A criação avulsa foi retirada.
 4. Confira os três encontros ordenados por início. Busque título/turma/professor, filtre por turma/situação e navegue pelos dias. Os três contadores resumem o dia completo, antes dos filtros.
 5. Abra **Detalhes**. Alunos previstos são os habituais ativos no momento da criação; a lista não marca presença ou falta, não é reserva e não limita quem poderá participar.
 6. Clique em **Cancelar aula**, leia a explicação e informe o motivo. **Voltar** não altera a aula. Confirmar mantém a aula cancelada na agenda e conserva seus dados. O primeiro motivo/data de cancelamento é mantido mesmo se a requisição for repetida.
@@ -58,9 +70,9 @@ Turmas/aulas começam vazias na instalação real. As turmas e encontros das cap
 | GET `/api/aulas` | Lista cronológica; filtros opcionais dataInicio, dataFim, turmaId e situacao |
 | GET `/api/aulas/:id` | Aula com alunosPrevistos |
 | POST `/api/aulas/da-grade` | horarioId/dataAula; 201 se criada, 200 se já existente |
-| POST `/api/aulas/extras` | titulo/professor/dataAula/horaInicio/horaFim/turmaId (UUID ou null); 201 |
+| POST `/api/aulas/extras` | Removido em 26/10/2026; retorna 404. |
 | PATCH `/api/aulas/:id/cancelamento` | motivo de 3 a 300 caracteres; 200, mantendo primeiro cancelamento |
-| DELETE `/api/aulas/:id` | Apenas origem extra, agendada/cancelada; remove aula e previstos e retorna 204. Grade fixa retorna 409 |
+| DELETE `/api/aulas/:id` | Removido em 26/10/2026; retorna 404. Use cancelamento quando permitido. |
 
 Entradas estritas: campos extras são rejeitados. Datas/regras inválidas geram 400; referências inexistentes e ID de aula inválido geram 404. Excluir novamente uma extra já removida retorna 404. Listagens ainda carregam o conjunto e filtram na interface; paginação/consulta por janela deve ser revista quando o volume crescer.
 

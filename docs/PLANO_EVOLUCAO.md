@@ -1,5 +1,9 @@
 # Plano de evolução para o desafio técnico
 
+## Incremento de acesso familiar — 25/10/2026
+
+Entregue para validação: responsáveis vinculados a menores, seleção de dependente, check-in pelo responsável sem celular, comunicados/autorizações internos e transições de acesso sem apagar histórico. Migração 9 testada em SQLite e Supabase. Consulte [RESPONSAVEIS.md](RESPONSAVEIS.md). Conclusão técnica não representa aprovação de commit/push nem implantação pública. Integrações externas permanecem futuras.
+
 **Aprovação posterior — 22/10/2026:** chamada, horários combinados, aniversários, login/portal e bloqueio financeiro aprovados para commit/envio após nova validação bem-sucedida. As pendências de aprovação nos registros anteriores são históricas. Main, tag v1.0.0 e integrações externas não fazem parte do envio. Registro em [PROCESSO.md](PROCESSO.md).
 
 Data: 10/10/2026. Referência preservada: tag `v1.0.0`, commit `618c1b3`.
@@ -131,6 +135,10 @@ O commit inicial é um retrato da versão 1.0.0. A partir dele, usar commits peq
 Na defesa, praticar explicar o caminho de uma ação da tela ao banco, as chaves e relações, o significado de centavos inteiros, a derivação do status, a fórmula de risco e a diferença entre cálculo determinístico e interpretação por IA.
 
 ## 7. n8n e outras evoluções
+
+**Envio de e-mail solicitado em 25/10/2026:** registrado nas integrações complexas futuras, conforme alternativa autorizada pelo usuário. Começar por convites de ativação/recuperação; depois avaliar avisos e lembretes financeiros. Depende de provedor/remetente, configuração privada, endereço público e tratamento de destinatários, falhas e duplicidade. Escopo e critérios em [PLANO_FUNCIONAL.md](PLANO_FUNCIONAL.md). Nenhum serviço ou envio foi configurado nesta etapa; links manuais e comunicados internos continuam como estão.
+
+**Adição solicitada em 25/10/2026:** envio automático de parabéns de aniversário por WhatsApp registrado entre as integrações complexas futuras. A homenagem interna já existe; envio externo ainda depende de integração e execução agendada. Escopo, dependências e critérios de aceite em [PLANO_FUNCIONAL.md](PLANO_FUNCIONAL.md). Nenhum envio ou agendamento configurado agora.
 
 Uma automação útil seria consultar cobranças pendentes/atrasadas e preparar lembretes de vencimento. Antes de um envio real, definir destinatários, autorização, canal e critérios; registrar o processamento por cobrança para evitar duplicidades e conferir o pagamento novamente antes de enviar.
 

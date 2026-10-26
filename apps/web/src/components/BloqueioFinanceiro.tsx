@@ -12,7 +12,7 @@ export function BloqueioFinanceiro({ bloqueio, loading, onRefresh }: { bloqueio:
     <p className="financial-lock-message" role="status">{bloqueio.mensagem}</p>
     <div className="financial-lock-summary"><span>{bloqueio.pendencias.length} {bloqueio.pendencias.length === 1 ? 'mensalidade vencida' : 'mensalidades vencidas'}</span><strong>{money(total)}</strong></div>
     <div className="financial-lock-bills">{bloqueio.pendencias.map(item => <div key={item.id}><div><strong>Mensalidade · {item.competencia.split('-').reverse().join('/')}</strong><span>Venceu em {dateLabel(item.dataVencimento)}</span></div><strong>{money(item.valorCentavos)}</strong></div>)}</div>
-    <p className="helper">O acesso às aulas, ao check-in e às demais áreas será liberado quando a academia registrar o pagamento de todas as mensalidades vencidas. Seu cadastro e seu histórico continuam preservados.</p>
+    <p className="helper">O acesso às aulas e ao check-in será liberado quando a academia registrar o pagamento de todas as mensalidades vencidas. Seu cadastro e seu histórico continuam preservados.</p>
     <Button disabled={loading} onClick={onRefresh}><RefreshCw size={16}/>{loading ? 'Verificando…' : 'Verificar liberação do acesso'}</Button>
     <p className="helper">Já realizou o pagamento? Avise seu professor para que ele registre a confirmação no sistema.</p>
   </section>;

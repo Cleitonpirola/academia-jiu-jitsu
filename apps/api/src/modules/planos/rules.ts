@@ -1,8 +1,8 @@
-import type { Aula, CheckinAula, LiberacaoAula, PlanoAluno, Presenca, PresencaAula, UsoPlano } from '@tatame/shared';
+import type { Aula, CheckinAula, DebitoAula, LiberacaoAula, PlanoAluno, Presenca, PresencaAula, UsoPlano } from '@tatame/shared';
 import { today } from '../../domain.js';
 import { HttpError } from '../../http-error.js';
 
-export interface ContextoPlano { plano: PlanoAluno | null; aulas: Aula[]; checkins: CheckinAula[]; chamada: PresencaAula[]; antigas: Presenca[]; liberacoes: LiberacaoAula[] }
+export interface ContextoPlano { plano: PlanoAluno | null; aulas: Aula[]; checkins: CheckinAula[]; chamada: PresencaAula[]; antigas: Presenca[]; liberacoes: LiberacaoAula[]; debitos?: DebitoAula[] }
 
 export function semana(data: string) {
   const inicio = new Date(data + 'T12:00:00Z');
@@ -18,6 +18,7 @@ export function usoPlano(ctx: ContextoPlano, alunoId: string, referencia = today
   const checkins = new Set(ctx.checkins.filter(item => item.alunoId === alunoId).map(item => item.aulaId));
   const chamada = new Map(ctx.chamada.filter(item => item.alunoId === alunoId).map(item => [item.aulaId, item]));
   const liberadas = new Set(ctx.liberacoes.filter(item => item.alunoId === alunoId).map(item => item.aulaId));
+  for (const item of ctx.debitos ?? []) if (item.alunoId === alunoId && !item.canceladoEm && item.statusPagamento !== 'cancelado') liberadas.add(item.aulaId);
   const usadas = aulas.filter(aula => chamada.has(aula.id) ? chamada.get(aula.id)!.presente : checkins.has(aula.id));
   const extrasUtilizadas = usadas.filter(aula => liberadas.has(aula.id)).length;
   const utilizadas = usadas.length - extrasUtilizadas + ctx.antigas.filter(item => item.alunoId === alunoId && item.presente && dentro(item.dataTreino)).length;

@@ -1,5 +1,69 @@
 # Registro de prompts
 
+## Faixas, graus, retirada de avulsas e ícone financeiro — 26/10/2026
+
+Pedidos: “ter um cadastro de faixas e um cadastro de graus dentro da faixa”; depois, configuração própria da academia e retirada de páginas/funções de aulas avulsas por uso de turmas com vários horários/coringa; ícone de Mensalidades para $. Codex perguntou se manteria a cobrança de aula adicional ao esgotar o plano; usuário confirmou. Foram implementados catálogo, vínculos, migração e telas, preservando faixas/históricos anteriores e separando origem avulsa de compra de participação adicional. Usuário também pediu checkpoint se faltassem tokens, salvo em RETOMADA.md.
+
+Após execução de testes, usuário autorizou commit condicionado ao sucesso. Codex comunicou revisão e envio do conjunto integrado à branch de trabalho. Novo pedido posterior de editar o nome de uma aula foi separado para implementação/validação posterior; não foi tratado como autorização automática para incluir novo comportamento no mesmo commit aprovado.
+
+## Aluno editar dados básicos — 26/10/2026
+
+Pedido: “o aluno precisa conseguir editar seus dados básicos (nome, telefone e email)”. Codex comunicou edição em Meu perfil, isolamento pela sessão e confirmação de senha para mudar o e-mail de login. Implementou consulta/edição dos três campos, sincronização de ficha e conta em transação, restrição de campos administrativos e formulário. Mantida edição de contato durante bloqueio financeiro, sem liberar aulas. Não expandiu a permissão para o responsável editar o login do dependente. Registro e defesa em ACESSO_ALUNO.md. Prova externa foi restringida a IDs sintéticos após bloqueio da repetição de um teste que invocava a limpeza global de sessões expiradas do login. Nenhum commit/envio autorizado por este pedido.
+
+## Incluir mais horários somente quando solicitado — 26/10/2026
+
+Pedido do usuário: checkbox “Incluir mais horários” inicialmente desmarcado; mostrar um horário e ocultar botão de adicionar; marcar libera extras e desmarcar oculta novamente. Codex comunicou modo simples e preservação de grades existentes. Para dar sentido ao salvamento com a opção desligada, somente o primeiro intervalo da primeira combinação fica ativo; demais campos permanecem como rascunho recuperável enquanto aberto, com orientação visível. Turmas com múltiplas combinações/intervalos abrem marcadas na edição. Implementação no formulário/CSS, sem alterar contratos ou banco. Verificação e exemplos em TURMAS.md; aguarda validação do usuário antes de commit/envio.
+
+## Envio de e-mail como integração futura — 25/10/2026
+
+Pedido: “funcionar envio de email - for complexo, coloque nas opções complexas futuras”. Codex conferiu os convites existentes e a ausência de serviço de entrega integrado na API/dependências/configuração de exemplo. Comunicou a dependência de provedor, remetente e endereço online, e utilizou a alternativa autorizada: registrar a integração futura com escopo e critérios de teste. Não afirmou envio implementado nem presumiu autorização para contratar provedor ou disparar mensagens. Link de ativação/recuperação preserva a escolha da senha pelo destinatário; comunicação respeitará aluno/responsável e transições de acesso. Registro apenas documental, sem commit/envio.
+
+## Responsável para menor sem celular — 25/10/2026
+
+Pedido do usuário: permitir escolher celular próprio ou acesso principal pelo responsável; responsável acompanha débitos/pagamentos, avisos, autorizações e informações administrativas; ativar a conta do aluno quando ganhar celular e transferir responsabilidade aos 18, preservando vínculos/histórico. Pergunta de Codex: “Quando o menor não tiver celular, o responsável poderá fazer o check-in dele pelo próprio acesso?” Resposta: “Sim, poderá fazer check-in”.
+
+Codex comunicou conta própria de responsável, vários dependentes e transferências auditadas sem apagar histórico. Implementou e testou SQLite/Supabase e interface; não tratou controle parental do produto como configuração do ChatGPT. Separou comunicados internos de integração de e-mail/WhatsApp e acesso de responsável de permissão administrativa. Guia e provas em RESPONSAVEIS.md; autorização das regras/testes não foi tratada como aprovação de commit/envio.
+
+## Parabéns pelo WhatsApp — 25/10/2026
+
+Pedido: “envio de parabéns no zap - se não for possível adicionar agora, coloque nas adições complexas futuras”. Codex conferiu a homenagem interna e ausência de módulo de envio externo e utilizou a alternativa autorizada: registrar a integração no planejamento, com dependências e critérios de aceite. Não presumiu autorização para conectar contas, contratar serviço, agendar envios ou mandar mensagens reais. Estado futuro identificado explicitamente, sem afirmar implementação ou validação externa.
+
+## Fluxo de aula adicional e Débitos — 25/10/2026
+
+Pedido detalhado do usuário: após esgotar limite mensal, mostrar preço adicional, escolher dia, confirmar aula e gerar débito com motivo/valor/geração/aula/vencimento/status; prazo padrão 3 editável, menu do aluno e baixa manual, integração bancária futura. Pergunta de Codex: débito vencido deve bloquear novos check-ins mantendo menu? Resposta: “Sim, bloquear novos check-ins”. Foram comunicados reserva sem presença antecipada, prazo da confirmação e congelamento das condições. Implementado fluxo completo com aceite, idempotência, isolamento e cancelamentos, sem cobrar aluno real nos testes ou presumir aprovação de commit/envio. Evidências e limites em DEBITOS.md.
+
+## Saldo mensal de aulas — 25/10/2026
+
+Pedido: campo no aluno para armazenar aulas restantes no mês; descontar ao fazer check-in e informar limite mensal atingido ao esgotar. Codex perguntou sobre renovação no dia 1, repetição e cancelamento; usuário respondeu “Sim, renovar no dia 1”. Foi comunicado que limite semanal e financeiro continuam aplicados e que liberação semanal não ignora cota mensal. Implementados modelo/migrações, backend transacional, configuração na ficha e saldo/aviso no portal. Testados SQLite e Supabase de homologação, com preservação e limpeza dos registros sintéticos, além de navegador fictício. Nenhum código foi atribuído a implementação manual do usuário. A confirmação das regras não foi tratada como aprovação de commit/envio.
+
+## Retirar alunos habituais — 25/10/2026
+
+Pedido: “remover alunos habituais”. Escopo comunicado e executado: retirar a seção de seleção no formulário de turmas, sem apagar vínculos cadastrados. Codex removeu a UI e os estados de seleção e preservou alunoIds existentes no payload de edição. Verificou build e salvamento com vínculo fictício preservado; aguarda validação, sem presumir autorização de commit/envio.
+
+## Entrada administrativa temporária — 25/10/2026
+
+Pedido: “tire entrar com a senha por enquanto, eu quero entrar como adm mas sem por a senha toda a hora, depois voltamos com isso”. Codex comunicou entrada automática restrita ao computador local e implementou flag explícita, desativada por padrão no exemplo, com guardas contra uso publicado/proxy e sem mudar a senha. Ativação apenas no .env privado local. Retorno ao login documentado; 141 testes e build aprovados, além de conferência HTTP sem cookie no servidor real. A solicitação de comportamento não foi tratada como aprovação de commit/envio.
+
+## Checkbox de nome automático — 25/10/2026
+
+Pedido do usuário: “colocar um campo checkbox ao lado do campo do nome das turmas (nome automático) - o campo deve vir selecionado [...] preencher com Turma das: ex 13h [...] com base na hora escolhida”. Codex comunicou a referência do início mais cedo para turmas com múltiplos horários e a preservação de nomes personalizados na edição. Implementou sugestão no frontend e alternância manual, mantendo contratos existentes. Verificação com build, testes de horários e navegador isolado; pendente de validação antes de commit/envio.
+
+## Pedido de conta sem administração — 23/10/2026
+
+Pedido: “Existe você criar um usuário sem nenhuma permissão de administrador para que eu possa testar como um usuário comum vai acessar o sistema.” Codex criou aluno fictício em homologação, usando o perfil aluno já implementado, e validou login/portal e bloqueios administrativos na API real. Credencial temporária removida; entregue convite para o usuário escolher senha, sem criar senha compartilhada nem alterar privilégios do administrador. Nenhum token registrado nos documentos versionados.
+
+## Nova senha e continuidade do ambiente — 23/10/2026
+
+Usuário informou “pronto” após repetir a entrada privada da senha. Codex repetiu a conexão, confirmou TLS e autenticação, conferiu o banco vazio e aplicou as seis migrações existentes no projeto de homologação. Em seguida disponibilizou a tela local em 3333 para o usuário criar pessoalmente o administrador do novo banco. Sem senhas no chat, sem seed ou cópia do banco local e sem publicação/commit presumidos.
+
+## Continuidade da configuração privada — 23/10/2026
+
+Após orientação para baixar a CA oficial, usuário informou “baixei aqui”. Codex localizou o certificado, configurou sslrootcert mantendo verify-full e repetiu a conexão sem exibir credenciais. TLS validado, autenticação recusada (28P01); orientada nova entrada da senha no terminal privado. Nenhuma senha foi solicitada no chat e não houve escrita no banco.
+
+## Preparação do ambiente de testes remoto — 23/10/2026
+
+Pedido: criar ambiente online para Gabriel testar. Usuário informou que Gabriel também ajuda no projeto, junto com Matheus. As etapas de cadastro Supabase foram guiadas por capturas; senha foi solicitada somente para preenchimento privado local, nunca no chat. O painel apresentou erro de tradução/extensão, resolvido com interface em inglês. Usuário copiou a URI com marcador de senha para arquivo local ignorado. Codex preparou prompt oculto e conversão local de símbolos, mantendo a configuração SQLite atual. Não há Supabase autenticado/migrado ou Render publicado comprovado nesta etapa.
+
 ## Aprovação e repetição dos testes dos planos — 22/10/2026
 
 Pedido: “testa e commita”, após a entrega de planos ter sido apresentada. Codex repetiu a suíte (136 TypeScript e 13 Python aprovados), build/typecheck e geração/validação Prisma, revisou o conjunto e atualizou o estado de aprovação documental para preparar commit/push na branch de trabalho. Não ampliou funcionalidades. As evidências anteriores de navegador e banco permanecem identificadas como anteriores; nenhuma execução externa de Supabase/IA foi presumida. A autorização supera a pendência de commit da implementação abaixo, sem autorizar merge, tag ou implantação.

@@ -1,3 +1,5 @@
+import { GraduacoesProvider } from './graduacoes';
+import { ResponsavelPortal } from './pages/ResponsavelPortal';
 import { useEffect, useState, type FormEvent } from 'react';
 import { ArrowRight, LockKeyhole, ShieldCheck } from 'lucide-react';
 import type { AuthState } from '@tatame/shared';
@@ -44,10 +46,10 @@ export default function AuthGate() {
     } catch (error) { setError((error as Error).message); }
     finally { setBusy(false); }
   };
-  if (state?.usuario && !token) return <>{error && <div className="auth-session-error"><FormError message={error}/></div>}{state.usuario.perfil === 'admin' ? <App key={state.usuario.id} usuario={state.usuario} onLogout={() => void logout()}/> : <StudentPortal key={state.usuario.id} onLogout={() => void logout()}/>}</>;
+  if (state?.usuario && !token) return <GraduacoesProvider key={state.usuario.id}>{error && <div className="auth-session-error"><FormError message={error}/></div>}{state.usuario.perfil === 'admin' ? <App key={state.usuario.id} usuario={state.usuario} onLogout={() => void logout()}/> : state.usuario.perfil === 'responsavel' ? <ResponsavelPortal key={state.usuario.id} onLogout={() => void logout()}/> : <StudentPortal key={state.usuario.id} onLogout={() => void logout()}/>}</GraduacoesProvider>;
   const setup = Boolean(state?.configuracaoInicial && !token);
   return <div className="auth-shell"><aside className="auth-story"><a className="brand" href="/"><span className="brand-mark">t</span><div>tatame<small>DA ACADEMIA PARA A SUA VIDA</small></div></a><div><span className="auth-kicker">SEU PRÓXIMO TREINO COMEÇA AQUI</span><h1>Dentro do tatame.<br/>Conectado com a sua evolução.</h1><p>Uma academia organizada. Uma jornada de treino que acompanha você.</p></div><small>Respeito, constância e evolução. Oss!</small></aside>
-    <main className="auth-main"><section className="auth-card"><span className="auth-icon"><LockKeyhole size={25}/></span><div className="eyebrow">BEM-VINDO AO TATAME</div><h2>{token ? 'Ative seu acesso' : setup ? 'Vamos preparar sua academia' : 'Bom ter você por aqui.'}</h2><p className="auth-description">{token ? 'Escolha sua senha para entrar na área do aluno. O link vale por 24 horas e pode ser usado uma vez.' : setup ? 'Crie a conta do administrador. Essa configuração acontece uma única vez, neste computador.' : 'Entre para acompanhar os treinos ou cuidar da sua academia.'}</p><FormError message={error}/>
+    <main className="auth-main"><section className="auth-card"><span className="auth-icon"><LockKeyhole size={25}/></span><div className="eyebrow">BEM-VINDO AO TATAME</div><h2>{token ? 'Ative seu acesso' : setup ? 'Vamos preparar sua academia' : 'Bom ter você por aqui.'}</h2><p className="auth-description">{token ? 'Escolha sua senha para entrar na sua área. O link vale por 24 horas e pode ser usado uma vez.' : setup ? 'Crie a conta do administrador. Essa configuração acontece uma única vez, neste computador.' : 'Entre para acompanhar os treinos ou cuidar da sua academia.'}</p><FormError message={error}/>
       {!state ? <Button variant="secondary" onClick={() => void load()}>Tentar conexão novamente</Button> : <form onSubmit={submit}>
         {setup && <Field label="Seu nome"><input required minLength={2} maxLength={120} autoComplete="name" value={nome} onChange={event => setNome(event.target.value)}/></Field>}
         {!token && <Field label="E-mail"><input required type="email" maxLength={180} autoComplete="username" value={email} onChange={event => setEmail(event.target.value)}/></Field>}
@@ -55,7 +57,7 @@ export default function AuthGate() {
         {(setup || token) && <><p className="helper">Use uma frase com pelo menos 15 caracteres. Pode incluir espaços.</p><Field label="Confirme a senha"><input required type="password" minLength={15} maxLength={128} autoComplete="new-password" value={confirmacao} onChange={event => setConfirmacao(event.target.value)}/></Field></>}
         <Button type="submit" disabled={busy}>{busy ? 'Aguarde…' : token ? 'Ativar minha conta' : setup ? 'Criar minha conta' : 'Entrar'}<ArrowRight size={17}/></Button>
       </form>}
-      {!setup && !token && <p className="auth-help">Primeiro acesso ou esqueceu a senha? Peça à academia um link de acesso para aluno.</p>}
+      {!setup && !token && <p className="auth-help">Primeiro acesso ou esqueceu a senha? Peça à academia um link de acesso.</p>}
       {token && <Button variant="ghost" disabled={busy} onClick={() => { setToken(''); setSenha(''); setError(''); }}>Voltar para o login</Button>}
       <div className="auth-trust"><ShieldCheck size={16}/>Cada pessoa acessa apenas sua área.</div>
     </section></main></div>;

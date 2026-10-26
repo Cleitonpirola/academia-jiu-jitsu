@@ -44,6 +44,56 @@ describe('Login, autorização e portal do aluno', () => {
   });
   afterEach(async () => { await repo.close(); });
 
+  it('permite administrador local existente sem senha apenas quando habilitado, sem gerar sessão', async () => {
+    const local = createApp(repo, { localAdmin: true });
+    const before = (await repo.list('Sessao')).length;
+    const response = await request(local).get('/api/auth/estado').set('Host', '127.0.0.1:3333').expect(200);
+    assert.equal(response.body.usuario.perfil, 'admin');
+    assert.equal(response.headers['set-cookie'], undefined);
+    await request(local).get('/api/alunos').set('Host', 'localhost:3333').expect(200);
+    assert.equal((await repo.list('Sessao')).length, before);
+    await request(app).get('/api/alunos').set('Host', '127.0.0.1:3333').expect(401);
+  });
+
+  it('não libera administrador local por host externo, origem externa, acesso cruzado ou proxy', async () => {
+    const local = createApp(repo, { localAdmin: true });
+    for (const headers of [
+      { Host: 'tatame.example.com' }, { Host: 'localhost', Origin: 'https://example.com' },
+      { Host: 'localhost', 'Sec-Fetch-Site': 'cross-site' },
+      ...['Forwarded','X-Forwarded-For','X-Forwarded-Host','X-Forwarded-Proto'].map(header => ({ Host: 'localhost', [header]: '127.0.0.1' })),
+    ]) await request(local).get('/api/alunos').set(headers).expect(401);
+  });
+
+  it('ignora a opção local quando há origem publicada, modo produção ou bind aberto', async () => {
+    for (const [key, value] of [['APP_ORIGIN', 'https://tatame.example.com'], ['NODE_ENV', 'production'], ['HOST', '0.0.0.0']]) {
+      const before = process.env[key];
+      try {
+        process.env[key] = value;
+        await request(createApp(repo, { localAdmin: true })).get('/api/alunos').set('Host', 'localhost').expect(401);
+      } finally { if (before === undefined) delete process.env[key]; else process.env[key] = before; }
+    }
+  });
+
+  it('preserva perfil de aluno autenticado mesmo com o acesso local habilitado', async () => {
+    const local = createApp(repo, { localAdmin: true });
+    const cookie = `${COOKIE}=${alunoToken}`;
+    await request(local).get('/api/alunos').set('Host', 'localhost').set('Cookie', cookie).expect(403);
+    const result = await request(local).get('/api/portal').set('Host', 'localhost').set('Cookie', cookie).expect(200);
+    assert.equal(result.body.aluno.id, aluno.id);
+  });
+
+  it('não cria administrador automaticamente e permite voltar ao login por senha', async () => {
+    const empty = new SqliteRepository(':memory:');
+    try {
+      const state = await request(createApp(empty, { localAdmin: true })).get('/api/auth/estado').set('Host', 'localhost').expect(200);
+      assert.deepEqual(state.body, { configuracaoInicial: true, usuario: null });
+    } finally { await empty.close(); }
+    const normal = createApp(repo, { localAdmin: false });
+    await request(normal).get('/api/alunos').set('Host', 'localhost').expect(401);
+    const login = await write(normal).send({ email: 'admin@teste.invalid', senha: password }).expect(200);
+    assert.equal(login.body.usuario.perfil, 'admin');
+  });
+
   it('protege todas as APIs administrativas e não expõe cadastros sem sessão', async () => {
     for (const path of ['/alunos','/mensalidades','/dashboard','/aulas','/turmas','/presencas','/analytics','/analises','/health','/portal']) await request(app).get('/api' + path).expect(401);
     await request(app).post('/api/alunos').set('X-Tatame-Request', '1').send(aluno).expect(401);
@@ -206,7 +256,7 @@ describe('Login, autorização e portal do aluno', () => {
   });
   it('preserva check-ins na exclusão de aula e exibe cancelamento sem transformar aviso em presença', async () => {
     await authenticated(alunoToken).put(`/api/portal/aulas/${aulas[0].id}/checkin`).send({}).expect(200);
-    await authenticated(adminToken).delete(`/api/aulas/${aulas[0].id}`).expect(409);
+    await authenticated(adminToken).delete(`/api/aulas/${aulas[0].id}`).expect(404);
     await authenticated(adminToken).patch(`/api/aulas/${aulas[0].id}/cancelamento`).send({ motivo: 'Mudança de agenda' }).expect(200);
     const portal = await authenticated(alunoToken).get('/api/portal').expect(200);
     assert.equal(portal.body.aulas.find((item: Aula) => item.id === aulas[0].id).situacao, 'cancelada');

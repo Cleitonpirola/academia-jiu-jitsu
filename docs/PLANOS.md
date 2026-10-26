@@ -1,5 +1,13 @@
 # Planos de treino e liberações extras
 
+## Adicionais com cobrança — 25/10/2026
+
+Implementado fluxo distinto da liberação nominal gratuita descrita abaixo: a academia habilita preço/prazo, o aluno com cota mensal esgotada confirma uma aula publicada e recebe um débito. Essa reserva permite a aula específica sem consumir novamente cotas regulares; respeita bloqueio financeiro e check-in somente no dia. Baixa manual e atraso em [DEBITOS.md](DEBITOS.md). Uma liberação semanal gratuita continua sem ignorar o limite mensal. Não há catálogo de planos por preço nem integração bancária automática nesta entrega.
+
+## Complemento mensal — 25/10/2026
+
+Além da cota semanal descrita neste documento, agora existe [saldo mensal de aulas](SALDO_MENSAL.md) individual no Aluno, configurado separadamente na ficha. As duas cotas se aplicam quando habilitadas; liberação extra semanal não ignora limite mensal. Saldo mensal usa check-ins únicos de aulas não canceladas, renova no dia 1 e não devolve crédito automaticamente por ausência após o check-in. A regra semanal anterior de ausência continua a mesma. Mensalidade/financeiro permanecem independentes. Migração 7 e validações registradas no guia mensal; o restante deste documento descreve a entrega semanal original.
+
 ## Desenho antes da implementação — 22/10/2026
 
 Pedido: implementar agora plano ilimitado ou limitado por semana, mostrar uso e permitir autorização administrativa de aula extra. Pagamento automático, preço de excedente, e-mail e hospedagem ficam para depois. A configuração será individual na ficha do aluno: nome do plano e limite semanal opcional. Não altera mensalidades nem gera cobranças.

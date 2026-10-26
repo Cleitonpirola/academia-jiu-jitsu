@@ -6,6 +6,8 @@ import type { Repository } from '../../repository.js';
 import type { Usuario, Sessao } from './models.js';
 import { HttpError } from '../../http-error.js';
 import { hashPassword, newToken, tokenHash, verifyPassword } from './password.js';
+import { allowsLocalAdmin } from './local-admin.js';
+import { usuarioHabilitado, emailProprio } from './familia.js';
 
 export const ADMIN_INICIAL_ID = '00000000-0000-4000-8000-000000000001';
 export const COOKIE = 'tatame_sessao';
@@ -17,7 +19,7 @@ const activationSchema = z.object({ token: z.string().regex(/^[A-Za-z0-9_-]{43}$
 const publicUser = ({ id, nome, email, perfil, alunoId }: Usuario): UsuarioView => ({ id, nome, email, perfil, alunoId });
 export const usuarioAtual = (res: Response): UsuarioView => res.locals.usuario;
 
-export function authModule(repo: Repository) {
+export function authModule(repo: Repository, options: { localAdmin?: boolean } = {}) {
   const router = Router();
   if (process.env.APP_ORIGIN) {
     const origin = new URL(process.env.APP_ORIGIN);
@@ -42,11 +44,14 @@ export function authModule(repo: Repository) {
       const session = (await repo.list('Sessao')).find(item => item.tokenHash === tokenHash(token));
       if (session && session.expiraEm > new Date().toISOString()) {
         const user = await repo.get('Usuario', session.usuarioId);
-        const aluno = user?.alunoId ? await repo.get('Aluno', user.alunoId) : null;
-        if (user?.senhaHash && session.credencialHash === tokenHash(user.senhaHash) && (user.perfil === 'admin' || aluno?.situacao === 'ativo')) {
+        if (user?.senhaHash && session.credencialHash === tokenHash(user.senhaHash) && usuarioHabilitado(user, await repo.list('Aluno'), await repo.list('ResponsavelAluno'))) {
           res.locals.usuario = publicUser(user); res.locals.sessao = session;
         }
       }
+    }
+    if (!res.locals.usuario && allowsLocalAdmin(req, options.localAdmin === true)) {
+      const admin = await repo.get('Usuario', ADMIN_INICIAL_ID);
+      if (admin?.perfil === 'admin' && admin.senhaHash) res.locals.usuario = publicUser(admin);
     }
     next();
   };
@@ -83,8 +88,7 @@ export function authModule(repo: Repository) {
     const { email, senha } = loginSchema.parse(req.body);
     const user = (await repo.list('Usuario')).find(item => item.email === email);
     const verified = await verifyPassword(senha, user?.senhaHash ?? null);
-    const aluno = user?.alunoId ? await repo.get('Aluno', user.alunoId) : null;
-    if (!verified || !user || (user.perfil === 'aluno' && aluno?.situacao !== 'ativo')) throw new HttpError(401, 'E-mail ou senha inválidos, ou acesso indisponível.');
+    if (!verified || !user || !usuarioHabilitado(user,await repo.list('Aluno'),await repo.list('ResponsavelAluno'))) throw new HttpError(401, 'E-mail ou senha inválidos, ou acesso indisponível.');
     res.json(await createSession(req, res, user));
   });
   router.post('/ativar', limit, async (req, res) => {
@@ -105,6 +109,7 @@ export function authModule(repo: Repository) {
     const id = z.string().uuid().parse(req.params.id);
     const aluno = await repo.get('Aluno', id);
     if (!aluno || aluno.situacao !== 'ativo') throw new HttpError(400, 'Selecione um aluno ativo e cadastrado.');
+    if(aluno.acessoPrincipal==='responsavel'||!emailProprio(aluno.email))throw new HttpError(409,'O acesso está com o responsável. Use a seção Responsável e acesso na ficha do aluno.');
     const token = newToken();
     const conviteExpiraEm = new Date(Date.now() + 24 * 3600_000).toISOString();
     const existing = (await repo.list('Usuario')).find(item => item.alunoId === id);

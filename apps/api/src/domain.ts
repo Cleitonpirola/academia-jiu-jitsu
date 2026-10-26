@@ -9,13 +9,24 @@ const date = z.string().refine(isDate, 'Informe uma data válida.');
 export const monthSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'Competência inválida.');
 export const alunoSchema = z.object({
   nome: z.string().trim().min(2, 'Nome deve ter pelo menos 2 caracteres.').max(120),
-  telefone: z.string().trim().max(40).refine(v => { const n = v.replace(/\D/g,'').length; return n >= 8 && n <= 15; }, 'Informe um telefone válido.'),
-  email: z.string().trim().toLowerCase().email('Informe um e-mail válido.').max(180),
+  telefone: z.string().trim().max(40),
+  email: z.union([z.literal(''),z.string().trim().toLowerCase().email('Informe um e-mail válido.').max(180)]),
+  possuiCelular: z.boolean().optional(),
   dataNascimento: date.refine(v => v <= today(), 'Nascimento não pode estar no futuro.'),
-  faixa: z.enum(FAIXAS),
+  faixa: z.string().trim().min(1).max(80),
+  faixaId: z.string().uuid().nullable().optional(),
+  grauId: z.string().uuid().nullable().optional(),
   dataMatricula: date.refine(v => v <= today(), 'Matrícula não pode estar no futuro.'),
   situacao: z.enum(['ativo','inativo']),
-}).strict().refine(v => v.dataNascimento <= v.dataMatricula, { message: 'Matrícula deve ser posterior ao nascimento.', path: ['dataMatricula'] });
+}).strict().superRefine((v,ctx)=>{
+  const [ano,mes,dia]=v.dataNascimento.split('-');
+  const menor=today()<String(Number(ano)+18)+'-'+mes+'-'+dia;
+  if(v.possuiCelular===false&&!menor)ctx.addIssue({code:'custom',message:'O acesso por responsável é destinado a menores de idade.',path:['possuiCelular']});
+  if(v.possuiCelular!==false){
+    if(!/^\d{8,15}$/.test(v.telefone.replace(/\D/g,'')))ctx.addIssue({code:'custom',message:'Informe um telefone válido.',path:['telefone']});
+    if(!v.email||v.email.endsWith('@cadastro.invalid'))ctx.addIssue({code:'custom',message:'Informe um e-mail próprio válido.',path:['email']});
+  }
+}).refine(v => v.dataNascimento <= v.dataMatricula, { message: 'Matrícula deve ser posterior ao nascimento.', path: ['dataMatricula'] });
 export const mensalidadeSchema = z.object({
   alunoId: z.string().uuid('Aluno inválido.'), competencia: monthSchema,
   valorCentavos: z.number().int('Use um valor com no máximo duas casas decimais.').positive('Valor deve ser maior que zero.').max(100_000_000),

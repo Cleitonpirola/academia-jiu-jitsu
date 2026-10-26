@@ -118,9 +118,9 @@ it('liberação vale só para uma aula, pode ser revogada antes de usada e prese
     await request(f.app).put(url(1)).send({ motivo: 'Repetição' }).expect(200); assert.equal((await f.repo.list('LiberacaoAula')).length, 1);
     await f.checkin(2).expect(403); await f.checkin(1).expect(200);
     const p = await f.portal(); assert.equal(p.body.plano.utilizadas, 1); assert.equal(p.body.plano.extrasUtilizadas, 1);
-    await request(f.app).delete(url(1)).expect(409); await request(f.app).delete(`/api/aulas/${f.aulas[1].id}`).expect(409);
+    await request(f.app).delete(url(1)).expect(409); await request(f.app).delete(`/api/aulas/${f.aulas[1].id}`).expect(404);
     await request(f.app).put(url(3)).send({ motivo: 'Autorização disponível' }).expect(200);
-    await request(f.app).delete(`/api/aulas/${f.aulas[3].id}`).expect(409);
+    await request(f.app).delete(`/api/aulas/${f.aulas[3].id}`).expect(404);
     await request(f.app).delete(url(3)).expect(204); await f.checkin(3).expect(403);
     const gestao = await request(f.app).get(`/api/alunos/${f.id}/plano`); assert.equal(gestao.body.liberacoes[0].utilizada, true);
     assert.equal(gestao.body.liberacoes[0].usuarioId, ADMIN_INICIAL_ID); assert.equal((await f.repo.list('Mensalidade')).length, 0);

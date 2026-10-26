@@ -6,6 +6,7 @@ import { today } from '../../domain.js';
 import { usuarioAtual } from '../auth/routes.js';
 import { contextoPlano } from './service.js';
 import { usoPlano } from './rules.js';
+import { saldoMensal } from './saldo-mensal.js';
 
 export const planoSchema = z.object({ nome: z.string().trim().min(2).max(80), limiteSemanal: z.number().int().min(1).max(100).nullable() }).strict();
 export function planosRouter(repo: Repository) {
@@ -15,6 +16,15 @@ export function planosRouter(repo: Repository) {
     if (!await repo.get('Aluno', id)) throw new HttpError(404, 'Aluno não encontrado.');
     return id;
   };
+  router.get('/:id/saldo-mensal', async (req, res) => {
+    const id = await alunoId(req.params.id), aluno = await repo.get('Aluno', id);
+    const [aulas, checkins, debitos] = await Promise.all([repo.list('Aula'), repo.list('CheckinAula'),repo.list('DebitoAula')]);
+    res.json(saldoMensal(aluno!, aulas, checkins,undefined,debitos));
+  });
+  router.put('/:id/saldo-mensal', async (req, res) => {
+    const { limiteMensal } = z.object({ limiteMensal: z.number().int().min(1).max(1000).nullable() }).strict().parse(req.body);
+    res.json(await repo.saveSaldoMensalAluno(await alunoId(req.params.id), limiteMensal));
+  });
   router.get('/:id/plano', async (req, res) => {
     const id = await alunoId(req.params.id), ctx = await contextoPlano(repo, id);
     const byAula = new Map(ctx.aulas.map(aula => [aula.id, aula]));

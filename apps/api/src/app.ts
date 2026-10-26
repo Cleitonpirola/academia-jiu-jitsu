@@ -1,3 +1,8 @@
+import { graduacoesRouter } from './modules/graduacoes/routes.js';
+import { graduacaoValida } from './modules/graduacoes/rules.js';
+import { familiaAdminRouter, responsavelRouter } from './modules/auth/familia-routes.js';
+import { vinculoSchema } from './modules/auth/familia.js';
+import { usuarioAtual } from './modules/auth/routes.js';
 import express, { type ErrorRequestHandler } from 'express';
 import helmet from 'helmet';
 import { randomUUID } from 'node:crypto';
@@ -14,17 +19,22 @@ import { aulasRouter } from './modules/aulas/routes.js';
 import { authModule, protectWrites } from './modules/auth/routes.js';
 import { portalRouter } from './modules/auth/portal.js';
 import { planosRouter } from './modules/planos/routes.js';
+import { debitosRouter } from './modules/planos/debitos-routes.js';
 const fold = (text: string) => text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-export function createApp(repo: Repository, options: { apiKey?: string; analyticsUrl?: string } = {}) {
+export function createApp(repo: Repository, options: { apiKey?: string; analyticsUrl?: string; localAdmin?: boolean } = {}) {
   const app = express();
   app.disable('x-powered-by'); app.use(helmet()); app.use(express.json({ limit:'32kb' }));
-  const auth = authModule(repo);
+  const auth = authModule(repo, { localAdmin: options.localAdmin });
   app.use('/api', protectWrites, auth.identify);
   app.use('/api/auth', auth.router);
   app.use('/api', auth.requireLogin);
+  app.use('/api/graduacoes',graduacoesRouter(repo,auth.requireAdmin));
   app.use('/api/portal', portalRouter(repo));
+  app.use('/api/responsavel', responsavelRouter(repo));
   app.use('/api', auth.requireAdmin);
+  app.use('/api/alunos', familiaAdminRouter(repo));
   app.use('/api/alunos', planosRouter(repo));
+  app.use('/api/debitos', debitosRouter(repo));
   const analyticsUrl = options.analyticsUrl || process.env.ANALYTICS_URL || 'http://127.0.0.1:8000';
   const apiKey = options.apiKey ?? process.env.OPENAI_API_KEY;
   const find = async (table: Table, id: string) => { if (!z.string().uuid().safeParse(id).success) throw new HttpError(404,'Registro não encontrado.'); const row = await repo.get(table,id); if(!row) throw new HttpError(404,'Registro não encontrado.'); return row; };
@@ -42,15 +52,35 @@ export function createApp(repo: Repository, options: { apiKey?: string; analytic
     res.json(rows.sort((a,b)=>a.nome.localeCompare(b.nome,'pt-BR')));
   });
   app.get('/api/alunos/:id',async(req,res)=>res.json(await find('Aluno',req.params.id)));
-  app.post('/api/alunos',async(req,res)=>res.status(201).json(await repo.insert('Aluno',{...alunoSchema.parse(req.body),id:randomUUID(),criadoEm:new Date().toISOString()})));
-  app.put('/api/alunos/:id',async(req,res)=>{ await find('Aluno',req.params.id); res.json(await repo.update('Aluno',req.params.id,alunoSchema.parse(req.body))); });
+  app.post('/api/alunos',async(req,res)=>{
+    const {responsavel,...dados}=req.body??{};
+    const parsed=alunoSchema.parse(dados),id=randomUUID();
+    const input={...parsed,...graduacaoValida(parsed,await repo.list('FaixaGraduacao'),await repo.list('GrauFaixa'))};
+    const aluno={...input,email:input.email||'sem-email-'+id+'@cadastro.invalid',id,criadoEm:new Date().toISOString()};
+    if(responsavel!==undefined||input.possuiCelular===false){
+      const familia=vinculoSchema.parse({possuiCelular:input.possuiCelular!==false,responsavel});
+      const result=await repo.saveFamilia({tipo:'vincular',alunoId:id,autorId:usuarioAtual(res).id,timestamp:aluno.criadoEm,novoAluno:aluno,input:familia});
+      res.status(201).json(result.aluno);
+    }else res.status(201).json(await repo.saveCadastroAluno(aluno,true));
+  });
+  app.put('/api/alunos/:id',async(req,res)=>{
+    const aluno=await repo.get('Aluno',z.string().uuid().parse(req.params.id));if(!aluno)throw new HttpError(404,'Aluno não encontrado.');
+    const parsed=alunoSchema.parse({...req.body,possuiCelular:req.body.possuiCelular??aluno.possuiCelular??true});
+    const input={...parsed,...graduacaoValida(parsed,await repo.list('FaixaGraduacao'),await repo.list('GrauFaixa'),aluno)};
+    if(input.possuiCelular!==(aluno.possuiCelular??true))throw new HttpError(409,'Altere o acesso pela seção Responsável e acesso.');
+    // Mudanças de identidade de uma conta existente passam pela transferência auditada.
+    if(input.email!==aluno.email&&(await repo.list('Usuario')).some(u=>u.alunoId===aluno.id))throw new HttpError(409,'Para trocar o e-mail de acesso, use Ativar acesso próprio na ficha.');
+    res.json(await repo.saveCadastroAluno({...aluno,...input,email:input.email||aluno.email},false));
+  });
   app.delete('/api/alunos/:id',async(req,res)=>{
     await find('Aluno',req.params.id);
+    if((await repo.list('ResponsavelAluno')).some(v=>v.alunoId===req.params.id))throw new HttpError(409,'Este aluno possui vínculo familiar. Inative o cadastro para preservar o histórico.');
     if((await repo.list('Mensalidade')).some(m=>m.alunoId===req.params.id)) throw new HttpError(409,'Este aluno possui cobranças. Altere sua situação para inativo para preservar o histórico.');
     if((await repo.list('AlunoTurma')).some(v=>v.alunoId===req.params.id)) throw new HttpError(409,'Este aluno está vinculado a uma turma. Remova os vínculos antes de excluir ou apenas inative o cadastro para preservá-lo.');
     if((await repo.list('PresencaAula')).some(v=>v.alunoId===req.params.id)) throw new HttpError(409,'Este aluno possui chamada vinculada a aulas. Inative o cadastro para preservar o histórico.');
     if((await repo.list('Usuario')).some(v=>v.alunoId===req.params.id) || (await repo.list('CheckinAula')).some(v=>v.alunoId===req.params.id)) throw new HttpError(409,'Este aluno possui acesso ou check-ins. Inative o cadastro para preservar seus vínculos.');
     if((await repo.list('PlanoAluno')).some(v=>v.alunoId===req.params.id) || (await repo.list('LiberacaoAula')).some(v=>v.alunoId===req.params.id)) throw new HttpError(409,'Este aluno possui plano ou liberações extras. Inative o cadastro para preservar seus vínculos.');
+    if((await repo.list('DebitoAula')).some(v=>v.alunoId===req.params.id)) throw new HttpError(409,'Este aluno possui débitos ou reservas de aulas adicionais. Inative o cadastro para preservar o histórico.');
     await repo.remove('Aluno',req.params.id); res.status(204).end();
   });
   app.get('/api/mensalidades',async(req,res)=>{
@@ -106,6 +136,7 @@ export function createApp(repo: Repository, options: { apiKey?: string; analytic
     if(code==='P2002' || /UNIQUE constraint failed/.test(message)) { res.status(409).json({message:'Já existe um registro com esse e-mail ou uma cobrança para o mesmo aluno e competência.'}); return; }
     if(code==='P2003' || /FOREIGN KEY constraint failed/.test(message)) { res.status(409).json({message:'O registro possui vínculos que devem ser preservados.'}); return; }
     if(error instanceof SyntaxError && 'body' in error) { res.status(400).json({message:'JSON inválido.'}); return; }
+    if(/Graduacao incompativel/.test(message)){res.status(409).json({message:'O grau e a faixa precisam corresponder ao cadastro atual. Atualize a página.'});return;}
     console.error('Falha na API:',code || error.name);
     res.status(500).json({message:'Não foi possível concluir a operação. Tente novamente.'});
   };

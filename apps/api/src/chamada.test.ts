@@ -1,12 +1,13 @@
+import { criarAulaDeTeste, type AulaDeTesteInput } from './test-aula-helper.js';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 
-import type { Aluno, AulaExtraInput, AulaView } from '@tatame/shared';
+import type { Aluno, AulaView } from '@tatame/shared';
 import { createApp, request } from './test-auth-helper.js';
 import { SqliteRepository } from './repository.js';
 
-const extra: AulaExtraInput = { titulo: 'Treino da tarde', professor: 'Professor teste', turmaId: null,
+const extra: AulaDeTesteInput = { titulo: 'Treino da tarde', professor: 'Professor teste', turmaId: null,
   dataAula: '2026-10-19', horaInicio: '15:00', horaFim: '16:00' };
 
 describe('Chamada por aula', () => {
@@ -16,7 +17,7 @@ describe('Chamada por aula', () => {
   const student = async (changes: Partial<Aluno> = {}) => repo.insert('Aluno', { id: randomUUID(), nome: 'Aluno teste',
     telefone: '11999991234', email: randomUUID() + '@example.com', dataNascimento: '2000-01-01', faixa: 'Branca',
     dataMatricula: '2026-01-01', situacao: 'ativo', criadoEm: '2026-01-01T00:00:00Z', ...changes });
-  const create = async (changes: Partial<AulaExtraInput> = {}): Promise<AulaView> => (await request(app).post('/api/aulas/extras').send({ ...extra, ...changes }).expect(201)).body;
+  const create = async (changes: Partial<AulaDeTesteInput> = {}): Promise<AulaView> => criarAulaDeTeste(repo,{...extra,...changes});
   const mark = (aulaId: string, alunoId: string, presente = true) => request(app).put(`/api/aulas/${aulaId}/chamada/${alunoId}`).send({ presente });
   const clear = (aulaId: string, alunoId: string) => request(app).delete(`/api/aulas/${aulaId}/chamada/${alunoId}`);
 
@@ -97,14 +98,13 @@ describe('Chamada por aula', () => {
   it('qualquer marcação protege exclusão/cancelamento e a última limpeza libera a aula', async () => {
     const aluno = await student(); const aula = await create();
     await mark(aula.id, aluno.id, false).expect(201);
-    await request(app).delete('/api/aulas/' + aula.id).expect(409);
+    await request(app).delete('/api/aulas/' + aula.id).expect(404);
     await request(app).patch('/api/aulas/' + aula.id + '/cancelamento').send({ motivo: 'Correção' }).expect(409);
-    await assert.rejects(repo.removeAulaExtra(aula.id), /possui marcações/);
     await assert.rejects(repo.cancelAula(aula.id, 'Correção', new Date().toISOString()), /possui marcações/);
     assert.equal((await repo.get('Aula', aula.id))?.situacao, 'agendada');
     await clear(aula.id, aluno.id).expect(204); await clear(aula.id, aluno.id).expect(404);
     await request(app).patch('/api/aulas/' + aula.id + '/cancelamento').send({ motivo: 'Correção confirmada' }).expect(200);
-    await request(app).delete('/api/aulas/' + aula.id).expect(204);
+    await request(app).delete('/api/aulas/' + aula.id).expect(404);
   });
   it('limpar uma aula preserva marcações de outra aula e registros anteriores por modalidade', async () => {
     const aluno = await student(); const one = await create(); const two = await create({ horaInicio: '18:00', horaFim: '19:00' });
@@ -112,7 +112,7 @@ describe('Chamada por aula', () => {
     await mark(one.id, aluno.id).expect(201); const other = (await mark(two.id, aluno.id).expect(201)).body;
     await clear(one.id, aluno.id).expect(204);
     assert.deepEqual(await repo.list('Presenca'), [legacy]); assert.deepEqual(await repo.list('PresencaAula'), [other]);
-    await request(app).delete('/api/aulas/' + one.id).expect(204);
+    await request(app).delete('/api/aulas/' + one.id).expect(404);
     assert.ok(await repo.get('Aula', two.id));
   });
   it('preserva chamada ao excluir turma e protege exclusão do aluno também por chave estrangeira', async () => {
@@ -145,11 +145,11 @@ describe('Chamada por aula', () => {
     const stored = await repo.get('Aula', aula.id); const records = await repo.list('PresencaAula');
     assert.equal(records.length, stored?.situacao === 'cancelada' ? 0 : 1);
   });
-  it('concorrência entre chamada e exclusão preserva aula marcada ou remove aula ainda vazia', async () => {
+  it('chamada concorrente à rota removida de exclusão preserva a aula e sua marcação', async () => {
     const aluno = await student(); const aula = await create();
     const [marked, removed] = await Promise.all([mark(aula.id, aluno.id), request(app).delete('/api/aulas/' + aula.id)]);
-    assert.ok((marked.status === 201 && removed.status === 409) || (marked.status === 404 && removed.status === 204));
-    assert.equal((await repo.list('PresencaAula')).length, removed.status === 204 ? 0 : 1);
+    assert.equal(marked.status,201);assert.equal(removed.status,404);
+    assert.equal((await repo.list('PresencaAula')).length,1);
     assert.deepEqual(repo.db.prepare('PRAGMA foreign_key_check').all(), []);
   });
 });

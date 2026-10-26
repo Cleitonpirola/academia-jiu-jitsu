@@ -1,5 +1,61 @@
 # Acesso e área do aluno
 
+## Edição dos dados básicos pelo aluno — 26/10/2026
+
+**Implementado e testado, aguardando validação do usuário antes de commit/envio.** Em **Meu perfil → Editar meus dados**, o aluno altera nome, telefone e e-mail. Nome/telefone não pedem senha. Troca de e-mail exige a senha atual, porque também muda o endereço do próximo login; a senha permanece a mesma e a sessão atual continua válida. Outras sessões e convites anteriores são invalidados quando o e-mail muda. Não há envio ou confirmação de propriedade da caixa de e-mail nesta entrega: a integração externa continua futura.
+
+O formulário permite cancelar sem salvar e apresenta confirmação/erro. Somente esses três campos são enviados: faixa, nascimento, matrícula, situação, plano, saldo, pagamentos e vínculos continuam administrativos. Contatos próprios podem ser corrigidos mesmo havendo bloqueio financeiro; isso não libera aulas nem quita cobranças. O responsável continua consultando a ficha do dependente, sem receber permissão para alterar o login do aluno por este formulário. Menores com acesso próprio usam o mesmo recurso; quem tem acesso principal pelo responsável não pode utilizá-lo como aluno.
+
+### Como funciona por dentro
+
+- `GET /api/portal/perfil` consulta a ficha do aluno autenticado e exibe o e-mail efetivamente usado em sua conta de acesso, inclusive se um cadastro antigo tiver endereço divergente. Não devolve hashes, convites ou sessões.
+- `PUT /api/portal/perfil` recebe `{nome,telefone,email}` e `senhaAtual` somente quando necessário. O servidor obtém aluno, usuário e sessão da autenticação, sem aceitar ID de outra pessoa ou perfil no corpo.
+- `apps/api/src/modules/auth/perfil.ts` valida nome de 2–120 caracteres, telefone com 8–15 dígitos (formatação permitida), e-mail válido de até 180 caracteres e exclusividade entre alunos/usuários. Endereços são normalizados com trim/minúsculas; o domínio interno cadastro.invalid não pode ser escolhido para acesso próprio.
+- `Repository.savePerfilAluno` grava `Aluno.nome/telefone/email` e `Usuario.nome/email` juntos, em transação SQLite/PostgreSQL, e revalida sessão, acesso principal e a prova de senha. Se uma conta mudar durante a confirmação, a operação é recusada. Colisão ou falha na auditoria desfaz a mudança inteira, inclusive revogação de sessões.
+- `EventoAcessoAluno` registra o próprio aluno como autor, tipo perfil_basico_atualizado, campos alterados e data; não guarda senha, token ou valores anteriores dos contatos. Salvar sem mudanças não cria evento extra. Nomes registrados em chamadas/check-ins antigos permanecem como histórico; o cadastro e os próximos registros usam o nome atualizado.
+- Confirmação de senha para e-mail tem limite de dez tentativas por conta em 15 minutos, em memória por processo. O bloqueio dessas tentativas não impede editar nome/telefone. Esse limite não é distribuído entre múltiplas instâncias.
+- `apps/web/src/components/PerfilAluno.tsx` consulta, edita, cancela e salva. O formulário não é reinicializado pela atualização periódica do restante do portal enquanto o aluno está digitando. `StudentPortal.tsx` mantém Meu perfil disponível durante bloqueio financeiro. Não foi necessária migração: são usados campos e auditoria existentes.
+
+### Verificação executada nesta entrega
+
+**195 testes TypeScript aprovados**, incluindo 12 novos de perfil: identidade, campos permitidos, dados inválidos, senha, colisão de e-mail, login novo/recusa do antigo, sessões/convites, limite de tentativas, preservação de histórico, bloqueio financeiro e rollback. Build/typecheck aprovados. Python não foi repetido, pois não houve mudança no serviço de analytics.
+
+Supabase de homologação: contas sintéticas confirmaram gravação nas duas entidades, senha necessária, colisão concorrente (uma operação 200 e outra 409), login após troca e revogação. Na primeira prova, o login executou sua limpeza já existente de sessões expiradas: 19 tabelas permaneceram iguais, e a tabela Sessao teve remoção de registro expirado; por isso, a comparação integral inicial falhou. A revisão automática bloqueou repetir esse fluxo global. A alternativa executada restringiu operações aos IDs sintéticos, sem chamar login/ativação: passou e, após limpeza, hashes das 20 tabelas ficaram idênticos ao início desse novo teste. Não houve alteração de cadastro ou histórico real, envio de e-mail ou nova migração.
+
+Navegador isolado em memória: edição de nome/telefone, confirmação, cancelamento sem gravar e edição de telefone com mensalidade atrasada aprovados. A troca de e-mail foi exercitada pelos testes da API; a confirmação da senha no formulário fica para validação humana. Sem teste físico de celular. Captura abaixo contém somente dados fictícios.
+
+![Edição de nome, telefone e e-mail com dados fictícios](screenshots/aluno-editar-perfil.png)
+
+**Para a defesa:** por que atualizar duas tabelas? Aluno guarda a ficha de quem treina; Usuario guarda a identidade usada para entrar. Alterar só uma delas pode deixar a tela mostrando um e-mail e o login esperando outro. A transação garante que ambas mudem juntas. Por que pedir senha ao trocar e-mail? Essa alteração muda a identificação da conta; confirmar a senha exige mais que uma sessão aberta. Por que o corpo não aceita alunoId? A identidade vem da sessão, evitando que o usuário escolha outra ficha para alterar.
+
+## Entrega de e-mail planejada — 25/10/2026
+
+O usuário autorizou deixar o envio automático nas integrações complexas futuras. [PLANO_FUNCIONAL.md](PLANO_FUNCIONAL.md) detalha convites de ativação/recuperação, destinatário aluno/responsável, configuração do provedor e testes. Até essa implementação, o convite continua sendo copiado e entregue manualmente. A conta escolhe sua senha pelo link de uso único; nenhum e-mail é enviado pelo Tatame nesta etapa.
+
+## Responsável e transição de acesso — 25/10/2026
+
+Novo perfil responsavel acompanha somente seus menores ativos. Sem celular, ele pode fazer check-in pelo dependente, conforme confirmação explícita do usuário. Com celular, o aluno faz o próprio check-in e mantém acompanhamento do responsável. Aos 18, acesso parental é recusado; administrador finaliza transferência e pode manter contato sem conceder acesso. Convites e sessões continuam sujeitos a validade e vínculo atuais. Caminhos, exemplos, limitações e evidências em [RESPONSAVEIS.md](RESPONSAVEIS.md). Avisos/autorizações internos e débitos estão disponíveis por dependente. Nenhuma mensagem externa é enviada automaticamente.
+
+## Menu Débitos e reserva adicional — 25/10/2026
+
+Ao atingir a cota mensal, o portal informa preço configurado e oferece reservar aula adicional de hoje ou futura no período elegível. O aluno confirma dia/horário, valor e prazo antes de gerar débito. A lista Débitos abre imediatamente; o check-in continua no dia. Débito vencido bloqueia novos check-ins, conforme resposta explícita do usuário, mas login e Débitos permanecem acessíveis, inclusive com mensalidade vencida. Pagamento é registrado pela academia e o estado é atualizado no portal. Autorização, isolamento e limitações em [DEBITOS.md](DEBITOS.md).
+
+## Saldo mensal no portal — 25/10/2026
+
+O aluno agora vê Aulas restantes no mês. Cada novo check-in único debita uma aula quando há limite mensal; saldo esgotado mostra aviso e bloqueia novos check-ins. Renovação no dia 1, conforme confirmado pelo usuário; cancelamento de aula devolve crédito. Limite semanal e financeiro também continuam valendo; somente a administração configura o limite mensal. Regras e verificações novas em [SALDO_MENSAL.md](SALDO_MENSAL.md).
+
+## Entrada temporária sem senha no computador — 25/10/2026
+
+Solicitação explícita do usuário: entrar como administrador sem repetir a senha durante os testes, com possibilidade de voltar ao login depois. Implementada opção `TATAME_ADMIN_LOCAL=true` no `.env` privado deste computador. O arquivo não existia nessa conferência; foi criado com HOST=127.0.0.1 e a opção local, sem copiar credenciais de outros ambientes. A execução atual continua usando SQLite. `.env.homologacao` recebeu explicitamente `TATAME_ADMIN_LOCAL=false`, preservando suas conexões e credenciais: isso evita que dotenv complete a flag ausente com o valor true do .env local ao iniciar o ambiente de homologação.
+
+Ao abrir http://127.0.0.1:5173 ou http://127.0.0.1:3333, uma requisição local sem sessão válida identifica o administrador inicial já existente. Não apaga a senha, não cria administrador padrão, não grava nova sessão/cookie e não altera o cadastro. Uma sessão válida de aluno tem prioridade e continua com perfil aluno. Enquanto a opção estiver ativa, qualquer pessoa usando esse acesso local sem sessão válida entra como administrador; para testar as restrições de um visitante sem sessão, desligue a opção.
+
+A opção exige HOST de loopback, hostname e endereço remoto de loopback, ausência de APP_ORIGIN e NODE_ENV diferente de production. Rejeita origem externa, Sec-Fetch-Site cross-site e cabeçalhos de encaminhamento Forwarded/X-Forwarded-For/Host/Proto. Não foi criada uma rota pública para ligar o modo. Os filtros de escrita e as demais regras de autorização permanecem aplicados. Em hospedagem, configurar APP_ORIGIN, HOST e NODE_ENV corretamente continua necessário.
+
+Para restaurar o login: definir `TATAME_ADMIN_LOCAL=false` no arquivo privado e reiniciar a API. Como a entrada automática não emite cookie/sessão, ela não deixa um acesso administrativo novo sobrevivendo à desativação. Sessões normais já existentes continuam com seu prazo original. O botão Sair encerra sessões normais e mostra o login; ao atualizar a página sem sessão, a opção local volta a identificar o administrador enquanto estiver ligada. Isso também permite entrar normalmente com uma conta de aluno pela tela de login.
+
+Verificação nova: 141 testes TypeScript aprovados, incluindo cinco casos de entrada local/limites de rede e ambiente, preservação de aluno e retorno ao login. Build/typecheck aprovados. Na execução real, sem cookie, estado/perfil admin e listagem de turmas retornaram 200 nas portas 3333 e 5173; requisição com X-Forwarded-For foi recusada com 401. Serviço Python /health retornou 200, sem repetição da suíte Python. Nenhuma migração ou escrita de teste no banco de homologação. Incremento aguarda validação antes de commit/envio.
+
 **Incremento local de planos — 22/10/2026:** o portal mostra plano/uso semanal e restringe novos check-ins quando a cota acaba, com exceção de aula nominal autorizada pela administração. Sem plano mantém ilimitado. Check-in pendente ocupa vaga, ausência/cancelamento libera; frequência continua dependendo de presença confirmada. Bloqueio por mensalidade vencida permanece prioritário. Guia e limites: [PLANOS.md](PLANOS.md). Entrega aprovada para commit/envio após nova execução bem-sucedida de 136 testes TypeScript, 13 Python, build/typecheck e Prisma; a aprovação abaixo pertence à entrega anterior.
 
 **Estado em 22/10/2026:** conjunto aprovado para commit/envio após nova execução bem-sucedida de 121 testes TypeScript, 13 Python, build/typecheck e validação Prisma. Essa autorização supera as pendências históricas abaixo. Registro em [PROCESSO.md](PROCESSO.md).
@@ -35,10 +91,10 @@ Migração SQLite 005 acrescenta as três tabelas, com backup automático, sem c
 1. Abra o endereço local informado no README. No primeiro acesso, preencha seu nome, e-mail e uma frase de senha com pelo menos 15 caracteres. Confirme a senha e crie sua conta. Essa etapa deve ser feita pelo próprio usuário; não compartilhe a senha no chat.
 2. Entre em **Alunos → Ver ficha → Área do aluno → Gerar link de acesso**. O aluno precisa estar ativo. O acesso fica vinculado ao cadastro escolhido; não há cadastro público que permita escolher outro aluno ou perfil de administrador.
 3. Copie o link privado e entregue somente ao aluno correspondente. Vence em 24 horas e funciona uma vez. Gerar outro invalida o anterior. A senha atual só muda quando o novo link é utilizado.
-4. O aluno abre o link, escolhe e confirma a própria senha. Depois, entra pelo e-mail de acesso. Se o e-mail da ficha for editado depois, o login existente mantém seu endereço original, exibido ao gerar o link; a troca do e-mail de acesso ainda não tem fluxo próprio.
+4. O aluno abre o link, escolhe e confirma a própria senha. Depois, entra pelo e-mail de acesso. Pode trocar esse endereço em **Meu perfil → Editar meus dados**, confirmando a senha atual; ficha e conta são atualizadas juntas. Na gestão, a troca de e-mail de conta existente passa pela ativação/transferência na seção Responsável e acesso.
 5. Em **Aulas e check-in**, selecione a data ou **Ver próximas aulas**. No dia da aula, clique em **Fazer check-in**. Um segundo clique/reenvio não duplica o aviso.
 6. Na gestão, abra **Aulas → Chamada**. O aluno que avisou aparece mesmo sem ser habitual daquela turma. Marque presente ou ausente. O aluno vê o resultado em **Meus treinos** e na aula.
-7. **Mensalidades** mostra somente as próprias cobranças, valores, vencimentos e pagamentos registrados. É consulta; ainda não existe pagamento online. **Meu perfil** mostra a própria ficha, sem edição automática.
+7. **Mensalidades** mostra somente as próprias cobranças, valores, vencimentos e pagamentos registrados. É consulta; ainda não existe pagamento online. **Meu perfil** permite consultar a ficha e editar nome, telefone e e-mail de acesso pelas regras acima.
 8. **Sair** revoga a sessão no servidor. Sessão expirada exige novo login. Inativar o aluno impede novo login e uso das sessões existentes; não apaga o histórico.
 
 As duas áreas atualizam os dados a cada 30 segundos enquanto a página está visível e ao retornar à janela. Uma falha de consulta é apresentada; na área do aluno, o check-in fica indisponível até recarregar com sucesso. Cadastro de turma não publica aulas automaticamente: use a agenda administrativa para criar cada encontro.

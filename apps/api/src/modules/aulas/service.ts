@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { Aula, AulaAlunoPrevisto, AulaView, PresencaAula, Turma, CheckinAula } from '@tatame/shared';
 import type { Repository } from '../../repository.js';
 import { HttpError } from '../../http-error.js';
-import { aulaExtraSchema, aulaGradeSchema, cancelarAulaSchema, filtroAulasSchema } from './schema.js';
+import { aulaGradeSchema, cancelarAulaSchema, filtroAulasSchema } from './schema.js';
 
 export function createAulasService(repo: Repository) {
   const find = async (id: string) => {
@@ -66,20 +66,11 @@ export function createAulasService(repo: Repository) {
         throw error;
       }
     },
-    async createExtra(body: unknown) {
-      const { turmaId, ...fields } = aulaExtraSchema.parse(body);
-      return create({ ...fields, origem: 'extra', origemHorarioId: null }, turmaId ? await activeTurma(turmaId) : null);
-    },
     async cancel(id: string, body: unknown) {
       const { motivo } = cancelarAulaSchema.parse(body);
       await find(id);
       await repo.cancelAula(id, motivo, new Date().toISOString());
       return detail(id);
-    },
-    async removeExtra(id: string) {
-      const aula = await find(id);
-      if (aula.origem !== 'extra') throw new HttpError(409, 'Somente aulas extras podem ser excluídas. Para uma aula da grade fixa, use cancelar.');
-      if (!await repo.removeAulaExtra(id)) throw new HttpError(404, 'Aula não encontrada.');
     },
   };
 }

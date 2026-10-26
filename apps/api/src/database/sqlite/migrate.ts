@@ -3,7 +3,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 
-export interface SqliteMigration { version: number; name: string; sql: string }
+export interface SqliteMigration { version: number; name: string; sql: string; rebuildForeignKeys?: boolean }
 export interface MigrationResult { version: number; applied: number[]; backupPath: string | null }
 
 export const sqliteMigrations: readonly SqliteMigration[] = [
@@ -13,6 +13,10 @@ export const sqliteMigrations: readonly SqliteMigration[] = [
   { version: 4, name: '004_chamada', sql: readFileSync(new URL('./migrations/004_chamada.sql', import.meta.url), 'utf8') },
   { version: 5, name: '005_acesso_aluno', sql: readFileSync(new URL('./migrations/005_acesso_aluno.sql', import.meta.url), 'utf8') },
   { version: 6, name: '006_planos', sql: readFileSync(new URL('./migrations/006_planos.sql', import.meta.url), 'utf8') },
+  { version: 7, name: '007_saldo_mensal', sql: readFileSync(new URL('./migrations/007_saldo_mensal.sql', import.meta.url), 'utf8') },
+  { version: 8, name: '008_debitos_aulas', sql: readFileSync(new URL('./migrations/008_debitos_aulas.sql', import.meta.url), 'utf8') },
+  { version: 9, name: '009_responsaveis', sql: readFileSync(new URL('./migrations/009_responsaveis.sql', import.meta.url), 'utf8'), rebuildForeignKeys: true },
+  { version: 10, name: '010_graduacoes', sql: readFileSync(new URL('./migrations/010_graduacoes.sql', import.meta.url), 'utf8') },
 ];
 
 const checksum = (sql: string) => createHash('sha256').update(sql.replace(/\r\n/g, '\n').trim()).digest('hex');
@@ -83,8 +87,16 @@ export function migrateSqlite(
     return { version: migrations.length, applied: [], backupPath };
   }
 
-  db.exec('BEGIN IMMEDIATE');
+  // Rejeitar estrutura desconhecida antes de uma migração consultar colunas legadas.
+  if (db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='Aluno'").get()) {
+    assertKnownStructure(db, migrations.slice(0, Math.max(1, history.length)));
+  }
+
+  const restoreForeignKeys = pending.some(item => item.rebuildForeignKeys) && db.prepare('PRAGMA foreign_keys').get()?.foreign_keys === 1;
+  if (restoreForeignKeys) db.exec('PRAGMA foreign_keys=OFF');
+  let began = false;
   try {
+    db.exec('BEGIN IMMEDIATE'); began = true;
     db.exec('CREATE TABLE IF NOT EXISTS _tatame_migrations (version INTEGER PRIMARY KEY, name TEXT NOT NULL, checksum TEXT NOT NULL, appliedAt TEXT NOT NULL)');
     for (const migration of pending) {
       db.exec(migration.sql);
@@ -94,9 +106,10 @@ export function migrateSqlite(
     assertKnownStructure(db, migrations);
     db.exec('COMMIT');
   } catch (error) {
-    db.exec('ROLLBACK');
+    if (began) db.exec('ROLLBACK');
     const message = error instanceof Error ? error.message : 'Falha desconhecida.';
     throw new Error(`Migração SQLite interrompida: ${message}${backupPath ? ` Cópia anterior preservada em: ${backupPath}` : ''}`, { cause: error });
   }
+  finally { if (restoreForeignKeys) db.exec('PRAGMA foreign_keys=ON'); }
   return { version: migrations.length, applied: pending.map(migration => migration.version), backupPath };
 }

@@ -7,6 +7,15 @@ export interface HorarioAgrupado {
 }
 export const ORDEM_SEMANA: readonly number[] = [1, 2, 3, 4, 5, 6, 0];
 
+/** Usa o início mais cedo da grade para manter o nome estável ao agrupar os dias. */
+export function nomeAutomaticoDaTurma(grupos: readonly HorarioAgrupado[]): string {
+  const inicio = grupos.flatMap(grupo => grupo.intervalos.map(intervalo => intervalo.horaInicio))
+    .filter(hora => /^([01]\d|2[0-3]):[0-5]\d$/.test(hora)).sort()[0];
+  if (!inicio) return '';
+  const [hora, minutos] = inicio.split(':');
+  return `Turma das: ${Number(hora)}h${minutos === '00' ? '' : minutos}`;
+}
+
 /** Agrupa só o formulário. A grade persistida continua com uma linha por dia/intervalo. */
 export function agruparHorarios(horarios: readonly Horario[]): HorarioAgrupado[] {
   const porDia = new Map<number, HorarioAgrupado['intervalos']>();

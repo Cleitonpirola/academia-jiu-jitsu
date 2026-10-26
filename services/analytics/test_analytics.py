@@ -85,5 +85,13 @@ class AnalyticsTests(unittest.TestCase):
                 with self.assertRaises(ValidationError):
                     metrics(mensalidades=[billing(valorCentavos=value)])
 
+    def test_accepts_custom_belt_name(self):
+        result = metrics(alunos=[student(faixa='Coral da academia')])
+        self.assertEqual(result['riscos'][0]['faixa'], 'Coral da academia')
+
+    def test_rejects_empty_belt_name(self):
+        with self.assertRaises(ValidationError):
+            metrics(alunos=[student(faixa='')])
+
 if __name__ == "__main__":
     unittest.main()
