@@ -30,7 +30,7 @@ it('migra v4 para acesso preservando as dez tabelas, backup, autenticação e ch
     old.prepare('INSERT INTO PresencaAula VALUES (?,?,?,?,?,?,?)').run(randomUUID(),aula,id,'Nome histórico',1,now,now);
     const original = tables.map(table => old.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()); old.close();
     repo = new SqliteRepository(file);
-    assert.deepEqual(repo.migration.applied,[5,6,7,8,9,10]); assert.equal(repo.migration.version,10); assert.ok(repo.migration.backupPath);
+    assert.deepEqual(repo.migration.applied,[5,6,7,8,9,10,11]); assert.equal(repo.migration.version,11); assert.ok(repo.migration.backupPath);
     assert.deepEqual(tables.map(table => repo!.db.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()), original);
     for (const table of ['Usuario','Sessao','CheckinAula'] as const) assert.equal((await repo.list(table)).length,0);
     const backup = new DatabaseSync(repo.migration.backupPath, { readOnly:true });

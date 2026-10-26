@@ -27,7 +27,7 @@ it('migra v5 para planos com backup, preserva as treze tabelas e reabre plano/li
     assert.equal(tables.length, 13);
     const snapshot = (source: DatabaseSync) => tables.map(table => source.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all());
     const original = snapshot(db); db.close(); oldDb = undefined;
-    repo = new SqliteRepository(file); assert.deepEqual(repo.migration.applied, [6, 7, 8, 9, 10]); assert.equal(repo.migration.version, 10); assert.ok(repo.migration.backupPath);
+    repo = new SqliteRepository(file); assert.deepEqual(repo.migration.applied, [6, 7, 8, 9, 10,11]); assert.equal(repo.migration.version, 11); assert.ok(repo.migration.backupPath);
     assert.deepEqual(snapshot(repo.db), original); assert.equal((await repo.list('PlanoAluno')).length, 0); assert.equal((await repo.list('LiberacaoAula')).length, 0);
     const backup = new DatabaseSync(repo.migration.backupPath, { readOnly: true });
     try { assert.deepEqual(snapshot(backup), original); assert.equal(backup.prepare('SELECT MAX(version) v FROM _tatame_migrations').get()?.v, 5); } finally { backup.close(); }

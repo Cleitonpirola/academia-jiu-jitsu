@@ -68,7 +68,8 @@ export interface UsoPlano {
   aulasLiberadas: string[];
 }
 export interface GestaoPlano { plano: PlanoAluno | null; uso: UsoPlano; aulasHoje: Aula[]; liberacoes: (LiberacaoAula & { aula: Aula; utilizada: boolean })[] }
-export interface AulaView extends Aula { alunosPrevistos: AulaAlunoPrevisto[]; chamada: PresencaAula[]; checkins: CheckinAula[] }
+export interface AulaProfessor { id: string; aulaId: string; nome: string; ordem: number }
+export interface AulaView extends Aula { professores: string[]; alunosPrevistos: AulaAlunoPrevisto[]; chamada: PresencaAula[]; checkins: CheckinAula[] }
 export interface UsuarioView { id: string; nome: string; email: string; perfil: 'admin' | 'aluno' | 'responsavel'; alunoId: string | null }
 export interface AuthState { configuracaoInicial: boolean; usuario: UsuarioView | null }
 export interface AulaAlunoView extends Aula { checkin: CheckinAula | null; presenca: PresencaAula | null }

@@ -70,3 +70,4 @@
 
 .graduacao-actions .btn{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;padding:8px 10px;width:auto;height:auto}
 .aula-title{display:flex;align-items:center;gap:8px;margin-bottom:9px}.aula-info .aula-title h2{margin:0}.aula-title .icon-btn{flex-shrink:0;min-width:32px;min-height:32px;color:#628773}.aula-confirmado{flex-wrap:wrap}.aula-confirmado>.btn{font-size:10px}.chamada-row .attendance-buttons{flex-wrap:wrap}
+.professores-aula-list{display:grid;gap:14px;margin:18px 0}.professor-aula-row{display:flex;align-items:flex-end;gap:10px}.professor-aula-row>.field{flex:1;min-width:0}.professor-aula-row>.icon-btn{min-height:40px}.aula-professores-heading{display:flex;align-items:center;gap:12px;justify-content:space-between;flex-wrap:wrap}.aula-professores-heading>.turma-professor{margin:0}.aula-professores-heading>.btn{font-size:10px}

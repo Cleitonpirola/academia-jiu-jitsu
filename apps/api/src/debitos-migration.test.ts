@@ -20,7 +20,7 @@ it('migração 8 faz backup v7, preserva saldo/cadastros e persiste débito e ba
     old.prepare('INSERT INTO CheckinAula VALUES(?,?,?,?,?)').run(randomUUID(),base,id,'Aluno preservado',now);
     const tables=old.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name<>'_tatame_migrations' ORDER BY name").all().map(row=>String(row.name));
     const projections=Object.fromEntries(tables.map(table=>[table,old!.prepare('PRAGMA table_info("'+table+'")').all().map(c=>'"'+c.name+'"').join(',')]));const snapshot=(db:DatabaseSync)=>tables.map(table=>db.prepare('SELECT '+projections[table]+' FROM "'+table+'" ORDER BY id').all());const before=snapshot(old);old.close();old=undefined;
-    repo=new SqliteRepository(file);assert.deepEqual(repo.migration.applied,[8,9,10]);assert.ok(repo.migration.backupPath);assert.deepEqual(snapshot(repo.db),before);assert.equal((await repo.list('DebitoAula')).length,0);
+    repo=new SqliteRepository(file);assert.deepEqual(repo.migration.applied,[8,9,10,11]);assert.ok(repo.migration.backupPath);assert.deepEqual(snapshot(repo.db),before);assert.equal((await repo.list('DebitoAula')).length,0);
     const backup=new DatabaseSync(repo.migration.backupPath!,{readOnly:true});try{assert.equal(backup.prepare('SELECT MAX(version) v FROM _tatame_migrations').get()!.v,7);assert.deepEqual(snapshot(backup),before);}finally{backup.close();}
     await repo.saveConfiguracaoAdicionais({valorAulaAdicionalCentavos:2500,prazoPagamentoDias:3},ADMIN_INICIAL_ID,now);
     const d=await repo.confirmarAulaAdicional(id,extra,{valorEsperadoCentavos:2500,prazoEsperadoDias:3},now);await repo.baixarDebito(d.id,ADMIN_INICIAL_ID,dia);

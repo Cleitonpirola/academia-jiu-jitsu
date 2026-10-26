@@ -219,3 +219,7 @@ Pedido: "quero que possa editar o nome da aula, se caso ainda não puder porque 
 ## Cartão, confirmados e telefone — 26/10/2026
 
 Pedidos: lápis junto ao nome, retirar alunos previstos, manter confirmados e permitir remover check-in quando não comparecer; corrigir máscara de telefone. Codex explicitou ausência e recálculo de crédito, mantendo débito contratado. Usuário autorizou testar e commitar se tudo funcionasse. Depois esclareceu retirar o botão duplicado de edição dos detalhes. Implementação e QA descritas em AULAS.md/TELEFONES.md. Pedido posterior de vários professores por aula separado da autorização anterior.
+
+## Mais de um professor — 26/10/2026
+
+Pedido: “coloque a opção de adicionar mais de 1 professor nas aulas tambem, as vezes tera mais de 1”. Codex informou que o conjunto anterior autorizado seria sincronizado primeiro e que este pedido ficaria separado para validação. Implementou lista de nomes por encontro, herança do padrão da turma e gravação atômica, sem criar contas. 227 testes, build/typecheck, Prisma e UI aprovados; estado e limites em PROFESSORES_AULA.md. Ainda sem aprovação de commit desse incremento.

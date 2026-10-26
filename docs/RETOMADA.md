@@ -1,5 +1,11 @@
 # Ponto de retomada do Tatame
 
+## Estado vigente ao encerrar — 26/10/2026
+
+Usuário aprovou vários professores e autorizou commit/push, solicitou resumo para Matheus e informou que continuará à noite. Implementação e testes concluídos (227 TypeScript, build/typecheck e Prisma); sem alterações de código após essa validação. SQLite local v11, Supabase v10 (migração 11 preparada e pendente). Os conjuntos anteriores estão nos commits db08478 e e58d87d. O último conjunto de professores está autorizado para sincronização: conferir git log/status e origin/codex/evolucao-tatame antes de repetir qualquer commit/push. As notas históricas de falta de aprovação/testes mais abaixo foram superadas. Resumo completo do dia em RESUMO_2026-10-26.md.
+
+Próximos passos ao retomar: conferir Git, ambiente e feedback humano; combinar a aplicação externa da migração 11 antes de usar professores no Supabase. Não fazer merge na main, deploy, tag ou envio de mensagens a terceiros sem solicitação. Credenciais e dados privados continuam ignorados.
+
 Atualizado em 26/10/2026. Este arquivo registra o estado do trabalho e deve ser atualizado antes de interromper por limite ou ao concluir etapas relevantes. Não contém credenciais.
 
 ## Fluxo obrigatório
@@ -67,3 +73,17 @@ Configurações reais em .env/.env.homologacao são privadas e ignoradas pelo Gi
 Concluídos lápis no cartão (sem duplicação nos detalhes), confirmados sem previstos, remoção administrativa de check-in com ausência/saldo/financeiro preservado e máscara compartilhada. 222 testes TypeScript e build/typecheck aprovados; UI fictícia validou remoção, chamada e telefone. Usuário autorizou commit/push após testes. Conferir Git para verificar sincronização efetiva antes de repetir comandos. Base anterior db08478d70f623f702ebb6dfda7d3819d75d6cf9. Sem migração nova.
 
 NOVO PEDIDO SEPARADO: mais de um professor por aula. Ainda não implementado neste checkpoint. Próximo passo: modelar lista de professores, tela de edição e herança/publicação conforme o código existente; preservar o professor histórico e explicar o alcance ao usuário. Implementar/testar/documentar e apresentar para validação antes de commit desse novo comportamento.
+
+## Vários professores — implementação em andamento
+
+Base sincronizada: e58d87dc832a81ad046de7df2971cd838ba5ce1a na codex/evolucao-tatame (HEAD/remoto iguais no envio; v1.0.0 preservada). Conjunto de aulas/check-ins/telefone já commitado/enviado, não repetir esse commit.
+
+Novo pedido separado: vários professores em cada aula. Implementados AulaProfessor e migração 11 SQLite/PostgreSQL preparada, lista de nomes em AulaView, transação que atualiza lista e resumo professor, herança do professor da turma ao publicar, formulário em Detalhes → Editar professores com adicionar/remover nomes. Válido apenas no encontro; turma e outras aulas preservadas. Sem cadastrar contas/permissões para esses nomes.
+
+Cinco testes novos passaram após corrigir fixture com horários sobrepostos e comparação de objeto SQLite. Build/typecheck e Prisma generate passaram. Primeira suíte revelou expectativas antigas da versão 10 e campo novo professores nas projeções: ajustadas para 11 sem retirar verificações de preservação. Falta execução final completa, validação de schema, aplicar migração local com backup/preservação e reiniciar API, conferir UI fictícia, atualizar documentação e apresentar para validação. Migração externa PostgreSQL ainda não aplicada. Não commitar esse pedido sem nova aprovação do usuário.
+
+## Estado final para retomar — 26/10/2026
+
+Entrega local de vários professores concluída: API, tabela/lista, migração 11, formulário nos detalhes e documentação em PROFESSORES_AULA.md. 227 testes TypeScript, build/typecheck, Prisma generate/validate aprovados; migração SQLite real 11 com backup, preservação das 22 tabelas anteriores e vínculos válidos. API normal na sessão 57947, porta 3333; frontend 5173 e analytics 8000. Supabase continua na migração 10: script PostgreSQL 11 preparado, sem execução externa. Nenhuma credencial nova ou conta de professor.
+
+QA fictícia atual: porta 3340, sessão 16438, aba 17 com dois professores na aula das 15h; capturas novas na documentação. Portas/abas anteriores 3336–3338 podem conter testes do usuário: não apagar nem reiniciar indiscriminadamente. Conferir processos/estados antes de retomar. O conjunto anterior foi enviado no commit e58d87dc832a81ad046de7df2971cd838ba5ce1a; o incremento de professores permanece SEM COMMIT/SEM PUSH, aguardando validação por ter sido pedido após a aprovação. Não confundir com as notas de pendência de testes acima, já superadas por esta verificação final.

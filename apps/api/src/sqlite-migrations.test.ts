@@ -36,10 +36,10 @@ const originalStudent = [
 it('registra a versão inicial de um banco novo e não reaplica a migração', async () => {
   const repo = new SqliteRepository(':memory:');
   try {
-    assert.deepEqual(repo.migration.applied, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    assert.deepEqual(repo.migration.applied, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,11]);
     assert.equal(repo.migration.backupPath, null);
     assert.deepEqual(migrateSqlite(repo.db).applied, []);
-    assert.equal(repo.db.prepare('SELECT COUNT(*) AS total FROM _tatame_migrations').get()?.total, 10);
+    assert.equal(repo.db.prepare('SELECT COUNT(*) AS total FROM _tatame_migrations').get()?.total, 11);
   } finally { await repo.close(); }
 });
 
@@ -162,7 +162,7 @@ it('evolui versão 1 para turmas, preserva as quatro tabelas e persiste grade e 
     const before = originalTables.map(table => old.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all());
     old.close();
     repo = new SqliteRepository(temp.file);
-    assert.deepEqual(repo.migration.applied, [2, 3, 4, 5, 6, 7, 8, 9, 10]); assert.equal(repo.migration.version, 10);
+    assert.deepEqual(repo.migration.applied, [2, 3, 4, 5, 6, 7, 8, 9, 10,11]); assert.equal(repo.migration.version, 11);
     assert.deepEqual(originalTables.map(table => repo!.db.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()), before);
     assert.ok(repo.migration.backupPath);
     const backup = new DatabaseSync(repo.migration.backupPath, { readOnly: true });
@@ -199,7 +199,7 @@ it('evolui v2 para aulas/chamada sem alterar as sete tabelas, cria backup v2 e p
     old.prepare('INSERT INTO AlunoTurma VALUES (?, ?, ?, ?)').run(randomUUID(), turmaId, originalStudent[0], originalStudent[8]);
     const before = tables.map(table => old.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()); old.close();
     repo = new SqliteRepository(temp.file);
-    assert.deepEqual(repo.migration.applied, [3, 4, 5, 6, 7, 8, 9, 10]); assert.ok(repo.migration.backupPath);
+    assert.deepEqual(repo.migration.applied, [3, 4, 5, 6, 7, 8, 9, 10,11]); assert.ok(repo.migration.backupPath);
     assert.deepEqual(tables.map(table => repo!.db.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()), before);
     const backup = new DatabaseSync(repo.migration.backupPath, { readOnly: true });
     try { assert.equal(backup.prepare('SELECT MAX(version) AS version FROM _tatame_migrations').get()?.version, 2); assert.equal(backup.prepare("SELECT name FROM sqlite_master WHERE name='Aula'").get(), undefined); }
@@ -230,7 +230,7 @@ it('evolui v3 para chamada preservando nove tabelas, backup e registros por moda
     old.prepare('INSERT INTO AulaAlunoPrevisto VALUES (?, ?, ?, ?)').run(randomUUID(), aulaId, originalStudent[0], originalStudent[1]);
     const before = tables.map(table => old.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()); old.close();
     repo = new SqliteRepository(temp.file);
-    assert.deepEqual(repo.migration.applied, [4, 5, 6, 7, 8, 9, 10]); assert.equal(repo.migration.version, 10); assert.ok(repo.migration.backupPath);
+    assert.deepEqual(repo.migration.applied, [4, 5, 6, 7, 8, 9, 10,11]); assert.equal(repo.migration.version, 11); assert.ok(repo.migration.backupPath);
     assert.deepEqual(tables.map(table => repo!.db.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()), before);
     assert.deepEqual(await repo.list('PresencaAula'), []);
     const backup = new DatabaseSync(repo.migration.backupPath, { readOnly: true });

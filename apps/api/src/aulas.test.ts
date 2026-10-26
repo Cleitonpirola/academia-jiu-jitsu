@@ -18,7 +18,7 @@ describe('Aulas por turma e preservação do histórico de avulsas',()=>{
   const antes=(await request(app).get('/api/aulas/'+a.id).expect(200)).body,horarios=await repo.list('HorarioTurma');
   const r=await request(app).patch(`/api/aulas/${a.id}/nome`).send({titulo:'  Fundamentos de guarda  '}).expect(200);
   assert.deepEqual(r.body,{...antes,titulo:'Fundamentos de guarda'});
-  assert.deepEqual(await repo.get('Aula',outra.id),Object.fromEntries(Object.entries(outra).filter(([k])=>!['chamada','checkins','alunosPrevistos'].includes(k))));
+  assert.deepEqual(await repo.get('Aula',outra.id),Object.fromEntries(Object.entries(outra).filter(([k])=>!['chamada','checkins','alunosPrevistos','professores'].includes(k))));
   assert.equal((await repo.get('Turma',t.id))!.nome,grade.nome);assert.deepEqual(await repo.list('HorarioTurma'),horarios);
   assert.equal((await publicar(t.horarios[0].id,'2026-10-19',200)).titulo,'Fundamentos de guarda');
   assert.equal((await publicar(t.horarios[0].id,'2026-10-26')).titulo,grade.nome);

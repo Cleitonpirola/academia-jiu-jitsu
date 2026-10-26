@@ -274,3 +274,9 @@ Contrato administrativo PATCH /api/aulas/:id/nome, schema estrito {titulo}, 2–
 Confirmados são projeção de CheckinAula e PresencaAula presente, excluindo chamada ausente. AulaAlunoPrevisto permanece como histórico, sem alimentar a lista visível. DELETE administrativo /aulas/:id/checkins/:alunoId chama removeCheckin do repositório. SQLite usa BEGIN IMMEDIATE; Prisma trava Aula e Aluno na ordem dos fluxos de check-in/chamada, grava ausência por upsert, exclui check-in e sincroniza saldo na mesma transação. Repetição é idempotente. Financeiro continua independente; não há cancelamento de débito por não comparecimento. Sem migração.
 
 TelefoneInput centraliza apresentação, formato completo e cursor; telefone.ts contém funções puras. Não altera modelo de persistência nem autorização do perfil. Modais usam useId para rótulos distintos ao abrir confirmação sobre os detalhes.
+
+## Professores de uma aula — 26/10/2026
+
+Aula tem relação 1:N com AulaProfessor(id,aulaId,nome,ordem), ordem 0–7 e unicidade por aula/ordem e aula/nome. Migração 11 copia o texto anterior como uma linha, sem dividir nomes históricos. Aula.professor continua como resumo de leitura, unido por separador; AulaView acrescenta professores:string[]. Publicar herda o professor padrão da turma. saveProfessoresAula grava lista/resumo em transação SQLite/Prisma, com trava da aula no PostgreSQL. PATCH administrativo /aulas/:id/professores usa schema estrito e valida de 1 a 8 nomes únicos normalizados, mantendo a ordem. Fallback de leitura de fixture/importação sem linhas usa o texto antigo como um nome.
+
+Nenhuma alteração em autenticação de professores, turma, presença, check-in ou cobrança. SQLite local v11 preservado/validado; PostgreSQL com migração preparada, sem execução externa deste incremento. Guia: PROFESSORES_AULA.md.

@@ -10,6 +10,7 @@ export function aulasRouter(repo: Repository) {
   router.get('/', async (req, res) => res.json(await service.list(req.query)));
   router.get('/:id', async (req, res) => res.json(await service.detail(req.params.id)));
   router.patch('/:id/nome', async (req, res) => res.json(await service.rename(req.params.id, req.body)));
+  router.patch('/:id/professores', async (req, res) => res.json(await service.setProfessores(req.params.id, req.body)));
   router.delete('/:id/checkins/:alunoId', async (req, res) => {
     await chamada.removeCheckin(req.params.id, req.params.alunoId);
     res.status(204).end();

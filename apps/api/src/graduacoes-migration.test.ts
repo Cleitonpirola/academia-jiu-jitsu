@@ -11,7 +11,7 @@ it('migração 10 preserva vinte tabelas, liga faixas anteriores e conserva grau
   const usuario=randomUUID();db.prepare('INSERT INTO Usuario VALUES(?,?,?,?,?,?,?,?,?)').run(usuario,'Aluno preservado','login@teste.invalid','aluno',alunos[0],'hash-preservado',null,null,'2026-01-01');db.prepare('INSERT INTO Sessao VALUES(?,?,?,?,?,?)').run(randomUUID(),usuario,'token-preservado','credencial-preservada','2099-01-01','2026-01-01');
   const tabelas=db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name<>'_tatame_migrations' ORDER BY name").all().map(t=>String(t.name));assert.equal(tabelas.length,20);
   const cols=Object.fromEntries(tabelas.map(t=>[t,db.prepare('PRAGMA table_info("'+t+'")').all().map(c=>'"'+c.name+'"').join(',')]));const snapshot=()=>tabelas.map(t=>db.prepare('SELECT '+cols[t]+' FROM "'+t+'" ORDER BY id').all());const before=snapshot();
-  assert.deepEqual(migrateSqlite(db).applied,[10]);assert.deepEqual(snapshot(),before);
+  assert.deepEqual(migrateSqlite(db).applied,[10,11]);assert.deepEqual(snapshot(),before);
   const rows=db.prepare('SELECT a.faixa,a.grauId,f.nome FROM Aluno a JOIN FaixaGraduacao f ON f.id=a.faixaId ORDER BY a.email').all();assert.equal(rows.length,2);assert.ok(rows.every(r=>r.faixa===r.nome&&r.grauId===null));assert.equal(db.prepare('SELECT COUNT(*) n FROM GrauFaixa').get()!.n,0);
   assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(),[]);assert.deepEqual(migrateSqlite(db).applied,[]);
  }finally{db.close();}

@@ -35,7 +35,7 @@ function snapshot(db:DatabaseSync){
 it('migração 9 preserva todas as 17 tabelas, inclusive sessões, convites, configurações e baixas',()=>{
   const {db,aluno}=bancoAnterior();try{
     const read=snapshot(db),before=read(db);assert.equal(before.length,17);
-    assert.deepEqual(migrateSqlite(db).applied,[9,10]);assert.deepEqual(read(db),before);
+    assert.deepEqual(migrateSqlite(db).applied,[9,10,11]);assert.deepEqual(read(db),before);
     assert.deepEqual({...db.prepare('SELECT possuiCelular,acessoPrincipal,responsabilidadeTransferidaEm FROM Aluno WHERE id=?').get(aluno)},{possuiCelular:1,acessoPrincipal:'aluno',responsabilidadeTransferidaEm:null});
     assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(),[]);assert.equal(db.prepare('PRAGMA foreign_keys').get()!.foreign_keys,1);
     assert.throws(()=>db.prepare('DELETE FROM Usuario WHERE perfil=?').run('admin'),/FOREIGN KEY/);
@@ -49,6 +49,6 @@ it('falha na reconstrução do usuário desfaz a migração inteira e restaura a
     assert.throws(()=>migrateSqlite(db,undefined,broken),/Migração SQLite interrompida/);
     assert.deepEqual(read(db),before);assert.equal(db.prepare('SELECT MAX(version) v FROM _tatame_migrations').get()!.v,8);
     assert.equal(db.prepare('PRAGMA foreign_keys').get()!.foreign_keys,1);assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(),[]);
-    assert.deepEqual(migrateSqlite(db).applied,[9,10]);
+    assert.deepEqual(migrateSqlite(db).applied,[9,10,11]);
   }finally{db.close();}
 });

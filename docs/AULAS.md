@@ -125,3 +125,7 @@ O cartão mostra lápis junto ao título; salvar ou cancelar volta à agenda. N�
 Em Detalhes ou Chamada, Remover check-in pede confirmação. DELETE /api/aulas/:id/checkins/:alunoId é administrativo: em transação, registra/atualiza ausência, remove o check-in e sincroniza o saldo mensal. A ausência permite análise do não comparecimento e impede o aluno de simplesmente repetir o check-in na aula já avaliada. O professor pode corrigir a chamada depois. A repetição não devolve crédito duas vezes, e outra aula permanece intacta. Mensalidade, autorização e débito adicional contratado, pago ou pendente, não são cancelados pela remoção. A UI informa isso antes de confirmar. Aula cancelada/futura não permite a operação. Sem migração: usa os registros existentes.
 
 Validação nova: 222 testes TypeScript, build/typecheck e navegador isolado. Cobertura de permissões, repetição/concorrência, rollback, saldo, outra aula e débitos. A UI confirmou edição pelo lápis, retirada do confirmado e ausência na chamada. Implementado nos repositórios SQLite e Prisma/PostgreSQL; sem nova execução externa PostgreSQL deste incremento.
+
+## Vários professores por encontro — 26/10/2026
+
+Em Aulas → Detalhes → Editar professores, adicione/remova nomes e salve. Lista de 1 a 8 nomes, com professor da turma como padrão inicial. Edição afeta só a aula escolhida. Guia e motivos técnicos em [PROFESSORES_AULA.md](PROFESSORES_AULA.md). Novo incremento local, aguardando validação para commit; migração SQLite 11 validada e PostgreSQL preparado sem execução externa.

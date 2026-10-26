@@ -139,6 +139,7 @@ model Aula {
   canceladaEm        String?
   criadoEm           String
   alunosPrevistos    AulaAlunoPrevisto[]
+  professores        AulaProfessor[]
   chamada            PresencaAula[]
   checkins           CheckinAula[]
   liberacoes         LiberacaoAula[]
@@ -146,6 +147,15 @@ model Aula {
   @@unique([origemHorarioId, dataAula])
   @@index([dataAula])
   @@index([turmaId])
+}
+model AulaProfessor {
+  id     String @id @default(uuid()) @db.Uuid
+  aulaId String @db.Uuid
+  aula   Aula @relation(fields: [aulaId], references: [id], onDelete: Cascade)
+  nome   String
+  ordem  Int
+  @@unique([aulaId, ordem])
+  @@unique([aulaId, nome])
 }
 model AulaAlunoPrevisto {
   id      String @id @default(uuid()) @db.Uuid

@@ -1,5 +1,5 @@
 import { graduacaoValida, validarCatalogo, type AcaoGraduacao } from './modules/graduacoes/rules.js';
-import type { FaixaGraduacao,GrauFaixa } from '@tatame/shared';
+import type { FaixaGraduacao,GrauFaixa,AulaProfessor } from '@tatame/shared';
 import { planejarPerfilAluno } from './modules/auth/perfil.js';
 import type { PerfilBasicoAluno } from '@tatame/shared';
 import type { ResponsavelAluno, EventoAcessoAluno, ComunicadoAluno, UsuarioView } from '@tatame/shared';
@@ -22,7 +22,7 @@ import { assertSaldoMensal, camposSaldo, limparSaldoNulo, saldoMensal } from './
 import type { AceiteAulaAdicional, CondicoesAulaAdicional, ConfiguracaoAcademia, DebitoAula } from '@tatame/shared';
 import { adicionalAtivo, assertDebitosEmDia, condicoesPadrao, novoDebito, validarDataBaixa } from './modules/planos/debitos.js';
 
-export type Tables = { FaixaGraduacao:FaixaGraduacao; GrauFaixa:GrauFaixa; ResponsavelAluno: ResponsavelAluno; EventoAcessoAluno: EventoAcessoAluno; ComunicadoAluno: ComunicadoAluno; ConfiguracaoAcademia: ConfiguracaoAcademia; DebitoAula: DebitoAula; Aluno: Aluno; Mensalidade: Mensalidade; Presenca: Presenca; Analise: Analise; Turma: Turma; HorarioTurma: HorarioTurma; AlunoTurma: AlunoTurma; Aula: Aula; AulaAlunoPrevisto: AulaAlunoPrevisto; PresencaAula: PresencaAula; Usuario: Usuario; Sessao: Sessao; CheckinAula: CheckinAula; PlanoAluno: PlanoAluno; LiberacaoAula: LiberacaoAula };
+export type Tables = { AulaProfessor:AulaProfessor; FaixaGraduacao:FaixaGraduacao; GrauFaixa:GrauFaixa; ResponsavelAluno: ResponsavelAluno; EventoAcessoAluno: EventoAcessoAluno; ComunicadoAluno: ComunicadoAluno; ConfiguracaoAcademia: ConfiguracaoAcademia; DebitoAula: DebitoAula; Aluno: Aluno; Mensalidade: Mensalidade; Presenca: Presenca; Analise: Analise; Turma: Turma; HorarioTurma: HorarioTurma; AlunoTurma: AlunoTurma; Aula: Aula; AulaAlunoPrevisto: AulaAlunoPrevisto; PresencaAula: PresencaAula; Usuario: Usuario; Sessao: Sessao; CheckinAula: CheckinAula; PlanoAluno: PlanoAluno; LiberacaoAula: LiberacaoAula };
 export type Table = keyof Tables;
 export interface Repository {
   kind: 'sqlite' | 'supabase';
@@ -39,6 +39,7 @@ export interface Repository {
   saveTurma(turma: Turma, horarios: HorarioTurma[], alunos: AlunoTurma[], create: boolean): Promise<void>;
   removeTurma(id: string): Promise<void>;
   createAula(aula: Aula, alunos: AulaAlunoPrevisto[]): Promise<void>;
+  saveProfessoresAula(aulaId: string, nomes: string[]): Promise<void>;
   cancelAula(id: string, motivo: string, timestamp: string): Promise<void>;
   savePresencaAula(aulaId: string, alunoId: string, presente: boolean, timestamp: string): Promise<{ registro: PresencaAula; created: boolean }>;
   removePresencaAula(aulaId: string, alunoId: string): Promise<void>;
@@ -55,6 +56,7 @@ export interface Repository {
   close(): Promise<void>;
 }
 const columns: Record<Table, string[]> = {
+  AulaProfessor:['id','aulaId','nome','ordem'],
   FaixaGraduacao:['id','nome','chave','cor','ordem','situacao','criadoEm','atualizadoEm'],
   GrauFaixa:['id','faixaId','numero','situacao','criadoEm','atualizadoEm'],
   ResponsavelAluno: ['id','alunoId','usuarioId','telefone','parentesco','tipoVinculo','criadoEm','atualizadoEm'],
@@ -150,7 +152,18 @@ export class SqliteRepository implements Repository {
     this.db.exec('BEGIN IMMEDIATE');
     try {
       this.insertRow('Aula', aula);
+      this.insertRow('AulaProfessor', { id: randomUUID(), aulaId: aula.id, nome: aula.professor, ordem: 0 });
       for (const aluno of alunos) this.insertRow('AulaAlunoPrevisto', aluno);
+      this.db.exec('COMMIT');
+    } catch (error) { this.db.exec('ROLLBACK'); throw error; }
+  }
+  async saveProfessoresAula(aulaId: string, nomes: string[]) {
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      if (!this.db.prepare('SELECT id FROM Aula WHERE id=?').get(aulaId)) throw new HttpError(404, 'Aula não encontrada.');
+      this.db.prepare('DELETE FROM AulaProfessor WHERE aulaId=?').run(aulaId);
+      nomes.forEach((nome, ordem) => this.insertRow('AulaProfessor', { id: randomUUID(), aulaId, nome, ordem }));
+      this.db.prepare('UPDATE Aula SET professor=? WHERE id=?').run(nomes.join(' · '), aulaId);
       this.db.exec('COMMIT');
     } catch (error) { this.db.exec('ROLLBACK'); throw error; }
   }
@@ -449,7 +462,17 @@ export class PrismaRepository implements Repository {
   async createAula(aula: Aula, alunos: AulaAlunoPrevisto[]) {
     await this.client.$transaction(async client => {
       await client.aula.create({ data: aula });
+      await client.aulaProfessor.create({ data: { id: randomUUID(), aulaId: aula.id, nome: aula.professor, ordem: 0 } });
       if (alunos.length) await client.aulaAlunoPrevisto.createMany({ data: alunos });
+    });
+  }
+  async saveProfessoresAula(aulaId: string, nomes: string[]) {
+    await this.client.$transaction(async client => {
+      const rows = await client.$queryRaw`SELECT id FROM "Aula" WHERE id=${aulaId}::uuid FOR UPDATE`;
+      if (!(rows as unknown[]).length) throw new HttpError(404, 'Aula não encontrada.');
+      await client.aulaProfessor.deleteMany({ where: { aulaId } });
+      await client.aulaProfessor.createMany({ data: nomes.map((nome, ordem) => ({ id: randomUUID(), aulaId, nome, ordem })) });
+      await client.aula.update({ where: { id: aulaId }, data: { professor: nomes.join(' · ') } });
     });
   }
   async cancelAula(id: string, motivo: string, timestamp: string) {
