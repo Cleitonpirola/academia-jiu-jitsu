@@ -44,6 +44,7 @@ export interface Repository {
   removePresencaAula(aulaId: string, alunoId: string): Promise<void>;
   activateUsuario(id: string, conviteHash: string, senhaHash: string, timestamp: string): Promise<boolean>;
   saveCheckin(aulaId: string, alunoId: string, timestamp: string, ator?: Pick<UsuarioView, 'id'|'perfil'>): Promise<CheckinAula>;
+  removeCheckin(aulaId: string, alunoId: string, timestamp: string): Promise<void>;
   saveSaldoMensalAluno(alunoId: string, limiteMensal: number | null): Promise<ReturnType<typeof saldoMensal>>;
   saveConfiguracaoAdicionais(input: CondicoesAulaAdicional, usuarioId: string, timestamp: string): Promise<ConfiguracaoAcademia>;
   confirmarAulaAdicional(alunoId: string, aulaId: string, aceite: AceiteAulaAdicional, timestamp: string, ator?: Pick<UsuarioView, 'id'|'perfil'>): Promise<DebitoAula>;
@@ -220,6 +221,23 @@ export class SqliteRepository implements Repository {
         this.sincronizarSaldoMensal(alunoId);
       }
       this.db.exec('COMMIT'); return row;
+    } catch (error) { this.db.exec('ROLLBACK'); throw error; }
+  }
+  async removeCheckin(aulaId: string, alunoId: string, timestamp: string) {
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      const aula = this.db.prepare('SELECT * FROM Aula WHERE id=?').get(aulaId) as unknown as Aula | undefined;
+      validateAulaChamada(aula ?? null);
+      const checkin = this.db.prepare('SELECT * FROM CheckinAula WHERE aulaId=? AND alunoId=?').get(aulaId, alunoId) as unknown as CheckinAula | undefined;
+      if (checkin) {
+        // A ausência impede refazer o check-in automaticamente e mantém o histórico da chamada.
+        const registro = this.db.prepare('SELECT id FROM PresencaAula WHERE aulaId=? AND alunoId=?').get(aulaId, alunoId);
+        if (registro) this.db.prepare('UPDATE PresencaAula SET presente=0, atualizadoEm=? WHERE id=?').run(timestamp, String(registro.id));
+        else this.insertRow('PresencaAula', { id: randomUUID(), aulaId, alunoId, nome: checkin.nome, presente: false, criadoEm: timestamp, atualizadoEm: timestamp });
+        this.db.prepare('DELETE FROM CheckinAula WHERE id=?').run(checkin.id);
+        this.sincronizarSaldoMensal(alunoId);
+      }
+      this.db.exec('COMMIT');
     } catch (error) { this.db.exec('ROLLBACK'); throw error; }
   }
   async savePlanoAluno(alunoId: string, input: Pick<PlanoAluno, 'nome' | 'limiteSemanal'>, timestamp: string) {
@@ -492,6 +510,20 @@ export class PrismaRepository implements Repository {
       const checkin = await client.checkinAula.create({ data: { id: randomUUID(), aulaId, alunoId, nome: aluno.nome, criadoEm: timestamp } });
       await sincronizarSaldoPrisma(client, alunoId);
       return checkin;
+    });
+  }
+  async removeCheckin(aulaId: string, alunoId: string, timestamp: string) {
+    await this.client.$transaction(async client => {
+      const [aula] = await client.$queryRaw<Aula[]>`SELECT * FROM "Aula" WHERE id=${aulaId}::uuid FOR UPDATE`;
+      validateAulaChamada(aula ?? null);
+      await client.$queryRaw`SELECT id FROM "Aluno" WHERE id=${alunoId}::uuid FOR UPDATE`;
+      const checkin = await client.checkinAula.findUnique({ where: { aulaId_alunoId: { aulaId, alunoId } } });
+      if (!checkin) return;
+      await client.presencaAula.upsert({ where: { aulaId_alunoId: { aulaId, alunoId } },
+        create: { id: randomUUID(), aulaId, alunoId, nome: checkin.nome, presente: false, criadoEm: timestamp, atualizadoEm: timestamp },
+        update: { presente: false, atualizadoEm: timestamp } });
+      await client.checkinAula.delete({ where: { id: checkin.id } });
+      await sincronizarSaldoPrisma(client, alunoId);
     });
   }
   async savePlanoAluno(alunoId: string, input: Pick<PlanoAluno, 'nome' | 'limiteSemanal'>, timestamp: string) {

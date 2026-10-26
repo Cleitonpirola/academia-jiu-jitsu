@@ -12,6 +12,25 @@ describe('Aulas por turma e preservação do histórico de avulsas',()=>{
  const student=()=>repo.insert('Aluno',{id:randomUUID(),nome:'Aluno preservado',email:randomUUID()+'@teste.invalid',telefone:'11999991234',faixa:'Branca',situacao:'ativo',dataNascimento:'2000-01-01',dataMatricula:'2026-01-01',criadoEm:new Date().toISOString()});
  const publicar=async(id:string,dataAula='2026-10-19',code=201)=>(await request(app).post('/api/aulas/da-grade').send({horarioId:id,dataAula}).expect(code)).body;
  const legado=async():Promise<Aula>=>{const a:Aula={id:randomUUID(),titulo:'Avulsa histórica',professor:'Professor antigo',dataAula:'2026-10-19',horaInicio:'15:00',horaFim:'16:00',origem:'extra',origemHorarioId:null,turmaId:null,turmaNome:null,situacao:'agendada',motivoCancelamento:null,canceladaEm:null,criadoEm:new Date().toISOString()};await repo.createAula(a,[]);return a;};
+ it('renomeia somente o encontro escolhido e preserva turma, grade e chamada',async()=>{
+  const aluno=await student(),t=await turma([aluno.id]),a=await publicar(t.horarios[0].id),outra=await publicar(t.horarios[1].id);
+  await request(app).put(`/api/aulas/${a.id}/chamada/${aluno.id}`).send({presente:true}).expect(201);
+  const antes=(await request(app).get('/api/aulas/'+a.id).expect(200)).body,horarios=await repo.list('HorarioTurma');
+  const r=await request(app).patch(`/api/aulas/${a.id}/nome`).send({titulo:'  Fundamentos de guarda  '}).expect(200);
+  assert.deepEqual(r.body,{...antes,titulo:'Fundamentos de guarda'});
+  assert.deepEqual(await repo.get('Aula',outra.id),Object.fromEntries(Object.entries(outra).filter(([k])=>!['chamada','checkins','alunosPrevistos'].includes(k))));
+  assert.equal((await repo.get('Turma',t.id))!.nome,grade.nome);assert.deepEqual(await repo.list('HorarioTurma'),horarios);
+  assert.equal((await publicar(t.horarios[0].id,'2026-10-19',200)).titulo,'Fundamentos de guarda');
+  assert.equal((await publicar(t.horarios[0].id,'2026-10-26')).titulo,grade.nome);
+ });
+ it('recusa nome inválido e campos extras, sem alterar a aula',async()=>{
+  const a=await legado();for(const input of [{titulo:''},{titulo:' '},{titulo:'X'},{titulo:'X'.repeat(121)},{titulo:42},{titulo:'Teste',horaInicio:'09:00'},{}])await request(app).patch(`/api/aulas/${a.id}/nome`).send(input).expect(400);
+  assert.deepEqual(await repo.get('Aula',a.id),a);for(const id of ['invalido',randomUUID()])await request(app).patch(`/api/aulas/${id}/nome`).send({titulo:'Nome válido'}).expect(404);
+ });
+ it('renomeia aula cancelada preservando o motivo e a data do cancelamento',async()=>{
+  const a=await legado(),cancelada=(await request(app).patch(`/api/aulas/${a.id}/cancelamento`).send({motivo:'Professor indisponível'}).expect(200)).body;
+  assert.deepEqual((await request(app).patch(`/api/aulas/${a.id}/nome`).send({titulo:'Nome corrigido'}).expect(200)).body,{...cancelada,titulo:'Nome corrigido'});
+ });
  it('turma coringa publica 12h, 15h e 18h sem fabricar cobranças ou presenças',async()=>{const t=await turma(),antes=await repo.list('HorarioTurma');for(const h of t.horarios)await publicar(h.id);const r=await request(app).get('/api/aulas').expect(200);assert.deepEqual(r.body.map((a:Aula)=>a.horaInicio),['12:00','15:00','18:00']);assert.ok(r.body.every((a:Aula)=>a.origem==='grade'&&a.turmaId===t.id));assert.deepEqual(await repo.list('HorarioTurma'),antes);assert.deepEqual(await repo.list('Mensalidade'),[]);assert.deepEqual(await repo.list('PresencaAula'),[]);});
  it('recusa criação e exclusão de avulsas sem perder a leitura do histórico',async()=>{const a=await legado();await request(app).post('/api/aulas/extras').send({titulo:'Nova avulsa'}).expect(404);await request(app).delete('/api/aulas/'+a.id).expect(404);assert.equal((await request(app).get('/api/aulas/'+a.id).expect(200)).body.origem,'extra');assert.equal((await repo.list('Aula')).length,1);});
  it('histórico avulso ainda permite chamada e cancelamento sem excluir dados',async()=>{const aluno=await student(),a=await legado();await request(app).put(`/api/aulas/${a.id}/chamada/${aluno.id}`).send({presente:true}).expect(201);await request(app).patch(`/api/aulas/${a.id}/cancelamento`).send({motivo:'Teste de proteção'}).expect(409);await request(app).delete(`/api/aulas/${a.id}/chamada/${aluno.id}`).expect(204);await request(app).patch(`/api/aulas/${a.id}/cancelamento`).send({motivo:'Encontro cancelado'}).expect(200);assert.equal((await repo.get('Aula',a.id))!.situacao,'cancelada');});

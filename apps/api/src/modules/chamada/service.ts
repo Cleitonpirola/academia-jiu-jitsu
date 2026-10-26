@@ -11,6 +11,10 @@ const ids = (aulaId: string, alunoId: string) => {
 
 export function createChamadaService(repo: Repository) {
   return {
+    async removeCheckin(aulaId: string, alunoId: string) {
+      ids(aulaId, alunoId);
+      await repo.removeCheckin(aulaId, alunoId, new Date().toISOString());
+    },
     async mark(aulaId: string, alunoId: string, body: unknown) {
       ids(aulaId, alunoId);
       const { presente } = marking.parse(body);

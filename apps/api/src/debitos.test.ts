@@ -50,8 +50,33 @@ it('confirmar cria débito completo imediatamente e repetição não cobra duas 
     assert.equal((await f.repo.list('CheckinAula')).length,1,'reservar não faz check-in futuro');
   }finally{await f.repo.close();}
 });
+it('renomear aula preserva o débito contratado e seu check-in e exige administrador',async()=>{
+  const f=await fixture();try{
+    const debito=(await f.post().expect(201)).body;await f.check().expect(200);const checkins=await f.repo.list('CheckinAula');
+    const path=`/api/aulas/${f.aulas[1].id}/nome`;
+    await supertest(f.app).patch(path).set('X-Tatame-Request','1').send({titulo:'Nome indevido'}).expect(401);
+    await supertest(f.app).patch(path).set('Cookie',`${COOKIE}=${f.token}`).set('X-Tatame-Request','1').send({titulo:'Nome indevido'}).expect(403);
+    await request(f.app).patch(path).send({titulo:'Treino de defesa pessoal'}).expect(200);
+    assert.deepEqual(await f.repo.get('DebitoAula',debito.id),debito);assert.deepEqual(await f.repo.list('CheckinAula'),checkins);
+    assert.equal((await f.get().expect(200)).body.aulas.find((a:Aula)=>a.id===f.aulas[1].id).titulo,'Treino de defesa pessoal');
+    assert.equal((await f.post().expect(201)).body.id,debito.id);
+  }finally{await f.repo.close();}
+});
 it('confirmações concorrentes da mesma aula geram um único débito',async()=>{
   const f=await fixture();try{const aceite={valorEsperadoCentavos:2500,prazoEsperadoDias:3};const rows=await Promise.all([f.repo.confirmarAulaAdicional(f.id,f.aulas[1].id,aceite,now()),f.repo.confirmarAulaAdicional(f.id,f.aulas[1].id,aceite,now())]);assert.equal(rows[0].id,rows[1].id);assert.equal((await f.repo.list('DebitoAula')).length,1);}finally{await f.repo.close();}
+});
+it('remover check-in preserva débito adicional pendente ou pago e não altera o saldo do plano',async()=>{
+  for(const pago of [false,true]){
+    const f=await fixture();try{
+      const d=(await f.post().expect(201)).body;await f.check().expect(200);
+      if(pago)await request(f.app).patch(`/api/debitos/${d.id}/pagamento`).send({dataPagamento:today()}).expect(200);
+      const antes=await f.repo.get('DebitoAula',d.id),saldo=(await f.repo.get('Aluno',f.id))!.aulasRestantesMes;
+      await request(f.app).delete(`/api/aulas/${f.aulas[1].id}/checkins/${f.id}`).expect(204);
+      assert.deepEqual(await f.repo.get('DebitoAula',d.id),antes);assert.equal((await f.repo.get('Aluno',f.id))!.aulasRestantesMes,saldo);
+      assert.equal((await f.repo.list('CheckinAula')).some(c=>c.aulaId===f.aulas[1].id),false);
+      assert.equal((await f.repo.list('PresencaAula'))[0].presente,false);
+    }finally{await f.repo.close();}
+  }
 });
 it('aula adicional dispensa cotas daquela aula sem consumir outro crédito e mantém confirmação de presença separada',async()=>{
   const f=await fixture();try{

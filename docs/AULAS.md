@@ -1,5 +1,15 @@
 # Aulas datadas — entrega 1B
 
+## Nome de um encontro — 26/10/2026
+
+Em **Aulas → lápis ao lado do nome no cartão**, informe o nome e clique em **Salvar nome**. **Voltar** descarta o rascunho. Permitido ao administrador, inclusive para corrigir aula cancelada ou registro anterior. Nome obrigatório, espaços externos removidos, entre 2 e 120 caracteres.
+
+`PATCH /api/aulas/:id/nome` aceita somente `{ "titulo": "Fundamentos de guarda" }`. Atualiza apenas Aula.titulo, sem migração. O nome da turma e sua grade continuam iguais; publicar novas datas continua usando o nome da turma. Republicar um encontro existente mantém o nome editado. Chamadas, check-ins, cotas, datas e valores não são recalculados. O título guardado no débito permanece como estava na contratação, preservando o registro financeiro.
+
+Analogia para estudar: turma é o modelo da agenda; aula é um compromisso específico. Renomear o compromisso das 15h não muda o modelo nem o compromisso das 12h.
+
+Validação: 210 testes TypeScript e build/typecheck aprovados, incluindo permissões, entradas inválidas, outras aulas, chamada/check-in/débito, cancelamento e republicação. Navegador com dados fictícios confirmou salvar, cancelar rascunho e manter o outro encontro. Sem nova prova PostgreSQL deste incremento; utiliza a atualização parcial do repositório existente. Ainda aguardando validação do usuário para commit/envio.
+
 ## Fluxo atual: aulas publicadas pelas turmas — 26/10/2026
 
 **Criação e exclusão de aulas avulsas retiradas a pedido do usuário.** Em Turmas, configure os dias e intervalos, usando Incluir mais horários quando necessário. Uma turma coringa pode reunir 12h, 15h e 18h. Em **Aulas → Adicionar aula da turma**, escolha o horário e publique o encontro na data correspondente.
@@ -107,3 +117,11 @@ A parte 1C ligará presenças a cada aula, permitindo ao mesmo aluno treinar às
 Explicação curta: “A grade descreve a rotina. A aula guarda o encontro de uma data específica e copia os dados necessários para não mudar o passado quando o cadastro mudar. A criação é transacional. Há uma chave única por horário de origem e data, para uma repetição não duplicar a aula. Cancelar mantém o histórico e exige motivo; presença será registrada separadamente.”
 
 Perguntas para estudar: por que a lista de previstos não equivale à presença? Por que usamos SET NULL ao excluir uma turma em vez de apagar suas aulas?
+
+## Confirmados e retirada de check-in — 26/10/2026
+
+O cartão mostra lápis junto ao título; salvar ou cancelar volta à agenda. Não há outro botão de edição nos detalhes. A lista de confirmados considera check-in ainda não marcado como ausência e presença manual do professor, sem duplicar aluno. Check-in é intenção de participar; presença continua dependente da chamada. Alunos previstos deixaram de aparecer no cartão, nos detalhes e na chamada; snapshots anteriores continuam no banco para preservar dados.
+
+Em Detalhes ou Chamada, Remover check-in pede confirmação. DELETE /api/aulas/:id/checkins/:alunoId é administrativo: em transação, registra/atualiza ausência, remove o check-in e sincroniza o saldo mensal. A ausência permite análise do não comparecimento e impede o aluno de simplesmente repetir o check-in na aula já avaliada. O professor pode corrigir a chamada depois. A repetição não devolve crédito duas vezes, e outra aula permanece intacta. Mensalidade, autorização e débito adicional contratado, pago ou pendente, não são cancelados pela remoção. A UI informa isso antes de confirmar. Aula cancelada/futura não permite a operação. Sem migração: usa os registros existentes.
+
+Validação nova: 222 testes TypeScript, build/typecheck e navegador isolado. Cobertura de permissões, repetição/concorrência, rollback, saldo, outra aula e débitos. A UI confirmou edição pelo lápis, retirada do confirmado e ausência na chamada. Implementado nos repositórios SQLite e Prisma/PostgreSQL; sem nova execução externa PostgreSQL deste incremento.

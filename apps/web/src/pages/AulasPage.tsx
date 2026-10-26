@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react';
-import { CalendarDays, CalendarCheck, Clock3, Search, Users, UserRound, ChevronLeft, ChevronRight, Ban, Eye, Check } from 'lucide-react';
+import { CalendarDays, CalendarCheck, Clock3, Search, Users, UserRound, ChevronLeft, ChevronRight, Ban, Eye, Check, Pencil } from 'lucide-react';
 import { DIAS_SEMANA, type AulaView } from '@tatame/shared';
 import { useAcademia } from '../store';
 import { Button, Empty, Field, FormError, Modal, Person } from '../components';
 import { today, dateLabel, fold } from '../lib';
 import { ChamadaAula } from '../components/ChamadaAula';
+import { RemoverCheckin } from '../components/RemoverCheckin';
+import { confirmadosAula } from '../participantes-aula';
 
 const weekday = (value: string) => { const date = new Date(value + 'T12:00:00Z'); return Number.isNaN(date.valueOf()) ? null : date.getUTCDay(); };
 const dayOffset = (value: string, amount: number) => { const date = new Date(value + 'T12:00:00Z'); date.setUTCDate(date.getUTCDate() + amount); return date.toISOString().slice(0, 10); };
@@ -35,17 +37,36 @@ function GradeForm({ date, onClose, onCreated }: { date: string; onClose: () => 
   </Modal>;
 }
 
+function NomeAulaForm({ aula, onClose, onSaved }: { aula: AulaView; onClose: () => void; onSaved: () => void }) {
+  const { mutate } = useAcademia();
+  const [titulo, setTitulo] = useState(aula.titulo);
+  const [busy, setBusy] = useState(false); const [error, setError] = useState('');
+  const save = async (event: FormEvent) => {
+    event.preventDefault(); if (busy) return; setBusy(true); setError('');
+    try { await mutate('/aulas/' + aula.id + '/nome', 'PATCH', { titulo: titulo.trim() }, 'Nome da aula atualizado.'); onSaved(); }
+    catch (error) { setError((error as Error).message); }
+    finally { setBusy(false); }
+  };
+  return <Modal title="Editar nome da aula" description={`${dateLabel(aula.dataAula)} · ${aula.horaInicio}–${aula.horaFim}`} onClose={() => { if (!busy) onClose(); }}><form onSubmit={save}>
+    <p className="helper aula-form-note">O nome será alterado somente neste encontro. O nome da turma, os outros horários, as presenças e as cobranças serão preservados.</p>
+    <FormError message={error}/><Field label="Nome da aula"><input autoFocus required minLength={2} maxLength={120} value={titulo} disabled={busy} onChange={event => setTitulo(event.target.value)}/></Field>
+    <div className="form-actions"><Button variant="secondary" disabled={busy} onClick={onClose}>Voltar</Button><Button type="submit" disabled={busy || titulo.trim().length < 2}>{busy ? 'Salvando…' : 'Salvar nome'}</Button></div>
+  </form></Modal>;
+}
+
 export function AulasPage() {
   const { aulas, turmas, mutate } = useAcademia();
   const [date, setDate] = useState(today); const [search, setSearch] = useState('');
   const [turmaId, setTurmaId] = useState(''); const [situation, setSituation] = useState('');
   const [form, setForm] = useState<'grade' | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null); const [cancel, setCancel] = useState<AulaView | null>(null);
+  const [editName, setEditName] = useState<AulaView | null>(null);
   const [chamadaId, setChamadaId] = useState<string | null>(null);
   const [reason, setReason] = useState(''); const [busy, setBusy] = useState(false); const [error, setError] = useState('');
   const dayRows = aulas.filter(aula => aula.dataAula === date);
   const rows = dayRows.filter(aula => fold(aula.titulo + ' ' + aula.professor + ' ' + (aula.turmaNome ?? '')).includes(fold(search)) && (!turmaId || aula.turmaId === turmaId) && (!situation || aula.situacao === situation));
   const detail = aulas.find(aula => aula.id === detailId);
+  const confirmados = detail ? confirmadosAula(detail) : [];
   const chamada = aulas.find(aula => aula.id === chamadaId);
   const scheduled = dayRows.filter(aula => aula.situacao === 'agendada').length;
   const presentes = dayRows.reduce((total,aula)=>total+aula.chamada.filter(item=>item.presente).length,0);
@@ -66,18 +87,19 @@ export function AulasPage() {
     </section>
     <p className="aula-scope-note">Abra a Chamada para registrar quem participou de cada horário. Criar uma aula não marca presenças nem gera cobranças.</p>
     <div className="aulas-list">{!rows.length ? <section className="card"><Empty title={dayRows.length ? 'Nenhuma aula corresponde aos filtros' : 'Sua agenda está livre neste dia'} description={dayRows.length ? 'Ajuste a busca, a turma ou a situação.' : 'Adicione uma aula dos horários cadastrados em Turmas.'}/></section> : rows.map(aula => <article className={`card aula-card ${aula.situacao === 'cancelada' ? 'is-cancelled' : ''}`} key={aula.id}>
-      <div className="aula-time"><Clock3 size={18}/><strong>{aula.horaInicio}</strong><span>até {aula.horaFim}</span><small>{dateLabel(aula.dataAula)}</small></div><div className="aula-info"><div className="aula-tags"><span className={`aula-origin aula-origin-${aula.origem}`}>{aula.origem === 'grade' ? 'Grade da turma' : 'Registro anterior'}</span>{status(aula)}</div><h2>{aula.titulo}</h2><p><UserRound size={14}/>{aula.professor}</p><p><Users size={14}/>{aula.alunosPrevistos.length} {aula.alunosPrevistos.length === 1 ? 'aluno previsto' : 'alunos previstos'}<span>·</span>{aula.turmaNome ? aula.turmaNome + (!aula.turmaId ? ' · turma excluída' : '') : 'Registro anterior · sem turma'}</p>{aula.situacao === 'agendada' && aula.checkins.some(item => !aula.chamada.some(marcacao => marcacao.alunoId === item.alunoId)) && <p className="aula-checkin-pending">{aula.checkins.filter(item => !aula.chamada.some(marcacao => marcacao.alunoId === item.alunoId)).length} check-in(s) para validar</p>}{aula.motivoCancelamento && <p className="aula-cancel-note">{aula.motivoCancelamento}</p>}</div>
+      <div className="aula-time"><Clock3 size={18}/><strong>{aula.horaInicio}</strong><span>até {aula.horaFim}</span><small>{dateLabel(aula.dataAula)}</small></div><div className="aula-info"><div className="aula-tags"><span className={`aula-origin aula-origin-${aula.origem}`}>{aula.origem === 'grade' ? 'Grade da turma' : 'Registro anterior'}</span>{status(aula)}</div><div className="aula-title"><h2>{aula.titulo}</h2><button className="icon-btn" aria-label={`Editar nome da aula ${aula.titulo} às ${aula.horaInicio}`} title="Editar nome da aula" onClick={() => setEditName(aula)}><Pencil size={16}/></button></div><p><UserRound size={14}/>{aula.professor}</p><p><Users size={14}/>{confirmadosAula(aula).length} {confirmadosAula(aula).length === 1 ? 'aluno confirmado' : 'alunos confirmados'}<span>·</span>{aula.turmaNome ? aula.turmaNome + (!aula.turmaId ? ' · turma excluída' : '') : 'Registro anterior · sem turma'}</p>{aula.situacao === 'agendada' && aula.checkins.some(item => !aula.chamada.some(marcacao => marcacao.alunoId === item.alunoId)) && <p className="aula-checkin-pending">{aula.checkins.filter(item => !aula.chamada.some(marcacao => marcacao.alunoId === item.alunoId)).length} check-in(s) para validar</p>}{aula.motivoCancelamento && <p className="aula-cancel-note">{aula.motivoCancelamento}</p>}</div>
       <div className="aula-card-actions"><Button aria-label={`Abrir chamada de ${aula.titulo} às ${aula.horaInicio}`} onClick={() => setChamadaId(aula.id)}><CalendarCheck size={15}/>Chamada{aula.chamada.length > 0 ? ` · ${aula.chamada.filter(item => item.presente).length}` : ''}</Button><Button variant="secondary" onClick={() => setDetailId(aula.id)}><Eye size={15}/>Detalhes</Button>{aula.situacao === 'agendada' && <Button variant="ghost" disabled={aula.chamada.length > 0} title={aula.chamada.length ? 'A aula possui chamada. Corrija as marcações antes de cancelar.' : undefined} onClick={() => openCancel(aula)}><Ban size={15}/>Cancelar aula</Button>}</div>
     </article>)}</div>
     {form === 'grade' && <GradeForm date={date} onClose={() => setForm(null)} onCreated={created}/>}
     {chamada && <Modal wide title={`Chamada · ${chamada.titulo}`} description={`${dateLabel(chamada.dataAula)} · ${chamada.horaInicio}–${chamada.horaFim} · ${chamada.professor}`} onClose={() => setChamadaId(null)}><ChamadaAula key={chamada.id} aula={chamada}/><div className="form-actions"><Button variant="secondary" onClick={() => setChamadaId(null)}>Fechar chamada</Button></div></Modal>}
     {detail && <Modal title={detail.titulo} description={`${dateLabel(detail.dataAula)} · ${detail.horaInicio}–${detail.horaFim}`} onClose={() => setDetailId(null)}>
-      <div className="aula-tags"><span className={`aula-origin aula-origin-${detail.origem}`}>{detail.origem === 'grade' ? 'Grade fixa' : 'Aula extra'}</span>{status(detail)}</div><p className="turma-professor"><UserRound size={15}/>{detail.professor}</p><p className="helper aula-form-note">{detail.turmaNome ? detail.turmaNome + (detail.turmaId ? '' : ' · turma excluída; dados da aula preservados') : 'Registro anterior, sem turma vinculada.'}</p>
+      <div className="aula-tags aula-form-note"><span className={`aula-origin aula-origin-${detail.origem}`}>{detail.origem === 'grade' ? 'Grade fixa' : 'Registro anterior'}</span>{status(detail)}</div><p className="turma-professor"><UserRound size={15}/>{detail.professor}</p><p className="helper aula-form-note">{detail.turmaNome ? detail.turmaNome + (detail.turmaId ? '' : ' · turma excluída; dados da aula preservados') : 'Registro anterior, sem turma vinculada.'}</p>
       {detail.motivoCancelamento && <div className="aula-cancel-detail"><strong>Motivo do cancelamento</strong><p>{detail.motivoCancelamento}</p></div>}
-      <h3 className="turma-detail-label">Alunos previstos · {detail.alunosPrevistos.length}</h3><p className="helper">Lista guardada ao criar a aula. Não representa presenças ou faltas e não impede a participação de outros alunos na chamada.</p><div className="turma-student-list">{detail.alunosPrevistos.length ? detail.alunosPrevistos.map(aluno => <div className="turma-detail-student" key={aluno.id}><Person name={aluno.nome} secondary={aluno.alunoId ? 'Previsto na criação da aula' : 'Cadastro excluído · nome histórico'}/></div>) : <p className="helper aula-form-note">Nenhum aluno previsto. A aula pode ser realizada mesmo sem vínculos habituais.</p>}</div>
+      <h3 className="turma-detail-label">Alunos confirmados · {confirmados.length}</h3><p className="helper">Quem fez check-in ou teve presença registrada pelo professor. O check-in ainda precisa de validação na chamada.</p><div className="turma-student-list">{confirmados.length ? confirmados.map(aluno => <div className="turma-detail-student aula-confirmado" key={aluno.alunoId}><Person name={aluno.nome} secondary={aluno.presente ? 'Presença confirmada' : 'Check-in · aguardando validação'}/>{aluno.temCheckin && <RemoverCheckin aulaId={detail.id} alunoId={aluno.alunoId} nome={aluno.nome} disabled={detail.situacao === 'cancelada' || detail.dataAula > today()}/>}</div>) : <p className="helper aula-form-note">Nenhum aluno confirmou participação nesta aula.</p>}</div>
       {detail.checkins.length > 0 && <p className="helper aula-form-note">Esta aula possui {detail.checkins.length} check-in(s). Cancelar preserva os avisos dos alunos.</p>}{detail.chamada.length > 0 && <p className="helper aula-form-note">Esta aula possui {detail.chamada.length} marcações de chamada. O cancelamento está bloqueado para preservar o histórico.</p>}
       <div className="form-actions aula-detail-actions"><Button onClick={() => { setDetailId(null); setChamadaId(detail.id); }}><CalendarCheck size={15}/>Abrir chamada</Button>{detail.situacao === 'agendada' && <Button variant="secondary" disabled={detail.chamada.length > 0} onClick={() => openCancel(detail)}><Ban size={15}/>Cancelar aula</Button>}<Button variant="secondary" onClick={() => setDetailId(null)}>Fechar</Button></div>
     </Modal>}
+    {editName && <NomeAulaForm aula={editName} onClose={() => setEditName(null)} onSaved={() => setEditName(null)}/>}
     {cancel && <Modal title="Cancelar aula" description={`${cancel.titulo} · ${dateLabel(cancel.dataAula)} · ${cancel.horaInicio}`} onClose={() => { if (!busy) setCancel(null); }}><form onSubmit={cancelAula}><p className="helper">A aula ficará cancelada na agenda, com o motivo e seus dados preservados. Isso não altera a grade da turma nem gera faltas ou cobranças. Para outro encontro, configure o horário na turma e publique a aula pela grade.</p><FormError message={error}/><Field label="Motivo do cancelamento"><textarea required minLength={3} maxLength={300} rows={3} value={reason} disabled={busy} onChange={event => setReason(event.target.value)}/></Field><div className="form-actions"><Button variant="secondary" disabled={busy} onClick={() => setCancel(null)}>Voltar</Button><Button type="submit" variant="danger" disabled={busy}>{busy ? 'Cancelando…' : 'Confirmar cancelamento'}</Button></div></form></Modal>}
   </>;
 }

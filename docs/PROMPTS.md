@@ -211,3 +211,11 @@ O usuário pediu bloquear o acesso após o dia de vencimento combinado e mostrar
 Durante o trabalho, o usuário pediu deixar para o final a confirmação automática por serviço de pagamentos e os avisos destacados de paga/a vencer perto da jornada de login/check-in. Essa instrução foi tratada como planejamento adicional, preservando a execução do bloqueio já autorizado. Nenhuma integração bancária/e-mail ou banner futuro foi apresentado como pronto.
 
 O contexto enviado à implementação incluiu preservar login, dados anteriores, chamadas e main/tag, proteger API e gravação transacional, não testar em cobranças reais e aguardar validação antes de commit/push. O teste de reversão inicialmente usou endpoint incompatível; corrigido para edição existente sem enfraquecer validações. Evidências: 121 testes TypeScript, build/typecheck, navegador fictício e treze hashes locais preservados.
+
+## Editar nome da aula — 26/10/2026
+
+Pedido: "quero que possa editar o nome da aula, se caso ainda não puder porque você não terminou, desconsidere." Após verificar a ausência da edição, Codex informou que adicionaria alteração só no encontro escolhido, separada do commit anterior já autorizado. Implementou formulário e endpoint administrativos, sem alterar turma, data ou histórico. Verificação completa: 210 testes TypeScript, build/typecheck e navegador fictício. Precisa de validação do usuário antes de outro commit/push.
+
+## Cartão, confirmados e telefone — 26/10/2026
+
+Pedidos: lápis junto ao nome, retirar alunos previstos, manter confirmados e permitir remover check-in quando não comparecer; corrigir máscara de telefone. Codex explicitou ausência e recálculo de crédito, mantendo débito contratado. Usuário autorizou testar e commitar se tudo funcionasse. Depois esclareceu retirar o botão duplicado de edição dos detalhes. Implementação e QA descritas em AULAS.md/TELEFONES.md. Pedido posterior de vários professores por aula separado da autorização anterior.

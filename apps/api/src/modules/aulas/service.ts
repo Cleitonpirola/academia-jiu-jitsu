@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { Aula, AulaAlunoPrevisto, AulaView, PresencaAula, Turma, CheckinAula } from '@tatame/shared';
 import type { Repository } from '../../repository.js';
 import { HttpError } from '../../http-error.js';
-import { aulaGradeSchema, cancelarAulaSchema, filtroAulasSchema } from './schema.js';
+import { aulaGradeSchema, cancelarAulaSchema, filtroAulasSchema, nomeAulaSchema } from './schema.js';
 
 export function createAulasService(repo: Repository) {
   const find = async (id: string) => {
@@ -38,6 +38,13 @@ export function createAulasService(repo: Repository) {
   const fromSlot = async (horarioId: string, dataAula: string) => (await repo.list('Aula')).find(aula => aula.origemHorarioId === horarioId && aula.dataAula === dataAula);
   return {
     detail,
+    async rename(id: string, body: unknown) {
+      const { titulo } = nomeAulaSchema.parse(body);
+      await find(id);
+      // Atualizar somente o título preserva a turma e os registros vinculados à aula.
+      await repo.update('Aula', id, { titulo });
+      return detail(id);
+    },
     async list(query: unknown = {}) {
       const filter = filtroAulasSchema.parse(query);
       const [aulas, alunos, chamada, checkins] = await Promise.all([repo.list('Aula'), repo.list('AulaAlunoPrevisto'), repo.list('PresencaAula'), repo.list('CheckinAula')]);

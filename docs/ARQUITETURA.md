@@ -264,3 +264,13 @@ Validação retomada em 22/10: 112 testes TypeScript, 13 Python, build/typecheck
 Implementado o desenho registrado antes do código: financial-access.ts reutiliza statusOf/data de São Paulo; o contrato RespostaPortalAluno discrimina resposta normal bloqueado=false e resposta restrita bloqueado=true/mensagem/pendencias mínimas. A consulta com débito não carrega aulas/histórico, e o check-in revalida mensalidades na transação SQLite/Prisma. Nenhuma flag persistida ou nova migração; schema continua 5. A tela substitui o portal pelo aviso, consulta liberação e limpa dados anteriores se houver falha de consulta. Login e gestão administrativa permanecem acessíveis.
 
 121 testes TypeScript e build/typecheck aprovados; navegador em base de memória verificou bloqueio, tela estreita, pagamento fictício registrado pela API e liberação da mesma sessão, seguida de check-in. Os 13 testes Python anteriores não foram reexecutados neste incremento. Banco real preservado no reinício em treze tabelas por contagem/hash. O usuário pediu deixar confirmação automática de pagamento e banner de paga/a vencer para a etapa final, separados da integração de e-mail. Guia: [BLOQUEIO_FINANCEIRO.md](BLOQUEIO_FINANCEIRO.md).
+
+## Nome individual da aula — 26/10/2026
+
+Contrato administrativo PATCH /api/aulas/:id/nome, schema estrito {titulo}, 2–120 caracteres após trim. Serviço verifica existência e chama update parcial de Aula, já suportado por SQLite e Prisma/PostgreSQL. Nenhuma migração. A identidade, a grade e os registros dependentes permanecem iguais; título no débito é snapshot financeiro e não é reescrito. Frontend oferece formulário em Detalhes, recarrega recursos ao salvar e preserva rascunho em falha; Voltar descarta. Inclui aulas canceladas e legadas para correção de metadado, sem reabrir aula ou habilitar criação de avulsas.
+
+## Confirmados, retirada de check-in e máscara — 26/10/2026
+
+Confirmados são projeção de CheckinAula e PresencaAula presente, excluindo chamada ausente. AulaAlunoPrevisto permanece como histórico, sem alimentar a lista visível. DELETE administrativo /aulas/:id/checkins/:alunoId chama removeCheckin do repositório. SQLite usa BEGIN IMMEDIATE; Prisma trava Aula e Aluno na ordem dos fluxos de check-in/chamada, grava ausência por upsert, exclui check-in e sincroniza saldo na mesma transação. Repetição é idempotente. Financeiro continua independente; não há cancelamento de débito por não comparecimento. Sem migração.
+
+TelefoneInput centraliza apresentação, formato completo e cursor; telefone.ts contém funções puras. Não altera modelo de persistência nem autorização do perfil. Modais usam useId para rótulos distintos ao abrir confirmação sobre os detalhes.

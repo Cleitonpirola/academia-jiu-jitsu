@@ -52,10 +52,18 @@ O usuário autorizou commit/push após testes em 26/10/2026. Ao retomar, consult
 
 ## Novo pedido, separado da autorização anterior
 
-Editar o nome de uma aula individual foi solicitado depois da autorização de commit. Ainda não implementado neste ponto. Codex comunicou que concluiria primeiro o commit já autorizado e que esse incremento ficaria separado para validação. Próximos passos: adicionar edição individual do título sem renomear turma/grade/outras aulas, testar preservação de presença/check-in/débitos, atualizar docs e apresentar para validação antes de novo commit. Não tratar a autorização anterior como aprovação automática desse comportamento novo.
+O conjunto anterior foi enviado com sucesso em 26/10/2026: commit db08478d70f623f702ebb6dfda7d3819d75d6cf9, branch codex/evolucao-tatame; HEAD e ls-remote iguais no envio, tag v1.0.0 preservada. Nenhum merge/deploy/tag realizado.
+
+Editar o nome de uma aula individual foi solicitado depois da autorização de commit. Implementado localmente em Aulas → Detalhes → Editar nome da aula e PATCH /api/aulas/:id/nome, exclusivo administrativo. Atualiza apenas titulo; preserva turma/grade/outras aulas, presença/check-in/débito. Sem migração. 210 testes TypeScript e build/typecheck passaram. Navegador fictício em 3337 confirmou salvar, descartar rascunho e manter outro encontro. API normal 3333 reiniciada com o novo código. Documentação e captura atualizadas. Próximo passo: usuário validar este incremento antes de novo commit/push. Não tratar a autorização anterior como aprovação automática desse comportamento novo. Não repetir as migrações/testes externos por implicação.
 
 ## Ambiente
 
 Aplicação local usual: frontend 127.0.0.1:5173, API 127.0.0.1:3333, Python 127.0.0.1:8000. Conferir processos antes de reiniciar; não confiar em PID antigo. QA em memória costuma usar 3336 e é encerrado após conferir.
 
 Configurações reais em .env/.env.homologacao são privadas e ignoradas pelo Git. Não mostrar seu conteúdo nem copiar senhas/URLs com credenciais para esta documentação. Não publicar/implantar, criar tag ou fazer merge por implicação da aprovação de testes.
+
+## Atualização final desta rodada — 26/10/2026
+
+Concluídos lápis no cartão (sem duplicação nos detalhes), confirmados sem previstos, remoção administrativa de check-in com ausência/saldo/financeiro preservado e máscara compartilhada. 222 testes TypeScript e build/typecheck aprovados; UI fictícia validou remoção, chamada e telefone. Usuário autorizou commit/push após testes. Conferir Git para verificar sincronização efetiva antes de repetir comandos. Base anterior db08478d70f623f702ebb6dfda7d3819d75d6cf9. Sem migração nova.
+
+NOVO PEDIDO SEPARADO: mais de um professor por aula. Ainda não implementado neste checkpoint. Próximo passo: modelar lista de professores, tela de edição e herança/publicação conforme o código existente; preservar o professor histórico e explicar o alcance ao usuário. Implementar/testar/documentar e apresentar para validação antes de commit desse novo comportamento.

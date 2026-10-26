@@ -1,12 +1,13 @@
 import { nomeGrau, useGraduacoes } from './graduacoes';
-import { useEffect, useRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { X, ChevronLeft, ChevronRight, Inbox, type LucideIcon } from 'lucide-react';
 import { initials, monthOffset, today } from './lib';
 export function Button({children,variant='primary',className='',...props}:ButtonHTMLAttributes<HTMLButtonElement>&{variant?:'primary'|'secondary'|'danger'|'ghost'}) { return <button type="button" className={`btn btn-${variant} ${className}`} {...props}>{children}</button>; }
 export function Modal({title,description,children,onClose,wide=false}:{title:string;description?:string;children:ReactNode;onClose:()=>void;wide?:boolean}) {
   const ref=useRef<HTMLDialogElement>(null);
+  const titleId=useId();
   useEffect(()=>{ref.current?.showModal();return()=>ref.current?.close();},[]);
-  return <dialog ref={ref} className={`modal ${wide?'modal-wide':''}`} onCancel={e=>{e.preventDefault();onClose();}} aria-labelledby="modal-title"><div className="modal-header"><div><h2 id="modal-title">{title}</h2>{description&&<p>{description}</p>}</div><button type="button" className="icon-btn" aria-label="Fechar janela" onClick={onClose}><X size={20}/></button></div><div className="modal-body">{children}</div></dialog>;
+  return <dialog ref={ref} className={`modal ${wide?'modal-wide':''}`} onCancel={e=>{e.preventDefault();onClose();}} aria-labelledby={titleId}><div className="modal-header"><div><h2 id={titleId}>{title}</h2>{description&&<p>{description}</p>}</div><button type="button" className="icon-btn" aria-label="Fechar janela" onClick={onClose}><X size={20}/></button></div><div className="modal-body">{children}</div></dialog>;
 }
 export function Field({label,children,full=false}:{label:string;children:ReactNode;full?:boolean}) { return <label className={`field ${full?'field-full':''}`}><span>{label}</span>{children}</label>; }
 export function FormError({message}:{message:string}) { return message?<div className="form-error" role="alert">{message}</div>:null; }
