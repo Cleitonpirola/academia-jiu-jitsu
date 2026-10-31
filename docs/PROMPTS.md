@@ -1,5 +1,9 @@
 # Registro de prompts
 
+## Revisar e corrigir alertas, com commit autorizado —31/10/2026
+
+Pedido do usuário: revisar os alertas, corrigir o necessário e commitar, deixando os avaliadores validarem as funcionalidades e enviarem suas sugestões depois. Escopo adotado: quatro bibliotecas vulneráveis, regressão HTTP e documentação. Preservar alterações anteriores; upload privado de vídeos continua adiado. Não interpretar a autorização como merge/main, release, deploy ou inclusão automática de tudo que estiver modificado. [Relatório](SEGURANCA_DEPENDENCIAS.md).
+
 ## Faixas, graus, retirada de avulsas e ícone financeiro — 26/10/2026
 
 Pedidos: “ter um cadastro de faixas e um cadastro de graus dentro da faixa”; depois, configuração própria da academia e retirada de páginas/funções de aulas avulsas por uso de turmas com vários horários/coringa; ícone de Mensalidades para $. Codex perguntou se manteria a cobrança de aula adicional ao esgotar o plano; usuário confirmou. Foram implementados catálogo, vínculos, migração e telas, preservando faixas/históricos anteriores e separando origem avulsa de compra de participação adicional. Usuário também pediu checkpoint se faltassem tokens, salvo em RETOMADA.md.

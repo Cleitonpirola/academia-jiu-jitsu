@@ -1,5 +1,11 @@
 # Processo
 
+## Correção de dependências autorizada —31/10/2026
+
+Usuário pediu: “revisa esses alertas [...] corrige o que tiver que corrigir, aí você pode comitar”. Tratado como autorização explícita para este conjunto de segurança e seu envio ao GitHub, sem aprovar funcionalidades pendentes ou implantação. Preparada cópia isolada do commit-base c8c7ef4 para testar e selecionar apenas os manifests, tratamento HTTP, regressão e documentação correspondente.
+
+Atualizados body-parser2.4.0, fast-uri3.1.9, qs6.17.1 e zod4.6.7. Auditoria completa zerada;228 testes do conjunto isolado e285 do workspace aprovados, build/typecheck aprovados. Novo teste gzip detectou classificação500 de erro de descompressão; corrigido para400 sem dispensar autenticação. Testes somente locais em memória. Nenhuma migração, publicação, merge ou tag. [Detalhes](SEGURANCA_DEPENDENCIAS.md).
+
 ## Graduações configuráveis, retirada de avulsas e autorização de envio — 26/10/2026
 
 Usuário solicitou cadastro de faixas e graus, esclareceu a retirada de páginas/funções de avulsas em favor de turmas coringa e pediu ícone $ em Mensalidades. À pergunta sobre cobrança por excesso de aulas, respondeu “Sim, manter a cobrança de aula adicional”. Implementados catálogo/modelos/validações, migração 10, tela administrativa, selects/exibição do aluno, compatibilidade do Python, retirada dos endpoints/formulários/métodos específicos de avulsas e ícones nos dois portais. Histórico não apagado nem convertido; reservas antigas confirmadas preservadas. Cadastro familiar valida graduação na mesma transação. Retomada salva a pedido do usuário.

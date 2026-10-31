@@ -1,5 +1,7 @@
 # Tatame — Academia de Jiu-Jitsu
 
+**Segurança das dependências —31/10/2026:** corrigidos os quatro alertas conhecidos de `body-parser`, `fast-uri`, `qs` e `zod`; auditoria npm zerada. Conjunto isolado:228 testes aprovados; workspace completo:285. Build/typecheck aprovados. Correção preparada para Git com autorização explícita, sem deploy nem inclusão das funcionalidades locais pendentes. [Relatório e limites](docs/SEGURANCA_DEPENDENCIAS.md).
+
 **Vários professores por aula — entrega aprovada para sincronização (26/10/2026):** em **Aulas → Detalhes → Editar professores**, adicione ou remova nomes e salve. Cada aula aceita de 1 a 8 professores; turma e outros encontros permanecem iguais. Migração 11 aplicada no SQLite com backup e preservação das 22 tabelas anteriores; migração PostgreSQL preparada, ainda não aplicada externamente. 227 testes TypeScript, build/typecheck, geração/validação Prisma e UI fictícia aprovados. Guia: [PROFESSORES_AULA.md](docs/PROFESSORES_AULA.md). Usuário aprovou este incremento e seu commit/envio em 26/10/2026. O resultado da sincronização deve ser confirmado no histórico do Git.
 
 **Git confirmado:** os ajustes anteriores de nome, confirmados, remoção de check-in e máscara foram enviados em [e58d87d](https://github.com/Cleitonpirola/academia-jiu-jitsu/commit/e58d87dc832a81ad046de7df2971cd838ba5ce1a), branch codex/evolucao-tatame.

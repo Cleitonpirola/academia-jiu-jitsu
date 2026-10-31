@@ -130,6 +130,7 @@ export function createApp(repo: Repository, options: { apiKey?: string; analytic
   const dist=resolve('apps/web/dist');
   if(existsSync(dist)) { app.use(express.static(dist)); app.get('/{*path}',(_req,res)=>res.sendFile(resolve(dist,'index.html'))); }
   const errors: ErrorRequestHandler=(error,_req,res,_next)=>{
+    if(error.status===400&&['Z_DATA_ERROR','Z_BUF_ERROR'].includes(String(error.code))){res.status(400).json({message:'O corpo comprimido da requisição é inválido.'});return;}
     if(error instanceof ZodError) { res.status(400).json({message:error.issues.map(v=>v.message).join(' '),fields:error.issues.map(v=>({field:v.path.join('.'),message:v.message}))}); return; }
     if(error instanceof HttpError) { res.status(error.status).json({message:error.message}); return; }
     const code=String(error.code || ''); const message=String(error.message || '');

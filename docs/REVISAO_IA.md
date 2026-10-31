@@ -1,5 +1,9 @@
 # Revisão de IA
 
+## Revisão da correção de dependências —31/10/2026
+
+Conferidos npm audit e comunicados dos mantenedores. Corrigidas quatro bibliotecas dentro das versões compatíveis. A IA acrescentou teste de requisição comprimida inválida; a primeira execução identificou resposta500, corrigida especificamente no tratamento de erros de descompressão400. A expectativa não foi relaxada. Auditoria completa sem alertas; suíte isolada228 e workspace285 aprovados, build/typecheck aprovados. Seleção do commit usa conteúdo isolado para não misturar Storage ou outras funcionalidades pendentes. Sem alegar auditoria completa ou atualização da Preview. [Evidências e limitações](SEGURANCA_DEPENDENCIAS.md).
+
 ## Faixas/graus e fluxo de aulas por turma — 26/10/2026
 
 Revisados vínculos por ID, normalização/unicidade, situação/inativação e proteção de exclusão. Texto de faixa mantido sincronizado para compatibilidade; grau antigo fica não informado. Migração 10 não reescreve anteriores. Validação de estrutura foi antecipada antes de migração consultar colunas legadas, mantendo mensagem clara/backup para schema desconhecido. SQLite protege associação por trigger e PostgreSQL por FK composta/check; renomeação tem transação e rollback testado. Perfil do aluno continua sem permissão de graduação.
