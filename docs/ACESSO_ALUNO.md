@@ -1,5 +1,9 @@
 # Acesso e área do aluno
 
+## Regras e visibilidade da senha — 07/11/2026
+
+A configuração inicial e a ativação de conta exigem pelo menos oito caracteres. Use espaços entre palavras. A API recusa espaços nas pontas e combinações da lista interna de senhas comuns. Na tela, o botão de olho mostra ou oculta o texto. A confirmação tem seu próprio botão. Senhas existentes continuam sendo aceitas no login.
+
 ## Edição dos dados básicos pelo aluno — 26/10/2026
 
 **Implementado e testado, aguardando validação do usuário antes de commit/envio.** Em **Meu perfil → Editar meus dados**, o aluno altera nome, telefone e e-mail. Nome/telefone não pedem senha. Troca de e-mail exige a senha atual, porque também muda o endereço do próximo login; a senha permanece a mesma e a sessão atual continua válida. Outras sessões e convites anteriores são invalidados quando o e-mail muda. Não há envio ou confirmação de propriedade da caixa de e-mail nesta entrega: a integração externa continua futura.
@@ -88,7 +92,7 @@ Migração SQLite 005 acrescenta as três tabelas, com backup automático, sem c
 
 ## Como usar no seu computador
 
-1. Abra o endereço local informado no README. No primeiro acesso, preencha seu nome, e-mail e uma frase de senha com pelo menos 15 caracteres. Confirme a senha e crie sua conta. Essa etapa deve ser feita pelo próprio usuário; não compartilhe a senha no chat.
+1. Abra o endereço local informado no README. No primeiro acesso, preencha seu nome, e-mail e uma senha com pelo menos oito caracteres. Confirme a senha e crie sua conta. Essa etapa deve ser feita pelo próprio usuário; não compartilhe a senha no chat.
 2. Entre em **Alunos → Ver ficha → Área do aluno → Gerar link de acesso**. O aluno precisa estar ativo. O acesso fica vinculado ao cadastro escolhido; não há cadastro público que permita escolher outro aluno ou perfil de administrador.
 3. Copie o link privado e entregue somente ao aluno correspondente. Vence em 24 horas e funciona uma vez. Gerar outro invalida o anterior. A senha atual só muda quando o novo link é utilizado.
 4. O aluno abre o link, escolhe e confirma a própria senha. Depois, entra pelo e-mail de acesso. Pode trocar esse endereço em **Meu perfil → Editar meus dados**, confirmando a senha atual; ficha e conta são atualizadas juntas. Na gestão, a troca de e-mail de conta existente passa pela ativação/transferência na seção Responsável e acesso.

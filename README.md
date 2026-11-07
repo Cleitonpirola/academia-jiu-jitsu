@@ -1,5 +1,7 @@
 # Tatame — Academia de Jiu-Jitsu
 
+O login e a ativação têm um botão para mostrar ou ocultar a senha. Ao criar uma senha, use pelo menos oito caracteres e evite combinações comuns. [Guia de acesso](docs/ACESSO_ALUNO.md).
+
 **Segurança das dependências —31/10/2026:** corrigidos os quatro alertas conhecidos de `body-parser`, `fast-uri`, `qs` e `zod`; auditoria npm zerada. Conjunto isolado:228 testes aprovados; workspace completo:285. Build/typecheck aprovados. Correção preparada para Git com autorização explícita, sem deploy nem inclusão das funcionalidades locais pendentes. [Relatório e limites](docs/SEGURANCA_DEPENDENCIAS.md).
 
 **Vários professores por aula — entrega aprovada para sincronização (26/10/2026):** em **Aulas → Detalhes → Editar professores**, adicione ou remova nomes e salve. Cada aula aceita de 1 a 8 professores; turma e outros encontros permanecem iguais. Migração 11 aplicada no SQLite com backup e preservação das 22 tabelas anteriores; migração PostgreSQL preparada, ainda não aplicada externamente. 227 testes TypeScript, build/typecheck, geração/validação Prisma e UI fictícia aprovados. Guia: [PROFESSORES_AULA.md](docs/PROFESSORES_AULA.md). Usuário aprovou este incremento e seu commit/envio em 26/10/2026. O resultado da sincronização deve ser confirmado no histórico do Git.
@@ -75,7 +77,7 @@ Abra http://127.0.0.1:5173. API em http://127.0.0.1:3333/api; documentação do 
 
 Sem credenciais, o projeto usa SQLite real, persistido em `data/academia.sqlite`. Na primeira execução são criados 20 alunos fictícios, faixas diferentes, alunos ativos/inativos, cobranças pagas/pendentes/atrasadas e presenças distribuídas em três meses. Reiniciar não sobrescreve seus dados. Dados locais e credenciais estão no .gitignore.
 
-No primeiro acesso, crie sua conta de administrador na tela de configuração inicial: nome, e-mail e frase de senha com pelo menos 15 caracteres. Faça isso pessoalmente; não existe senha padrão nem conta automática. Depois, entre em **Alunos → Ver ficha → Gerar link de acesso** para o aluno escolher a própria senha. O link é privado, de uso único e vence em 24 horas. Acesso 127.0.0.1 funciona neste computador; usar de fora exige hospedagem HTTPS. Roteiro e limitações em [ACESSO_ALUNO.md](docs/ACESSO_ALUNO.md).
+No primeiro acesso, crie sua conta de administrador na tela de configuração inicial: nome, e-mail e senha com pelo menos oito caracteres. Faça isso pessoalmente; não existe senha padrão nem conta automática. Depois, entre em **Alunos → Ver ficha → Gerar link de acesso** para o aluno escolher a própria senha. O link é privado, de uso único e vence em 24 horas. Acesso 127.0.0.1 funciona neste computador; usar de fora exige hospedagem HTTPS. Roteiro e limitações em [ACESSO_ALUNO.md](docs/ACESSO_ALUNO.md).
 
 ## Correções de arquitetura — 19/10/2026
 

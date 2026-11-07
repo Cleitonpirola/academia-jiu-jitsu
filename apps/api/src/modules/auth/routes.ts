@@ -1,18 +1,20 @@
 import { Router, type RequestHandler, type Request, type Response } from 'express';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
-import type { UsuarioView } from '@tatame/shared';
+import { SENHA_MINIMA, type UsuarioView } from '@tatame/shared';
 import type { Repository } from '../../repository.js';
 import type { Usuario, Sessao } from './models.js';
 import { HttpError } from '../../http-error.js';
-import { hashPassword, newToken, tokenHash, verifyPassword } from './password.js';
+import { hashPassword, newToken, senhaComum, tokenHash, verifyPassword } from './password.js';
 import { allowsLocalAdmin } from './local-admin.js';
 import { usuarioHabilitado, emailProprio } from './familia.js';
 
 export const ADMIN_INICIAL_ID = '00000000-0000-4000-8000-000000000001';
 export const COOKIE = 'tatame_sessao';
 const emailSchema = z.string().trim().toLowerCase().email('Informe um e-mail válido.').max(180);
-const senhaSchema = z.string().min(15, 'Use uma frase de senha com pelo menos 15 caracteres.').max(128, 'Use até 128 caracteres.');
+const senhaSchema = z.string().min(SENHA_MINIMA, `Use uma senha com pelo menos ${SENHA_MINIMA} caracteres.`).max(128, 'Use até 128 caracteres.')
+  .refine(senha => senha === senha.trim(), 'Retire os espaços do início e do fim da senha.')
+  .refine(senha => !senhaComum(senha), 'Essa senha é muito comum. Escolha outra.');
 const loginSchema = z.object({ email: emailSchema, senha: z.string().min(1).max(128) }).strict();
 const setupSchema = z.object({ nome: z.string().trim().min(2).max(120), email: emailSchema, senha: senhaSchema }).strict();
 const activationSchema = z.object({ token: z.string().regex(/^[A-Za-z0-9_-]{43}$/), senha: senhaSchema }).strict();

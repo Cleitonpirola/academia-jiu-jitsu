@@ -1,3 +1,4 @@
+export const SENHA_MINIMA = 8;
 export const FAIXAS = ['Branca', 'Cinza', 'Amarela', 'Laranja', 'Verde', 'Azul', 'Roxa', 'Marrom', 'Preta'] as const;
 export type Faixa = string;
 export interface FaixaGraduacao { id: string; nome: string; chave: string; cor: string; ordem: number; situacao: Situacao; criadoEm: string; atualizadoEm: string }

@@ -269,7 +269,8 @@ describe('Login, autorização e portal do aluno', () => {
     const user = await repo.get('Usuario', usuarioId);
     assert.equal(user?.conviteHash, tokenHash(invite.body.token)); assert.notEqual(user?.conviteHash, invite.body.token);
     await request(app).post('/api/auth/ativar').set('X-Tatame-Request','1').send({ token: previous.body.token, senha: password }).expect(400);
-    const activation = await request(app).post('/api/auth/ativar').set('X-Tatame-Request','1').send({ token: invite.body.token, senha: password }).expect(200);
+    await request(app).post('/api/auth/ativar').set('X-Tatame-Request','1').send({ token: invite.body.token, senha: 'livro12' }).expect(400);
+    const activation = await request(app).post('/api/auth/ativar').set('X-Tatame-Request','1').send({ token: invite.body.token, senha: 'livro123' }).expect(200);
     assert.equal(activation.body.usuario.alunoId, aluno.id);
     await authenticated(alunoToken).get('/api/portal').expect(401);
     await request(app).post('/api/auth/ativar').set('X-Tatame-Request','1').send({ token: invite.body.token, senha: password }).expect(400);
@@ -300,12 +301,12 @@ describe('Login, autorização e portal do aluno', () => {
   });
 });
 
-it('configuração inicial cria um único administrador, exige senha longa e fecha após criação', async () => {
+it('configuração inicial cria um único administrador, exige ao menos oito caracteres e fecha após criação', async () => {
   const repo = new SqliteRepository(':memory:'); const app = createApp(repo, { apiKey: '' });
   try {
     assert.equal((await request(app).get('/api/auth/estado')).body.configuracaoInicial, true);
-    await request(app).post('/api/auth/configurar').set('X-Tatame-Request','1').send({ nome: 'Admin', email: 'admin@teste.invalid', senha: 'curta' }).expect(400);
-    const body = { nome: 'Admin', email: 'admin@teste.invalid', senha: password };
+    await request(app).post('/api/auth/configurar').set('X-Tatame-Request','1').send({ nome: 'Admin', email: 'admin@teste.invalid', senha: 'ponte12' }).expect(400);
+    const body = { nome: 'Admin', email: 'admin@teste.invalid', senha: 'ponte123' };
     const results = await Promise.all([1,2].map(() => request(app).post('/api/auth/configurar').set('X-Tatame-Request','1').send(body)));
     assert.deepEqual(results.map(item => item.status).sort(), [201,409]);
     assert.equal((await repo.list('Usuario')).length, 1);
