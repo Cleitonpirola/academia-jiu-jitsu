@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { limiteGrausRegistro, limiteGrausPadrao } from '@tatame/shared';
 import type { Aluno, FaixaGraduacao, GrauFaixa, Situacao } from '@tatame/shared';
 import { HttpError } from '../../http-error.js';
 
@@ -13,6 +14,8 @@ export function graduacaoValida(input:Pick<Aluno,'faixa'|'faixaId'|'grauId'>,fai
   const grauId=input.grauId===undefined?(manteveFaixa?atual?.grauId??null:null):input.grauId;
   const grau=grauId?graus.find(g=>g.id===grauId):null;
   if(grauId&&(!grau||grau.faixaId!==faixa.id))throw new HttpError(400,'O grau escolhido não pertence a esta faixa.');
+  const limite=limiteGrausRegistro(faixa.nome);
+  if(grau&&limite!==null&&grau.numero>limite&&atual?.grauId!==grau.id)throw new HttpError(400,`Esta faixa permite até o ${limite}º grau.`);
   if(grau&&grau.situacao!=='ativo'&&atual?.grauId!==grau.id)throw new HttpError(409,'Este grau está inativo para novas atribuições.');
   return {faixa:faixa.nome,faixaId:faixa.id,grauId};
 }
@@ -28,6 +31,8 @@ export function validarCatalogo(acao:AcaoGraduacao,faixas:FaixaGraduacao[],graus
     if(!faixa)throw new HttpError(404,'Faixa não encontrada.');
     if(acao.create&&faixa.situacao!=='ativo')throw new HttpError(409,'Ative a faixa antes de cadastrar graus.');
     if(!acao.create&&(!old||old.faixaId!==faixa.id))throw new HttpError(404,'Grau não encontrado nesta faixa.');
+    if(limiteGrausPadrao(faixa.nome)===4&&acao.row.numero>4&&(acao.create||old?.numero!==acao.row.numero))throw new HttpError(400,'Esta faixa permite até o quarto grau.');
+    if(old&&old.numero!==acao.row.numero&&alunos.some(a=>a.grauId===old.id))throw new HttpError(409,'Este grau está atribuído a alunos. Cadastre outro grau para preservar o histórico.');
     if(graus.some(g=>g.id!==acao.row.id&&g.faixaId===faixa.id&&g.numero===acao.row.numero))throw new HttpError(409,'Este grau já está cadastrado nesta faixa.');
     return;
   }

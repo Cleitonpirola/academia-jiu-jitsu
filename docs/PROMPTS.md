@@ -1,8 +1,85 @@
 # Registro de prompts
 
+## Senhas comuns e recuperação por e-mail — 05/11/2026
+
+O usuário aprovou começar pelo bloqueio de senhas comuns e por **Esqueci minha senha**. A implementação usa uma lista interna e um link temporário separado do convite. A integração local foi configurada com entrega simulada para verificar o fluxo.
+
+## Mínimo de senha — 05/11/2026
+
+O usuário pediu reduzir o mínimo de 15 caracteres para seis ou oito. Foi escolhido oito para a configuração inicial e a ativação por convite.
+
+## Excluir comunicado — 05/11/2026
+
+O usuário pediu um botão para excluir recados que perderam a utilidade. O botão foi incluído no envio individual e coletivo, com confirmação que informa quem deixará de ver a mensagem.
+
+## Simplificar comunicados — 05/11/2026
+
+O usuário pediu para retirar **Autorização** da aba de avisos e apontou o seletor **Tipo de comunicado**. Como o formulário passou a oferecer só comunicados, o seletor foi retirado também do envio individual.
+
+## Clique fora da ficha — 05/11/2026
+
+O usuário relatou que ainda precisava clicar no X para fechar a ficha do aluno. A correção passou a usar um fundo clicável separado do conteúdo, com margens disponíveis em telas estreitas.
+
+## Ficha e graus de graduação — 05/11/2026
+
+O usuário pediu fechar a ficha ao clicar fora e reabri-la no topo. Em seguida, relatou que 120 aulas deixavam o seletor apenas com **Não informado** e solicitou os graus até quatro nas faixas básicas e a graduação ampliada da preta. Consultada a referência da CBJJ/IBJJF e adotado o sexto grau como limite da preta no registro manual.
+
+## Acesso de menores simplificado — 05/11/2026
+
+Prévia para validação: [Tatame brasileiro](https://tatame-homologacao-bomdkv0wn-cleiton-pirola.vercel.app), deployment `dpl_F43wMCTdb1PS9pp6NTq8nfgWi6vF`, READY, staging, gru1. SSO global mantido; sem links de compartilhamento. Os testes visuais são locais, não um login automatizado nessa publicação. O usuário valida esta entrega antes do commit ou da troca definitiva do banco.
+
+Menores: checkbox Possui celular visível. Desmarcado mostra e exige responsável para aulas/check-ins; marcado oculta os controles familiares e permite acesso próprio, sem exigir responsável. Adultos não exibem o bloco. Vínculos anteriores viram contato sem acesso ao aluno, preservando histórico e outros dependentes. Sem migração. 287 testes, build/typecheck e QA visual com dados fictícios em memória aprovados. Sem commit/push; prévia protegida READY, sem troca definitiva do banco. Usuário esclareceu que o menor com celular cuida das próprias presenças sem manter os pais como responsáveis, e que os campos devem sumir ao marcar. Pedido aplicado à UI e à permissão do servidor; não interpretado como aprovação de commit nem de remoção do banco antigo. [Regras e evidências](RESPONSAVEIS.md).
+
+## Conexão e API brasileiras verificadas — 04/11/2026
+
+Conexão privada brasileira validada com TLS verify-full. Leitura Prisma das 33 tabelas de domínio e 24 verificações HTTP em cada pooler (5432 e 6543), total 48 aprovações, com login professor/aluno e permissões. Dados fictícios e sessões de teste desfeitos por rollback; 34 tabelas/82 registros reconferidos sem divergências. Aplicação publicada e banco original preservados. Navegador, Python e prévia Vercel brasileira não testados nesta rodada. Sem deploy, commit ou push. Usuário solicitou testar, pediu ajuda com a configuração, refez a entrada oculta e confirmou nova execução. Não solicitadas senhas pelo chat, alteração da publicação ou sincronização Git. [Evidências e limites](REGIOES.md).
+
+## Cópia brasileira conferida — 04/11/2026
+
+Cópia autorizada e concluída no Supabase tatame-homologacao-br (sa-east-1). Comparadas 34 tabelas e 82 registros por quantidade e hash de conteúdo tipado, incluindo os 19 registros do histórico Prisma; destino e releitura da origem sem divergências. Corrigida a precisão de microssegundos nas datas técnicas do histórico durante a conferência. RLS mantida nas 34 tabelas, zero políticas públicas e zero restrições não validadas. A aplicação continua em iad1 usando o banco original us-east-1, preservado. Conexão brasileira e API local posteriormente verificadas; troca publicada ainda pendente. Sem deploy, commit ou push. Autorização explícita do usuário para copiar dados pessoais, fotos, hashes e substituir apenas sementes do novo destino; após expirar a confirmação da ferramenta, pediu reenviá-la. Não houve autorização de redirecionamento ou exclusão da origem. [Evidências e próximos passos](REGIOES.md).
+
+
+## Hospedar no YouTube e enviar pelo Tatame —01/11/2026
+
+Pedido: avaliar biblioteca/API do YouTube para postar diretamente do app, evitando upload manual e cópia de links. Resposta baseada em documentação oficial atual, sem instalar cliente ou conectar conta. Proposta de botão com OAuth e upload retomável. Preferência por YouTube registrada; monetização anterior não considerada automaticamente compatível com políticas do provedor. Envio por bucket continua adiado. Estado e fontes em TECNICAS.md.
+
+## Recuperar senha pelo e-mail — 01/11/2026
+
+Pedido: adicionar meio de recuperação quando a pessoa esquecer a senha; se difícil agora, colocar nas implementações futuras. Usada a alternativa autorizada porque falta serviço de e-mail configurado. Documentados fluxo, dependências e critérios, distinguindo convite manual existente de redefinição automática futura. Não alterado login nem iniciado envio, contratação ou migração. Registro em PLANO_FUNCIONAL.md; sem commit/push desta decisão.
+
+## Refresh relatado por Gabriel —01/11/2026
+
+Durante a publicação autorizada de segurança, usuário repassou relato de Gabriel: um botão de carregar novamente aparecia rapidamente ao atualizar a página. Identificada condição !state mostrando erro mesmo com consulta pendente. Ajuste restrito à renderização: status Conferindo acesso enquanto sem resposta/erro; botão só após falha. Publicado na prévia para validação; não tratado como aprovação de novo commit ou de funcionalidades pendentes.
+
 ## Revisar e corrigir alertas, com commit autorizado —31/10/2026
 
 Pedido do usuário: revisar os alertas, corrigir o necessário e commitar, deixando os avaliadores validarem as funcionalidades e enviarem suas sugestões depois. Escopo adotado: quatro bibliotecas vulneráveis, regressão HTTP e documentação. Preservar alterações anteriores; upload privado de vídeos continua adiado. Não interpretar a autorização como merge/main, release, deploy ou inclusão automática de tudo que estiver modificado. [Relatório](SEGURANCA_DEPENDENCIAS.md).
+
+## Implementar buckets —31/10/2026
+
+Pedido: “vamos implementar”, após explicação sobre armazenamento de fotos e vídeos. Resposta de configuração: “Preciso de ajuda no painel”. Decisão: dois buckets privados, manter formatos antigos, não migrar autenticação, não criar políticas públicas, não inventar cobrança/preço. IA gerou integração e testes, conferiu contrato do SDK oficial e separou validação local de ativação externa. Usuário precisa cadastrar Secret diretamente na Vercel; nenhum valor solicitado no chat. Chave não foi obtida, banco/publicação não alterados, sem commit/push.
+
+## Acesso direto à homologação — 31/10/2026
+
+Pedido: professor e aluno devem chegar direto ao Tatame; confirmação específica: “autorizo apenas para esses testes”. Aplicada exceção somente à publicação final de homologação, preservando SSO global e autenticação interna. Não interpretado como autorização para abrir produção, outras publicações, retirar senhas ou fazer commit/push.
+
+## Concluir ambiente para testes externos — 31/10/2026
+
+Pedido: “vamos fazer a primeira parte então para eu mandar os testes, as att futuras veremos depois”. Interpretado como autorização para segurança apresentada, configuração/publicação de homologação e testes com fixtures, mantendo funcionalidades futuras adiadas. Aplicada segurança19, corrigido certificado/runtime e contrato de faixas dos indicadores; Preview publicada e fluxo real validado. Contas fictícias preparadas para avaliadores, sem envio automático a terceiros. Não tratado como aprovação para commit/push, merge/main ou release. Entrega e limites em TESTES_EXTERNOS.md.
+
+## Autorizar atualização do banco de homologação — 31/10/2026
+
+Codex apresentou oito migrações pendentes necessárias às funcionalidades já implementadas e pediu confirmação por causa do adiamento anterior do banco. Usuário respondeu **“confirmo”**. Aplicadas11–18 com exportação lógica privada, ensaio transacional revertido, Prisma deploy e comparação final. Identificada segurança pendente nas23 tabelas antigas; preparada proposta separada sem executar por implicação. Modelo/preço da biblioteca continua adiado. Não inferir aprovação de commit/push/deploy dessa confirmação. Ver MIGRACOES_11_18.md.
+
+## Biblioteca de técnicas semanais — 31/10/2026
+
+Resposta posterior à pergunta sobre mensalidade versus vídeo/pacote: “deixe opara decidirmos depois”. Codex registrou o adiamento e manteve o desenho da cobrança como proposta, sem tratar a prévia ou seu preço de exemplo como aprovados.
+
+Pedido do usuário: “criar aquela aba” com vídeos de explicações das técnicas semanais, contratação opcional para custear inicialmente o aplicativo e futura monetização em filiais/outras equipes. Codex perguntou mensalidade de biblioteca versus vídeo/pacote; enquanto aguarda, comunicou a hipótese de mensalidade opcional editável, acesso manual por validade e links YouTube/Vimeo, com limitação de repasse. Implementação local não contrata provedor nem inicia cobrança; registra monetização entre academias como evolução futura que requer isolamento e direitos de conteúdo. Entrega e verificações: TECNICAS.md. Mudanças anteriores de hospedagem e funcionalidades foram preservadas.
+
+## Iniciar homologação com Vercel e Supabase — 31/10/2026
+
+Contexto fornecido: avaliadores precisam testar de fora de casa; usuário pediu conferir plugins e “vamos começar então”. Após solicitação específica do provedor, confirmou “Autorizei o acesso” ao espaço Vercel. Codex conferiu projeto/banco, preparou configuração de três serviços e bloqueios da entrada hospedada, sem transferir dados ou credenciais para o chat. Perguntado sobre cadastrar a variável privada no painel, respondeu “Preciso de ajuda nessa tela”. Próximo passo assistido: abrir Environment Variables, adicionar `DATABASE_URL` em Preview como Secret usando o atalho local; depois verificar apenas metadados. O pedido não substitui validação do conjunto para commit nem a decisão de migração do banco. [Guia](VERCEL_HOMOLOGACAO.md).
 
 ## Faixas, graus, retirada de avulsas e ícone financeiro — 26/10/2026
 
@@ -227,3 +304,41 @@ Pedidos: lápis junto ao nome, retirar alunos previstos, manter confirmados e pe
 ## Mais de um professor — 26/10/2026
 
 Pedido: “coloque a opção de adicionar mais de 1 professor nas aulas tambem, as vezes tera mais de 1”. Codex informou que o conjunto anterior autorizado seria sincronizado primeiro e que este pedido ficaria separado para validação. Implementou lista de nomes por encontro, herança do padrão da turma e gravação atômica, sem criar contas. 227 testes, build/typecheck, Prisma e UI aprovados; estado e limites em PROFESSORES_AULA.md. Ainda sem aprovação de commit desse incremento.
+
+## Evolução por presença/tempo e acompanhamento — 27/10/2026
+
+Pedido: retirar faixa/grau do cadastro comum, permitir evolução na ficha e regras livres (ex.: 30 aulas/grau ou seis meses/grau com 24 meses/faixa). Codex perguntou se contaria somente presença confirmada; usuário respondeu sim. Usuário acrescentou trajetória no perfil próprio, aulas restantes e possibilidade de avisar o professor quando atingir critérios. Interpretação comunicada: critérios configuráveis e confirmação final do mestre, sem promoção automática. Implementados ajuste inicial justificado, metas, histórico, pedido interno e painel de revisão. Supabase permanece expressamente aguardando autorização. Entrega técnica e evidências em EVOLUCAO_GRADUACAO.md; nenhum commit autorizado ainda para esse conjunto.
+
+## 27/10/2026 — simplificar faixas e incluir kids
+
+Pedidos humanos: retirar controles de cor, ordem e faixa ativa/inativa; incluir variações kids conforme a imagem; manter quantidade de aulas por grau editável; usar cores similares, um pouco mais escuras. Decisão: catálogo padrão fixo, com listras, sem inferir idades; critérios pedagógicos permanecem configuráveis. IA implementou migração nova preservando dados, catálogo compartilhado, interface e testes. Código não foi atribuído a edição manual do usuário. Pergunta posterior sobre Outra combinação recebeu explicação do agrupamento de dias/horários; não autorizou mudança desse comportamento.
+
+## 27/10/2026 — retirar requisitos de tempo
+
+Usuário enviou imagem de Meses por grau e Permanência mínima com a instrução “sem necessidade”. Interpretação aplicada: remover campos e critérios, mantendo meta por aulas e confirmação do mestre. IA preservou colunas e histórico e impediu espera invisível por configuração antiga. Não houve alteração externa no banco nem aprovação para commit.
+
+## 27/10/2026 — separar configuração de aulas e graduação do aluno
+
+Pedidos humanos: retirar campo Graus para concluir (quatro graus nas faixas coloridas); simplificar lista de Sem graus/1º..4º sem editar/excluir; adicionar próximo grau no perfil do aluno acessado pelo professor. Esclarecimento final: nessa parte, somente quantidade de aulas editável e Salvar. IA implementou formulário único de aulas, ação na ficha e limite automático, preservando histórico e dados avançados/legados. Não houve pedido de commit ou autorização de Supabase.
+
+## 27/10/2026 — avisos coletivos, justificativa e datas
+
+Usuário: planejar aviso direto por WhatsApp aos alunos em conjunto, sem enviar aluno por aluno. Registrado como integração complexa futura, sem disparo/contratação/autorização de envio. Depois: “tira esse justificativa, ninguem irá ler”; aplicado à UI e contrato do ajuste, preservando auditoria automática. Complemento: “sem necessidade, apenas as datas de recebimento dos graus”, com imagem do ponto de partida; UI passou a exibir somente concessões reais e datas, sem fabricar datas a partir de ajustes. Implementação pela IA; sem aprovação implícita de commit.
+
+## 27/10/2026 — categorias e local de comunicados
+
+Usuário enviou imagens Infantil/Juvenil/Adulto. Pergunta: metas independentes por categoria? Resposta: “sim, mas editavel, segue a mesma logica”. Complemento: usar apenas opções enviadas até preta; coral e vermelhas ficam para futuro. Implementação preservou antigas identidades e acrescentou categorias explícitas sem classificação por nascimento. Pedido paralelo: “precisamos de um outro lugar para isso, tire dessa parte dos alunos”, com imagem dos avisos. Aplicado menu Comunicados com seleção de destinatário; portal do aluno preservado. Pesquisa pública BJJ Control solicitada depois, sem substituir as entregas anteriores. Não autorizou commit, Supabase ou login automático em conta externa.
+
+## 27/10/2026 — controle opcional, aulas realizadas e menos mensagens
+
+Pedidos: ativar planos em menu da academia, exibir apenas para alunos com cota, usar Aulas utilizadas só para planos limitados e Aulas realizadas para demais, retirar mensagens de ilimitado, manter débitos e retirar Cadastros anteriores. Resposta explícita sobre desativação: ocultar controles e manter limites. Implementação separou preferência visual de regras financeiras/consumo e manteve dados. Pedido “corrija tudo que eu falei, testando” entendido como implementar/verificar o conjunto, sem aprovação de commit ou Supabase.
+
+## 27/10/2026 — comunicados e referências de ranking/presenças
+
+Pedidos do usuário: “no destinatario eu quero todos da equipe de uma vez”; ranking geral/mensal e fotos próprias conforme screenshots; presença organizada por dia/aula para aluno/professor; “apenas kimono e sem”; título no portal como aula do horário escolhido. Reforços: salvar ponto de retomada se limite acabar e “deixe o supabase por enquanto”.
+
+Contexto utilizado: código e contratos locais, tabelas existentes, regras de confirmação e controle parental, screenshots fornecidas. Não foi acessada área autenticada do BJJ Control nem houve importação de dados. Decisões da IA: envio atômico/idempotente reutilizando mensagens individuais; ranking só por presença confirmada; JPEG compacto no cadastro; seletor diário compartilhado. Geração e revisão feitas pelo Codex; não atribuir autoria manual ao usuário. Resultados reais e correção de CSP registrados em PROCESSO/REVISAO_IA e guia novo.
+
+## 27/10/2026 — refinamento do ranking
+
+Pedido: “Eu quero que todo mês renove. Porém, no final do ano, faça a contabilização de quem treinou mais o ano todo.” Interpretação implementada: Mensal começa no período corrente, Anual acumula janeiro–dezembro; não apagar as presenças nem somar posições mensais. Histórico segue consultável, virada de calendário acompanhada na UI. Não foi solicitado envio de relatório/notificação ou congelamento permanente de resultados, portanto nenhuma automação externa foi criada.267testes e build aprovados, UI conferida; sem Supabase/commit/push.

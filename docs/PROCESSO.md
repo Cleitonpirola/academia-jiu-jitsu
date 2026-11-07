@@ -1,10 +1,133 @@
 # Processo
 
+## Verificação do conjunto de migrações e recuperação — 07/11/2026
+
+As migrações de graduação, preferências, comunicados, fotos e técnicas precedem a recuperação de senha no histórico SQLite. Foram verificadas em conjunto com a migração de recuperação, incluindo bancos anteriores. Passaram 293 testes TypeScript, 15 testes Python, cinco testes de configuração, o build e a validação do esquema Prisma. A entrega de e-mail e a recusa de um link vencido já foram observadas na prévia de São Paulo. [Fluxo de recuperação](ACESSO_ALUNO.md).
+
+## Senhas comuns e recuperação por e-mail — 05/11/2026
+
+Bloqueio de senhas comuns e recuperação por link de uso único implementados. Build e 291 testes locais aprovados. O navegador confirmou a solicitação e a abertura do formulário pelo e-mail simulado. A ativação online depende da migração Prisma, do remetente Resend e de um teste de entrega autorizado. [Configuração e fluxo](ACESSO_ALUNO.md).
+
+Na etapa de ativação, aplicamos somente a migração de recuperação no Supabase de homologação de São Paulo. Conferimos o registro Prisma, a unicidade do token e as permissões da tabela. O teste com a API local e o banco brasileiro passou com envio simulado e reversão dos dados fictícios. A prévia ainda precisa da configuração do Resend e do teste de entrega real. [Estado da ativação](ACESSO_ALUNO.md).
+
+## Mínimo de senha — 05/11/2026
+
+O formulário e a API passaram a exigir oito caracteres ao criar ou redefinir uma senha. Build aprovado e 45 testes de autenticação e acesso familiar passaram. [Prévia protegida para validação](https://tatame-homologacao-hqqu2tghr-cleiton-pirola.vercel.app).
+
+## Excluir comunicado — 05/11/2026
+
+Adicionado **Excluir** nos comunicados individuais e coletivos, com confirmação. Build aprovado, 21 testes direcionados passaram e o fluxo foi conferido no navegador com dados fictícios. A validação do usuário na prévia precede o commit e o envio. [Guia de comunicados](COMUNICADOS.md) · [Prévia protegida](https://tatame-homologacao-9cp9ijwgs-cleiton-pirola.vercel.app).
+
+## Simplificar comunicados — 05/11/2026
+
+Retirado o seletor **Tipo de comunicado** dos formulários de envio individual e coletivo. O portal passou a mostrar **Comunicados** e oferece **Estou ciente**. O build e a verificação no navegador local passaram com dados fictícios. [Guia de comunicados](COMUNICADOS.md) · [Prévia para validação](https://tatame-homologacao-pejqy3s3k-cleiton-pirola.vercel.app).
+
+## Clique fora da ficha — 05/11/2026
+
+Fundo clicável separado do painel, com margem lateral em telas estreitas. Build aprovado e fluxo conferido no navegador local com dados fictícios. A validação pelo usuário na prévia precede o commit e o envio. [Prévia brasileira protegida](https://tatame-homologacao-pteo91412-cleiton-pirola.vercel.app).
+
+## Ficha e graus de graduação — 05/11/2026
+
+Registro de graus padrão independente da meta de aulas e fechamento da ficha pelo fundo, com retorno ao topo na próxima abertura. Build e 288 testes aprovados. Verificação visual local com alunos fictícios. A Vercel confirmou a prévia em `staging`, `gru1`, com as 159 fontes conferidas por hash. A validação funcional na prévia protegida fica com o usuário antes de commit e push. [Fluxo e decisões](EVOLUCAO_GRADUACAO.md) · [Prévia brasileira protegida](https://tatame-homologacao-nycjohnic-cleiton-pirola.vercel.app).
+
+## Acesso de menores simplificado — 05/11/2026
+
+Prévia para validação: [Tatame brasileiro](https://tatame-homologacao-bomdkv0wn-cleiton-pirola.vercel.app), deployment `dpl_F43wMCTdb1PS9pp6NTq8nfgWi6vF`, READY, staging, gru1. SSO global mantido; sem links de compartilhamento. Os testes visuais são locais, não um login automatizado nessa publicação. O usuário valida esta entrega antes do commit ou da troca definitiva do banco.
+
+Menores: checkbox Possui celular visível. Desmarcado mostra e exige responsável para aulas/check-ins; marcado oculta os controles familiares e permite acesso próprio, sem exigir responsável. Adultos não exibem o bloco. Vínculos anteriores viram contato sem acesso ao aluno, preservando histórico e outros dependentes. Sem migração. 287 testes, build/typecheck e QA visual com dados fictícios em memória aprovados. Sem commit/push; prévia protegida READY, sem troca definitiva do banco. [Regras e evidências](RESPONSAVEIS.md).
+
+## Conexão e API brasileiras verificadas — 04/11/2026
+
+Conexão privada brasileira validada com TLS verify-full. Leitura Prisma das 33 tabelas de domínio e 24 verificações HTTP em cada pooler (5432 e 6543), total 48 aprovações, com login professor/aluno e permissões. Dados fictícios e sessões de teste desfeitos por rollback; 34 tabelas/82 registros reconferidos sem divergências. Aplicação publicada e banco original preservados. Navegador, Python e prévia Vercel brasileira não testados nesta rodada. Sem deploy, commit ou push. [Evidências e limites](REGIOES.md).
+
+## Cópia brasileira conferida — 04/11/2026
+
+Cópia autorizada e concluída no Supabase tatame-homologacao-br (sa-east-1). Comparadas 34 tabelas e 82 registros por quantidade e hash de conteúdo tipado, incluindo os 19 registros do histórico Prisma; destino e releitura da origem sem divergências. Corrigida a precisão de microssegundos nas datas técnicas do histórico durante a conferência. RLS mantida nas 34 tabelas, zero políticas públicas e zero restrições não validadas. A aplicação continua em iad1 usando o banco original us-east-1, preservado. Conexão brasileira e API local posteriormente verificadas; troca publicada ainda pendente. Sem deploy, commit ou push. [Evidências e próximos passos](REGIOES.md).
+
+
+## Consulta sobre upload ao YouTube pelo app —01/11/2026
+
+Usuário prefere YouTube e quer enviar pelo Tatame sem operar o Studio/copiar links. Consultadas referências oficiais atuais: API videos.insert/OAuth, biblioteca Node.js googleapis, políticas de uso e privacidade. Confirmada viabilidade técnica; documentada dependência de projeto Google/canal/autorização, upload retomável e acompanhamento do processamento. Identificada restrição relevante à intenção anterior de cobrar: proibição de cobrança para assistir pelo player incorporado e compartilhamento de não listados. Nenhum código, biblioteca, canal, credencial, envio, termo aceito, deploy ou Git alterado por esta consulta; somente planejamento. [Registro](TECNICAS.md).
+
+## Recuperação de senha registrada para etapa futura — 01/11/2026
+
+Usuário pediu recuperação por e-mail e permitiu adiar se fosse complexa. Conferidas rotas e tela: existem convites temporários manuais, mas não há endpoint de solicitação automática nem serviço de entrega configurado. Registrada prioridade na etapa futura de e-mails, com Esqueci minha senha para aluno/responsável/admin, link de uso único, proteção contra enumeração e preservação de permissões. Não adicionado botão inoperante nem contratado provedor. Conferência documental apenas; nenhum teste funcional novo, alteração de senha, envio real, commit ou push. [Escopo e critérios](PLANO_FUNCIONAL.md).
+
+## Publicação atualizada e refresh corrigido — 01/11/2026
+
+Prévia final READY: [Abrir o Tatame](https://tatame-homologacao-f1fi4dmth-cleiton-pirola.vercel.app), deployment `dpl_HzupaAG1JgiEW7KEKkiCZCG5oz2S`, ambiente API staging/Preview. Substitui a prévia original e o candidato intermediário de segurança. Mantidos os dois acessos fictícios, sem alterar senhas. Arquivos privados de acesso atualizados; não encaminhados automaticamente a terceiros.
+
+Base recomposta das159 fontes exatas da publicação anterior, conferidas por SHA1. Somente quatro arquivos diferem: package.json/package-lock.json/app.ts para segurança do commit510eb87 e AuthGate.tsx para corrigir o botão durante o refresh, relatado por Gabriel. Storage não incluído nem ativado. O pacote não é um checkout integral do commit510eb87: reutiliza também funcionalidades já publicadas a partir da fonte local; metadados dirty=true registram essa composição.
+
+Pacote de segurança sem Storage:279 testes, build/typecheck e npm audit sem alertas. Ajuste adicional só de renderização: build/typecheck e QA visual controlada com conexão pendente/erro/recuperação. Não foram adicionados testes espelho nem alegada nova execução da suíte285 após esse ajuste visual. Na publicação final: login dos dois perfis, autorização401/403, banco Supabase/Python, catálogo, presença fictícia anterior e indicadores conferidos; rota de Storage404.159 fontes remotas conferidas por hash. Relatório privado .test-output/deploy-seguranca-validacao-online.json.
+
+Acesso direto limitado ao deployment final, login/permissões do Tatame e SSO global preservados; revogadas as exceções anteriores e o compartilhamento temporário antigo após confirmação da versão final. Sem expiração automática: revogar a exceção final ao terminar os testes. Os links antigos podem pedir login Vercel; encaminhar o endereço novo.
+
+Git: segurança já enviada em510eb8761be09b5c65b6459746e03b270c57ea0b, branch codex/evolucao-tatame. A correção visual e esta atualização documental aguardam validação específica antes de novo commit/push, conforme AGENTS.md. Nenhuma migração, bucket, chave de Storage, pagamento, main/tag/release ou conta nova nesta publicação.
+
 ## Correção de dependências autorizada —31/10/2026
 
 Usuário pediu: “revisa esses alertas [...] corrige o que tiver que corrigir, aí você pode comitar”. Tratado como autorização explícita para este conjunto de segurança e seu envio ao GitHub, sem aprovar funcionalidades pendentes ou implantação. Preparada cópia isolada do commit-base c8c7ef4 para testar e selecionar apenas os manifests, tratamento HTTP, regressão e documentação correspondente.
 
 Atualizados body-parser2.4.0, fast-uri3.1.9, qs6.17.1 e zod4.6.7. Auditoria completa zerada;228 testes do conjunto isolado e285 do workspace aprovados, build/typecheck aprovados. Novo teste gzip detectou classificação500 de erro de descompressão; corrigido para400 sem dispensar autenticação. Testes somente locais em memória. Nenhuma migração, publicação, merge ou tag. [Detalhes](SEGURANCA_DEPENDENCIAS.md).
+
+## Adiamento dos vídeos — 31/10/2026
+
+Usuário priorizou a atualização atual e pediu deixar upload/hospedagem de vídeos para depois de definir tamanho, qualidade e duração. Registrado adiamento; código local preservado, sem ativar Storage ou solicitar chave agora. A publicação existente não foi alterada. Sugerida revisão dos alertas de dependências e consolidação para validação antes de Git. Nenhuma correção de dependência, teste novo, commit ou push nesta rodada de decisão.
+
+## Integração de buckets —31/10/2026
+
+Usuário pediu implementar buckets após explicação sobre fotos/vídeos. Consultadas skill Supabase, changelog, docs oficiais e contratos locais. MCP disponível não oferece criação/upload de Storage nem chave secreta; usadas interfaces oficiais do SDK no backend. Usuário informou precisar de ajuda no painel. Não obter segredo por SQL/forjar tokens nem solicitar chave no chat. Criados módulo arquivos, integração de fotos/vídeos, editor e testes; nenhuma política/bucket externo alterado. Supabase consultado somente para metadados: nenhum bucket/política Storage. Vercel consultada sem descriptografar: nenhuma variável SUPABASE_ cadastrada.
+
+284 testes totais e build/typecheck passaram. Primeira rodada sofreu EACCES de portas; repetida com autorização. Corrigida fixture com tamanho errado, sem relaxar validação. Prévia3354 em memória mostra novo seletor; não comprova upload real. Quatro avisos npm em dependências anteriores anotados em ARMAZENAMENTO.md, sem atualização indiscriminada. Sem commit/push: AGENTS exige validação explícita desta entrega antes de Git. Próximo: orientar chave secreta em Preview, preparar buckets na nova publicação e ensaiar com arquivos fictícios.
+
+## Acesso direto autorizado para estes testes — 31/10/2026
+
+Usuário confirmou “autorizo apenas para esses testes” após a rejeição inicial da revisão automática. A nova chamada autorizada criou `alias-protection-override` somente no deployment `dpl_4Wnh38NWzR3VFZZzXkHcVFU1a6b9`. URL: https://tatame-homologacao-aum8h1pc1-cleiton-pirola.vercel.app/. Proteção global SSO continua habilitada; autenticação e permissões do Tatame preservadas. A exceção não tem expiração automática: revogar ao encerrar estes testes; não estender a outras publicações. O prazo do antigo link temporário não se aplica ao acesso direto.
+
+Verificação nova sem cookies/parâmetros: página200, estado200/usuario:null, alunos401, portal401. Navegador confirmou formulário de login após logout apenas do aluno fictício. Arquivos privados dos dois acessos atualizados sem alterar senhas. Evidência `.test-output/acesso-direto-validacao.json` e `docs/screenshots/homologacao-login-direto.png`. Nenhuma migração, alteração de lógica, nova publicação, commit ou push nesta liberação. Os registros anteriores abaixo são históricos.
+
+## Solicitação de acesso direto sem tela da Vercel — 31/10/2026
+
+Usuário pediu simplificar os dois acessos para chegar direto ao Tatame. Tentada exceção apenas na publicação final, sem remover autenticação interna. A revisão automática rejeitou a operação por caracterizar bypass permanente/abrangente que não considerou explicitamente autorizado. Nenhuma configuração alterada. Não contornar a rejeição com desativação global/CLI/outroalias. Necessária confirmação específica para página de login pública nesta homologação, com dados ainda protegidos por loginTatame. Link temporário anterior permanece ativo.
+
+## Homologação entregue — 31/10/2026
+
+Publicação final dpl_4Wnh38NWzR3VFZZzXkHcVFU1a6b9 READY/Preview; source local semGitmutação. Primeiro candidato funcional dpl_8vqV11koJzHNprXgA4sJLWC94vm2 validou fluxo completo. Revisão detectou enum legado de faixa no contrato Node de analytics; teste novo reproduziu recusa de Adulto/Infantil/Juvenil, corrigido para texto limitado e suíte278 passou. Segundo candidato final validou novamente os mesmos registros fictícios, sem duplicá-los, incluindo ajuste administrativo de categoria e cálculo Python real com Adulto Faixa Branca.
+
+Conta administrativa fictícia criada sem substituir contas anteriores; aluno criado e ativado pelo fluxo normal, turma/aula/check-in/chamada pela API publicada. Pré-condição de ausência de sessões expiradas antigas verificada antes de login para não limpar sessões de terceiros como efeito colateral do comportamento atual. Credenciais e link temporário apenas em arquivo privado ignorado. Sessões dos testes HTTP encerradas; navegador final deixado no portal fictício para usuário conferir. Persistência de presença, autorização401/403 e disponibilidade banco/Python comprovadas. Conferência final:62 registros anteriores à segurança19 idênticos; só fixtures novos acrescentados.
+
+Documentação e capturas atualizadas; nenhum commit/push, merge ou tag. Usuário ainda valida conjunto para Git. Guia TESTES_EXTERNOS.md contém roteiro e limites: IA externa, e-mail, WhatsApp e pagamentos automáticos não ativados.
+
+## Preparação final para avaliadores — 31/10/2026
+
+Usuário pediu concluir a primeira parte para testes externos, adiando novas funcionalidades. Aplicada migração19 para segurança antiga após exportação lógica privada, ensaio revertido e comparação integral;19 concluídas/33 tabelas de domínio. RLS nas34 tabelas, papéis públicos sem registros e leitura Prisma privada conferidos. Certificado público Supabase incluído no pacote, caminho local substituído na entrada hospedada, TLS mantido. 277 testes locais aprovados nesta rodada.
+
+Publicação por upload de código local (159 arquivos públicos por SHA1), preservando a regra de validação antes de commit/push. Primeiro build apontou runtimeServices incorreto; removidas versões explícitas, usando autodetecção. Primeira publicação é forçada pela Vercel para Production: criado apenas placeholder estático sem dados para inicializar, então aplicação iniciada como Preview. Configurações de projeto alteradas explicitamente, pois projectSettings do pedido não substituiu o framework atual. Candidato dpl_8vqV11koJzHNprXgA4sJLWC94vm2 ainda em verificação. Não afirmar link funcional nem teste online completo antes da prova. Sem Git commit/push, merge ou release.
+
+## Aplicação externa autorizada das migrações11–18 — 31/10/2026
+
+Após proposta explícita de aplicar oito atualizações no banco de testes com cópia e conferências, usuário respondeu **“confirmo”**. Executada exportação lógica privada das23 tabelas anteriores, dados/metadados relidos e TLS verificado; ensaio das oito migrações em transação com rollback e retorno integral à estrutura/dados anteriores. Depois Prisma migrate deploy concluiu18 migrações/33 tabelas de domínio. Dados comparados ao ensaio,20 tabelas integrais preservadas, todos os registros antigos de faixas/graus mantidos e oito faixas com ajustes visuais previstos. Dois alunos/vínculos preservados. Leitura dos11 modelos novos por Prisma e restrições/vínculos validados. [Relatório e limites](MIGRACOES_11_18.md).
+
+Revisão antes de aplicar encontrou RLS ausente nas tabelas antigas; migração18 ainda pendente foi reforçada para proteger as11 tabelas novas do conjunto autorizado. Não alterados arquivos de migrações anteriores já aplicadas. Antigas23 tabelas continuam sem RLS e função antiga tem search_path mutável: [proposta separada](SEGURANCA_HOMOLOGACAO.md), não executada nem abrangida automaticamente pela aprovação das oito atualizações. Sem reset, seed, login de contas existentes, mensagens, cobranças, alteração SQLite, commit/push ou deploy. A autorização de banco não aprova o conjunto local para Git.
+
+## Variável privada na Vercel confirmada — 31/10/2026
+
+Usuário executou o atalho de copiar conexão e informou que salvou. Verificação somente de metadados encontrou DATABASE_URL Secret no ambiente Production. Codex corrigiu o target para Preview conforme o ambiente combinado, preservando tipo/valor; reconferência sem decrypt confirmou sensitive/preview. Nenhum teste externo de conexão, migração ou implantação nessa operação. Configuração e checkpoint atualizados; pendentes oito migrações externas11–18, decisão de aplicação após adiamento anterior e validação do conjunto para commit. Nenhuma nova execução de testes locais nesta confirmação de configuração.
+
+## Técnicas da semana — 31/10/2026
+
+Após a entrega, o usuário respondeu à pergunta comercial: “deixe opara decidirmos depois”. Registrado adiamento explícito do modelo/preço, sem modificar lógica, cobrar ou integrar pagamentos. A hipótese mensal da prévia não constitui aprovação comercial. Documentação atualizada, sem commit/push; nenhuma nova execução de testes necessária para este registro textual.
+
+Usuário pediu aba de vídeos semanais com contratação opcional para ajudar a custear o aplicativo e futura monetização em outras academias. Pergunta sobre mensalidade versus vídeo/pacote enviada, ainda sem resposta; assumida explicitamente mensalidade da biblioteca como proposta reversível, preço editável e liberação manual. Nenhuma cobrança automática ou contratação externa. Implementados catálogo/gestão/autorizações, contratos, SQLite/Prisma migração18 e documentação. Banco principal e Supabase não migrados nesta entrega.
+
+Verificação nova: 276 testes aprovados, build/typecheck e Prisma generate/validate aprovados. Primeira execução dos testes HTTP no sandbox encontrou EACCES local; repetida com permissão para portas temporárias, revelou duas expectativas incorretas (saldo ainda terminava na migração17; aluno inativo perde sessão e retorna401). Corrigidas sem alterar as regras de autorização. QA visual inicialmente recusou origem3352; corrigido APP_ORIGIN somente no script fictício. Depois, navegador confirmou configuração/vídeo persistidos na QA, catálogo bloqueado sem acesso, liberação manual e entrega do link para aluno. Não foi reproduzido vídeo real. Capturas em docs/screenshots/tecnicas-*.png, guia TECNICAS.md. Nenhum commit/push/deploy; aguardar validação do conjunto.
+
+## Preparação de homologação — 31/10/2026
+
+Usuário pediu iniciar a disponibilização para testes externos com Vercel/Supabase. Conexões dos plugins verificadas; a Vercel exigiu acesso adicional ao espaço `cleiton-pirola`, autorizado pelo usuário antes de repetir a consulta. Criado projeto vazio `tatame-homologacao`, Services/Node 24, proteção preservada; nenhuma implantação ou associação automática à `main`. Supabase consultado apenas para metadados, dez migrações concluídas e sete pendentes, sem escrita. Preparados serviços, entrada Express para hospedagem, exclusões de arquivos privados e atalho de conexão por área de transferência. Usuário precisa cadastrar `DATABASE_URL` como Secret/Preview no painel; não enviar senha pelo chat. Solicitou ajuda nessa tela, orientado abrir Environment Variables e adicionar variável.
+
+Executados nesta rodada: 270 testes TypeScript aprovados, dois testes do atalho aprovados, 15 Python aprovados, typecheck e build web aprovados. JSON Schema oficial aceitou a configuração; build remoto e fluxo completo ainda não testados. Nenhum commit/push, migração externa ou deploy. Guia: [VERCEL_HOMOLOGACAO.md](VERCEL_HOMOLOGACAO.md). A aprovação do acesso ao espaço Vercel não foi tratada como aprovação do conjunto local para Git nem como autorização para aplicar migrações antes adiadas.
 
 ## Graduações configuráveis, retirada de avulsas e autorização de envio — 26/10/2026
 
@@ -331,3 +454,59 @@ Cinco testes novos e suíte final de 227 testes passaram. Primeira execução ap
 ## Aprovação e encerramento — 26/10/2026
 
 Usuário respondeu "pode" à pergunta sobre commitar/enviar vários professores e pediu lista de todas as entregas do dia para encaminhar ao Matheus. Documentação ajustada para registrar aprovação; código e verificações permanecem os mesmos da entrega validada (227 testes TypeScript, build/typecheck, Prisma e UI). Sem repetir resultados anteriores como uma nova execução. Resumo em RESUMO_2026-10-26.md inclui funcionalidades consolidadas e distingue integrações futuras e migração externa pendente. Commit/push normal autorizado na branch de trabalho; confirmar resultado efetivo pelo Git. Continuação prevista pelo usuário à noite, sem automação criada.
+
+## Graduação configurável e trajetória — 27/10/2026
+
+Usuário pediu retirar faixa/grau do formulário comum e graduar pela ficha, usando regras próprias por academia/faixa. Confirmou via pergunta contar somente presenças confirmadas pelo professor. Acrescentou acompanhamento no perfil do aluno e sinalização ao professor quando atingir as metas. Codex implementou dados/regra/histórico, cálculo compartilhado pelos repositórios, rotas com acesso restrito, ficha, configuração e trajetória/pedidos. Cadastro comum preserva graduação; sem promoção automática ou regra oficial imposta por cor. Ajuste manual exige justificativa.
+
+Verificações: 16 testes novos e suíte completa final de 243 aprovados; build/typecheck, Prisma generate/validate. A primeira suíte apresentou expectations da versão 11 e testes que trocavam faixa no PUT antigo: adaptados ao novo contrato, mantendo os asserts de preservação. Corrigida fixture de conta de aluno sem vínculo, respeitando a constraint existente. Revisão adicional trocou marco de IDs de presença por IDs de aula, impedindo recontagem depois de recriar uma marcação. Nova execução completa passou.
+
+SQLite real migrado para 12 com backup, hashes das 23 tabelas anteriores iguais e vínculos válidos. API normal reiniciada; .env verificado apenas quanto à existência de banco externo (false), sem expor segredos. Nenhuma alteração em contas/graduações reais para demonstrar. UI com dados fictícios confirmou cadastro sem seletores, regra livre 6/24 meses, 29→30 presenças, aviso do aluno, pedido na gestão, concessão e histórico/novas metas. Harness local precisou adaptar exclusivamente suas origens QA, sem alterar a proteção de origem da aplicação. Supabase não acessado/migrado; ordem de aguardar permanece. Documentação em EVOLUCAO_GRADUACAO.md e RETOMADA.md. Aguardando validação antes de commit/push deste conjunto.
+
+## Catálogo fixo, kids e cores — 27/10/2026
+
+Usuário pediu retirar escolha de cor, ordem e ativação, incluir kids e manter aulas por grau editáveis; referência visual fornecida pelo próprio usuário, com tons um pouco mais escuros. Implementação pela IA: paleta compartilhada, listras, catálogo 20, interface Configurar regras e bloqueio das antigas escritas de faixa. Migração 13 nova, preservando as já aplicadas e os vínculos. Registros legados não são excluídos. Sem regras de idade inferidas nem decisão de promoção automática.
+
+Nova suíte: 246 testes TypeScript aprovados e build/typecheck aprovados. Primeira tentativa de testes HTTP locais encontrou EACCES do ambiente restrito; repetição autorizada com acesso ao loopback passou. Testes históricos de migração 11/12 foram limitados explicitamente até v12 para continuarem conferindo sua preservação integral; nova migração 13 possui teste separado de mudanças visuais e preservação dos outros dados. SQLite local v13: backup, hashes das 25 tabelas fora do catálogo iguais, nove identidades anteriores preservadas, FKs válidas. UI sintética nova em 3343/3344, sem interromper a anterior, confirmou cores e regra kids 17 salva/reaberta; somente fixture. API normal 3333 reiniciada em SQLite. Python e PostgreSQL externo não retestados. Supabase continua aguardando autorização. Sem commit/push desta entrega: aguarda validação humana.
+
+## Simplificação dos critérios de evolução — 27/10/2026
+
+Usuário indicou na imagem que Meses por grau e Permanência mínima não eram necessários. IA retirou ambos, as instruções de tempo e os bloqueios correspondentes, para não deixar regras ocultas. Compatibilidade de dados e snapshots mantida sem migração ou atualização global; API só aceita valores temporais neutros. Duas provas de tempo foram substituídas por provas do contrato sem tempo e da preservação de regras/histórico antigos sem bloqueio. Suíte completa nova: 246 testes passaram; build/typecheck passaram. UI fictícia confirmou tela sem os dois campos e salvamento da regra apenas com aulas/graus/destino. Sem Supabase, migração, commit ou push neste incremento.
+
+## Campo de total e lista de graus removidos — 27/10/2026
+
+Usuário rejeitou total de graus editável e lista de editar/excluir graus; esclareceu que Adicionar próximo grau deve ficar no perfil administrativo do aluno e, na configuração, somente a quantidade de aulas pode mudar. IA implementou formulário de campo único/Salvar, retirou a lista e o destino da UI, renomeou a ação de concessão e fixou quatro graus nas faixas branca/kids/coloridas até marrom. Preta/corais/legadas preservam dados anteriores, sem inventar norma. Salvar somente aulas preserva destinos anteriores; não altera alunos/histórico. Sem nova migração.
+
+248 testes TypeScript e build/typecheck aprovados. Após acrescentar assert explícito de recusa de quinto grau, 16 testes focados de evolução passaram. Novas provas cobrem contrato só de aulas, destino anterior preservado (inclusive inativo), quatro graus automáticos e dados avançados não convertidos. UI sintética confirmou salvar aulas, adicionar primeiro grau na ficha, histórico e meta seguinte bloqueada. Um clique de confirmação retornou erro de observação do navegador depois de executar; releitura mostrou sucesso e não foi repetido, evitando dupla ação. Capturas graduacao-configurar-aulas.png e graduacao-proximo-grau-perfil.png. Demo atual persistida em arquivo ignorado, para preservar mudanças fictícias em futuros reinícios. Supabase aguarda autorização. Sem commit/push até validação humana.
+
+## Avisos coletivos futuros e retirada de justificativa — 27/10/2026
+
+Usuário pediu WhatsApp para vários alunos numa ação futura; registrado em PLANO_FUNCIONAL como planejado, com seleção/preview/lote e resultados individuais, sem conectar serviço ou enviar mensagem. Confirmação explícita Estou ciente foi distinguida de entrega/leitura/compreensão; não foi prometida prova de leitura automática.
+
+Durante o registro, usuário pediu retirar justificativa e depois exibir somente datas dos graus. IA retirou input/obrigatoriedade e textos, manteve registro automático de autoria/data/antes/depois e preservou motivos antigos. Lista agora contém apenas concessões de grau, sem ajustes/início/pedidos. 249 testes passaram após a mudança do contrato e build/typecheck passaram. Após o último ajuste visual de filtragem, novo build/typecheck e UI fictícia confirmaram grau/data, ausência dos blocos de ajustes e salvamento sem justificativa. Reinícios de QA persistida preservaram aluno, grau e histórico, sem ressemear; API principal reiniciada em SQLite. Sem migração, Supabase, commit ou push.
+
+## Categorias confirmadas e menu Comunicados — 27/10/2026
+
+Usuário enviou referências com Infantil/Juvenil/Adulto e confirmou que metas devem ser independentes e editáveis. Depois pediu somente opções enviadas, até preta. IA criou 20 identidades por categoria/cor via migração 14, mantendo as antigas sem classificar alunos automaticamente. UI agrupada, seletor/filtro atualizados; registros anteriores usados/configurados recolhidos, sem vermelhas na configuração atual. Usuário também pediu tirar avisos da ficha; menu Comunicados criado, com seleção do aluno/responsável e resposta, reutilizando APIs existentes.
+
+252 testes TypeScript passaram, build/typecheck passou. Três provas novas de categorias/migração/metas independentes. Expectativas de versão atualizadas; prova histórica de v13 limitada explicitamente até v13, sem alterar seus asserts de preservação. SQLite principal e QA persistida receberam apenas [14], com backup, hashes das outras 25 tabelas iguais e todas as vinte faixas anteriores idênticas/FKs válidas. Sem Supabase. UI fictícia salvou Infantil Branca 20 e Adulto Branca 30, reabriu infantil e confirmou 20; nomes completos no seletor, lista até preta. Menu Comunicados: envio interno fictício, recebimento no aluno, Estou ciente e retorno Ciente ao administrador; ficha sem o formulário. Um seletor Playwright não encontrou label; AX setValue funcionou. Observação de fechamento de modal falhou após ação, estado foi relido sem repetir gravação. Capturas faixas-categorias-*.png e comunicados-*.png. Sem commit/push até validação humana.
+
+## Planos opcionais, nomenclatura e limpeza — 27/10/2026
+
+Usuário pediu planos só para academia/alunos que utilizam limite. À pergunta sobre desativação respondeu “Não, apenas ocultar os controles; manter os limites”. Pediu Aulas utilizadas só para limitados, Aulas realizadas para ilimitados, retirada de mensagens/cartões ilimitados e da seção Cadastros anteriores. IA implementou preferência administrativa persistida, ficha/coluna/condições opcionais, consumo limitado separado de presenças reais e retirada da seção sem excluir dados. Débitos e regras de bloqueio intactos. Não foram inferidas suspensões de limite.
+
+256 testes TypeScript completos passaram, build/typecheck passaram e Prisma foi gerado/validado. Migração 15 somente aditiva aplicada local/QA com backup, hashes das 26 tabelas anteriores iguais e FKs válidas. Nenhuma aplicação externa. Depois, uma conta limitada fictícia adicional foi semeada na QA para comparação, com ID reservado, sem sobrescrever o aluno anterior. UI confirmou preferência padrão oculta; ativação/salvamento; controles na ficha limitada e só entrada opcional na ilimitada; desligamento persistente e formulários/coluna ocultos; limites continuam no portal limitado (1/3 e 11/12). Portal ilimitado sem cartões, Meus treinos com 30 realizadas e Débitos acessível. Lista de faixas sem bloco anterior. Capturas configuracoes-planos-opcionais, portal-sem-blocos-ilimitados, portal-aulas-realizadas, portal-plano-limitado. Pesquisa BJJ Control só pública, registrada em REFERENCIAS_UX.md. Sem commit/push, esperando validação humana.
+
+## 27/10/2026 — equipe, fotos e presenças
+
+Pedidos: envio de uma vez para toda equipe; referências de ranking geral/mensal com fotos e pódio; fotos nos perfis; professor e aluno por dia/aula; nome do treino por horário; só kimono/sem kimono. Implementados em continuidade ao conjunto local ainda não aprovado para Git. Usuário reforçou salvar retomada e manter Supabase parado.
+
+Validação real: npm test com264 testes aprovados, incluindo atomicidade/idempotência/permissões, ranking e fotos; build/typecheck aprovados; Prisma gerado/validado. Migrações16/17 aplicadas somente no SQLite principal e QA, backup e hashes das27 tabelas anteriores idênticos, FKs válidas. Prova visual em contas fictícias: envio coletivo para2alunos, um Ciente independente; imagem escolhida/recortada/salva; ranking geral/mensal; chamada por dia; pódio com5fictícios em banco separado e390px. Prévia inicialmente falhou com blob URL sob CSP; corrigida com FileReader/dataURL e retestada visualmente. Build/typecheck repetidos após correção. Não houve teste externo PostgreSQL ou Python nesta parte.
+
+Entrega concreta aguarda validação humana antes de commit/push. Sem merge, release ou implantação. Documentação e capturas acompanham o código.
+
+## 27/10/2026 — renovação mensal e fechamento anual do ranking
+
+Usuário esclareceu que deseja começar uma nova contagem todo mês e contabilizar os treinos de todo o ano ao encerramento. Alterada a interface compartilhada para Mensal padrão e Anual (substitui Geral). API filtra mês ou ano civil, usa mês corrente quando omitido e rejeita combinações conflitantes. História preservada; sem cron, sem migração ou alteração de registros.
+
+Executados novamente npm test:267pass/0fail e npm run build (typecheck/Vite) aprovado. Três provas novas: virada mês/ano e conservação do ano encerrado; contrato/default/validação de filtros sem escrita; atualização automática preservando consultas históricas. UI: Mensal default, Anual2026 e2025, retorno ao ano corrente, mesmos controles no portal do aluno. Servidores locais reiniciados após conferir os processos, sem ressemear QA. Supabase permanece parado. Entrega para validação, sem commit/push.

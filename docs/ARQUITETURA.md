@@ -1,5 +1,50 @@
 # Arquitetura — Academia de Jiu-Jitsu
 
+## Recuperação de senha — 05/11/2026
+
+`RecuperacaoSenha` guarda um pedido por usuário, indexado pelo hash do token. O pedido fica vinculado ao e-mail e à credencial vigentes. A API verifica acesso ativo no pedido e no resgate. O resgate troca a senha, consome o token, encerra as sessões e revoga o convite anterior na mesma transação. O controle de reenvio por conta é compartilhado pelo banco. O limite geral de tentativas de login continua em memória por processo. O adaptador de e-mail usa a API do Resend e a origem HTTPS configurada no servidor. [Fluxo e configuração](ACESSO_ALUNO.md#recuperação-de-senha-e-senhas-comuns--05112026).
+
+Na gestão de comunicados, a API tem rotas administrativas de exclusão para um destinatário ou para todo o envio coletivo. A camada de persistência apaga os vínculos e as mensagens juntas em uma transação, usando o esquema existente. [Contratos de comunicados](COMUNICADOS.md).
+
+## Registro de graus padrão — 05/11/2026
+
+O seletor usa os limites compartilhados com a API. Quando o grau padrão ainda não tem registro, o ajuste administrativo envia `grauNumero` com `grauId` nulo. O servidor valida o número, reutiliza a opção existente se houver e grava o grau novo, o vínculo com o aluno e o evento na transação de evolução. Os ajustes que já enviavam `grauId` continuam aceitos. A tabela existente `GrauFaixa` comporta o fluxo sem nova migração.
+
+## Acesso de menores simplificado — 05/11/2026
+
+Prévia para validação: [Tatame brasileiro](https://tatame-homologacao-bomdkv0wn-cleiton-pirola.vercel.app), deployment `dpl_F43wMCTdb1PS9pp6NTq8nfgWi6vF`, READY, staging, gru1. SSO global mantido; sem links de compartilhamento. Os testes visuais são locais, não um login automatizado nessa publicação. O usuário valida esta entrega antes do commit ou da troca definitiva do banco.
+
+Menores: checkbox Possui celular visível. Desmarcado mostra e exige responsável para aulas/check-ins; marcado oculta os controles familiares e permite acesso próprio, sem exigir responsável. Adultos não exibem o bloco. Vínculos anteriores viram contato sem acesso ao aluno, preservando histórico e outros dependentes. Sem migração. 287 testes, build/typecheck e QA visual com dados fictícios em memória aprovados. Sem commit/push; prévia protegida READY, sem troca definitiva do banco. PUT familia passou a aceitar responsável opcional quando possuiCelular=true; false continua exigindo os quatro dados familiares. Autorização no servidor exige menor ativo, sem celular, acessoPrincipal=responsavel e vínculo operacional. O planejador transacional comum mantém SQLite/PostgreSQL coerentes; nenhuma migração antiga foi reescrita. [Regras e evidências](RESPONSAVEIS.md).
+
+## Conexão e API brasileiras verificadas — 04/11/2026
+
+Conexão privada brasileira validada com TLS verify-full. Leitura Prisma das 33 tabelas de domínio e 24 verificações HTTP em cada pooler (5432 e 6543), total 48 aprovações, com login professor/aluno e permissões. Dados fictícios e sessões de teste desfeitos por rollback; 34 tabelas/82 registros reconferidos sem divergências. Aplicação publicada e banco original preservados. Navegador, Python e prévia Vercel brasileira não testados nesta rodada. Sem deploy, commit ou push. [Evidências e limites](REGIOES.md).
+
+## Cópia brasileira conferida — 04/11/2026
+
+Cópia autorizada e concluída no Supabase tatame-homologacao-br (sa-east-1). Comparadas 34 tabelas e 82 registros por quantidade e hash de conteúdo tipado, incluindo os 19 registros do histórico Prisma; destino e releitura da origem sem divergências. Corrigida a precisão de microssegundos nas datas técnicas do histórico durante a conferência. RLS mantida nas 34 tabelas, zero políticas públicas e zero restrições não validadas. A aplicação continua em iad1 usando o banco original us-east-1, preservado. Conexão brasileira e API local posteriormente verificadas; troca publicada ainda pendente. Sem deploy, commit ou push. [Evidências e próximos passos](REGIOES.md).
+
+
+## Storage privado — implementação local,31/10/2026
+
+Adicionado módulo arquivos com SDK oficial fixado2.118.0, injetado pela composição da API. Fotos novas podem ir para bucket privado e manter só referência textual no banco; fotos antigas continuam legíveis. Vídeos mantêm YouTube/Vimeo e ganham envio direto ao Storage por autorização de upload, comprovante HMAC vinculado ao usuário/tamanho e leitura por URL600s após autorização do portal. Buckets não são públicos; chave sb_secret_ somente na API. Não troca autenticação Tatame por Supabase Auth nem altera tabelas/migrações. Código local validado; buckets/configuração/publicação/ensaio remoto pendentes. [Fluxo e limites](ARMAZENAMENTO.md).
+
+## Homologação publicada e protegida — 31/10/2026
+
+Três serviços em Vercel Preview: web Vite, Express Node24 e FastAPI/Pandas Python3.14. API usa Supabase pelo Transaction pooler6543 com certificado público incluído e TLS verify-full; migrações usam Session5432. Autodetecção de runtime Services, sem valores versionados de Functions. Migração19 protege as23 tabelas antigas e fixa search_path da função de validação;34 tabelas incluindo histórico com RLS, sem políticas públicas, acesso pelo backend privado. Contrato de indicadores aceita nomes de faixas configurados/categorizados, limitados a texto1–80, preservando demais validações. [Verificações externas](TESTES_EXTERNOS.md). Nenhum reset/importação do SQLite nem pagamento automático.
+
+## Estrutura aplicada na homologação — 31/10/2026
+
+Migrações11–18 aplicadas por Prisma, após exportação privada e ensaio revertido: Supabase com33 tabelas de domínio e18 migrações concluídas. Contratos dos11 modelos novos lidos pelo repositório Prisma; dois alunos/vínculos anteriores preservados. Migração18 habilita RLS nas11 tabelas novas, sem políticas públicas, mantendo leitura pela conexão privada do backend. Tabelas anteriores continuam sem RLS; correção separada preparada, não aplicada. [Resultado](MIGRACOES_11_18.md), [proposta de segurança](SEGURANCA_HOMOLOGACAO.md). Hospedagem ainda sem fluxo completo validado. SQLite permanece inalterado nesta operação.
+
+## Biblioteca opcional de técnicas — 31/10/2026
+
+Três tabelas aditivas na migração18: ConfiguracaoTecnicas, VideoTecnica e AcessoTecnicas. Configuração por instalação; vídeo com data de referência, modalidade, publicação e URL canônica; autorização por aluno/validade/autor, renovada por upsert. Gestão `/api/tecnicas` fica após requireAdmin. Leitura `/api/portal/tecnicas` e rota `/:id/assistir` ficam após autorização do aluno; o portal de responsável reutiliza essas rotas após validar dependente. Catálogo sem URL, rascunhos/futuros excluídos, autorização revisada no servidor antes de entregar link; respostas no-store. Links externos podem ser compartilhados após recebidos: não equivalem a hospedagem privada. Preço mensal é proposta para validação; nenhum lançamento financeiro/webhook/repasse ou isolamento de várias academias adicionado. PostgreSQL preparado com FKs/índices/RLS, não aplicado externamente. [TECNICAS.md](TECNICAS.md).
+
+## Preparação para Vercel Services — 31/10/2026
+
+`vercel.json` separa web Vite, API Express/Node 24 e analytics FastAPI/Python 3.14. Rewrites públicos encaminham `/api` à API e as demais rotas à web; analytics recebe somente vínculo interno `ANALYTICS_URL`. Entrada `apps/api/src/vercel.ts` exporta Express sem listen, exige PostgreSQL/TLS e origem HTTPS, desliga seed e administrador local. A opção `serveFrontend: false` evita que essa API entregue os arquivos estáticos do serviço web; a execução local mantém o padrão anterior. Transaction pooler é preparado para a hospedagem, Session pooler é mantido para migrações. Configuração de três serviços em beta, ainda sem validação de execução remota. [Guia e verificações](VERCEL_HOMOLOGACAO.md). Supabase permanece com dez migrações concluídas; 11–17 não executadas nesta etapa.
+
 ## Catálogo de graduações e agenda por turmas — 26/10/2026
 
 FaixaGraduacao e GrauFaixa substituem a lista fixa como fonte de seleção. Aluno recebe faixaId/grauId, mantendo o texto faixa por compatibilidade; renomear atualiza os alunos em transação. Chave normalizada impede nomes equivalentes e grau é único dentro de cada faixa. Inativação preserva atribuições, exclusão protege vínculos. SQLite usa FKs/triggers; PostgreSQL acrescenta FK composta/check e trigger para coerência do nome. Migração 10 conserva campos antigos e não presume grau dos alunos. [GRADUACOES.md](GRADUACOES.md) detalha modelos, contratos, validação e limites.
@@ -280,3 +325,47 @@ TelefoneInput centraliza apresentação, formato completo e cursor; telefone.ts 
 Aula tem relação 1:N com AulaProfessor(id,aulaId,nome,ordem), ordem 0–7 e unicidade por aula/ordem e aula/nome. Migração 11 copia o texto anterior como uma linha, sem dividir nomes históricos. Aula.professor continua como resumo de leitura, unido por separador; AulaView acrescenta professores:string[]. Publicar herda o professor padrão da turma. saveProfessoresAula grava lista/resumo em transação SQLite/Prisma, com trava da aula no PostgreSQL. PATCH administrativo /aulas/:id/professores usa schema estrito e valida de 1 a 8 nomes únicos normalizados, mantendo a ordem. Fallback de leitura de fixture/importação sem linhas usa o texto antigo como um nome.
 
 Nenhuma alteração em autenticação de professores, turma, presença, check-in ou cobrança. SQLite local v11 preservado/validado; PostgreSQL com migração preparada, sem execução externa deste incremento. Guia: PROFESSORES_AULA.md.
+
+## Evolução da graduação — 27/10/2026
+
+RegraGraduacao (por faixa), EstadoGraduacao (por aluno) e EventoGraduacao (histórico) foram adicionados na migração 12, sem preencher estados/datas/regras antigos. Regra possui metas cumulativas de aulas/meses por grau, total de graus, permanência mínima e destino. Estado guarda data explícita, crédito reconhecido e marco de IDs de aulas já utilizadas, não de marcações substituíveis. Evento guarda snapshot, autor, motivo, contagem e versão. Índice parcial impede duas solicitações na mesma versão.
+
+Módulo modules/graduacoes/evolucao.ts centraliza cálculo determinístico, schemas e planejamento para os dois bancos. Apenas PresencaAula validada e elegível entra; não soma check-ins/Presenca antiga. Transação salva graduação/estado/evento e regras/graus novos. PostgreSQL usa trava do catálogo e do aluno; SQLite BEGIN IMMEDIATE. Versão de estado e hash da regra conferem concorrência e configuração exibida. Histórico não é recalculado como se uma promoção tivesse usado a regra atual.
+
+API administrativa de evolução separada do cadastro comum; repositório preserva graduação ao editar dados comuns sob trava. Portal recebe apenas trajetória do aluno autenticado e registra pedido interno sem auto promoção. Administração lista aptos/pedidos. Ajuste é explícito, justificado e auditado; sem data inventada a partir da matrícula. Guia: EVOLUCAO_GRADUACAO.md. SQLite v12 preservado; Supabase v10 mantido sem alteração por ordem do usuário.
+
+## Catálogo padrão e paleta fixa — 27/10/2026
+
+Faixas de apresentação são definidas em packages/shared/src/faixas.ts: vinte nomes, ordem, cor e padrões kids/corais. A migração 13 atualiza apenas metadados padrão e inclui ausentes; mantém IDs, nomes, chaves, datas originais, graus, alunos, regras e eventos. Legadas fora do padrão permanecem ao final, sem mesclagem. Cor/ordem/situacao continuam no modelo por compatibilidade, sem controles administrativos públicos. POST de faixa e PUT/DELETE de faixa retornam 409; autenticação e autorização continuam aplicadas. GET e default do novo aluno usam ordem canônica, sem deixar ordem antiga de faixa personalizada substituir Branca. Graus e evolução seguem contratos próprios. A ordem visual não impõe próxima faixa nem idade. SQLite local v13 preservado com backup; migrações PostgreSQL 11/12/13 aguardam autorização no Supabase v10.
+
+## Evolução por aulas, sem critérios temporais — 27/10/2026
+
+Retirados meses por grau e permanência mínima da configuração e cálculo a pedido do usuário. RegraGraduacaoInput expõe aulas/total/destino; compatibilidade aceita campos antigos somente em null/0 ou omitidos. Regra armazenada mantém colunas para dados e snapshots anteriores; salvamento normaliza os valores neutros, sem nova migração. Progresso não exige espera mesmo que regra antiga ainda guarde meses. Meta.dataMinima permanece vazia por compatibilidade e não aparece na trajetória. Data de início continua delimitando as presenças elegíveis. Assinatura da regra usa versão aulas-v1 e os critérios efetivos, impedindo confirmação com tela anterior à mudança de semântica. Confirmação humana, autorização, marco de aulas e histórico preservados.
+
+## Configuração só de aulas e graus na ficha — 27/10/2026
+
+GraduacoesPage/RegraGraduacaoEditor exibem somente aulasPorGrau e Salvar; a lista de CRUD de graus e seleção de total/destino foram retiradas. GraduacaoAluno administrativo oferece Adicionar próximo grau com confirmação, validação de meta/versão/assinatura e auditoria já existentes. limiteGrausPadrao compartilhado define quatro para Branca, kids e coloridas até Marrom; não força quatro em Preta/corais/legadas. Progresso usa limite efetivo, mesmo para configuração antiga diferente. API parcial preserva proximaFaixaId anterior quando omitido; saveRegra cria graus faltantes 0..4 sem reativar inativos/alterar alunos. Não rebaixa graduações antigas. Validadores bloqueiam novos graus/atribuições >4 nessas faixas, preservando atribuições legadas iguais. Rotas técnicas antigas de graus permanecem por compatibilidade, sem controles visíveis no fluxo normal. Sem nova migração ou acesso externo.
+
+## Ajuste sem motivo digitado e histórico visual reduzido — 27/10/2026
+
+Schema de ajuste permite omitir motivo e preenche descrição automática no servidor. Campo permanece no EventoGraduacao para compatibilidade/histórico; inputs antigos explicitamente informados seguem validação. UI removeu textarea, valor enviado e complemento do botão. A lista Graus recebidos filtra exclusivamente eventos tipo grau e mostra faixa/grau e criadoEm em São Paulo, sem converter ajustes ou pedidos em concessões. API mantém eventos originais; não houve migração nem perda de auditoria. A retirada do campo não muda autorização administrativa, versão, limites ou transações.
+
+## Categorias de faixa e central de comunicados — 27/10/2026
+
+FAIXAS_CATEGORIA define vinte nomes completos, agrupados em Infantil 13, Juvenil 2 e Adulto 5, até Preta. FaixaGraduacao existente representa cada categoria/cor por ID distinto; RegraGraduacao já é 1:1 com essa identidade, sem compartilhar metas entre cores iguais de categorias distintas. Migração 14 aditiva somente INSERT; registros antigos e seus vínculos permanecem, sem inferir idade, renomear aluno ou apagar snapshots. Novo aluno usa Branca legada neutra até classificação explícita. FAIXAS_PADRAO permanece como paleta/compatibilidade histórica, incluindo vermelhas antigas, sem exibi-las no catálogo atual. Ordem, cores, listras e limite de graus reconhecem os novos nomes; Preta continua fora da imposição de quatro. Seletor/filtro agrupam categorias e preservam opção legada atual/em uso.
+
+ComunicadosPage oferece seleção explícita e reutiliza o componente/API existentes. ControleParental deixa de embutir Comunicados. Navegação administrativa ganhou Comunicados sem seletor financeiro de mês. Formulário é recriado por ID de aluno, sem herdar rascunho de outro destinatário. Contratos/tabela/autorização de avisos intactos; portal mantém Avisos e autorizações. Não implementa lote/WhatsApp/e-mail.
+
+## Preferência de exibição e portal direto — 27/10/2026
+
+PreferenciasAcademia(id,exibirControlePlanos,atualizadoEm,atualizadoPorId) criada na migração 15, sem mudanças nas tabelas existentes. GET/PUT /configuracoes/academia sob requireAdmin; schema estrito, booleano, upsert SQLite/Prisma e autoria FKUsuario. Provider administrativo separado carrega preferência e exibe falhas. Ficha mostra controles somente com preferência ativa, e expande automaticamente apenas quem tem limite; demais têm entrada opcional. Coluna de saldo e formulário de preço adicional acompanham preferência. NÃO é flag de aplicação de regras: check-in/saldo/financeiro ignoram essa preferência e preservam todos os limites, como o usuário confirmou.
+
+ResumoPlano retorna nulo sem limite semanal; ResumoSaldoMensal retorna nulo sem limite mensal. Portal ilimitado conta Aulas realizadas em Meus treinos, por IDs de aulas com presença confirmada, até hoje, não canceladas. Reservas/ausências/futuro excluídos. Limitados continuam vendo consumo de sua cota mesmo com controles administrativos ocultos. Cadastros anteriores removido da página de graduação, mantendo registros/associações existentes. Guia CONFIGURACOES_ACADEMIA.md.
+
+## Incremento local de equipe — 27/10/2026
+
+Comunicados coletivos reutilizam ComunicadoAluno, acrescentando LoteComunicado e EntregaComunicado (migração16) em transação, UUID idempotente e resumo de destinatários/pendências. Respostas continuam individuais e restritas por sessão. FotoPerfil (migração17) guarda JPEG compacto ligado exclusivamente a Aluno ou Usuario, com rotas próprias/dependente e consulta de imagem autenticada. Ranking é projeção de PresencaAula + Aula, apenas confirmadas elegíveis, sem materializar contador. Não expõe dados financeiros/contatos. UI reutiliza DiasAulas nos dois perfis e ChamadaAula na gestão. Guias COMUNICADOS.md e RANKING_FOTOS_PRESENCAS.md detalham contratos, decisões e limites. SQLite v17 validado localmente; scripts PostgreSQL preparados e não aplicados no Supabase (v10, usuário pediu aguardar).
+
+## Ranking mensal e anual — ajuste de 27/10/2026
+
+GET /api/equipe/ranking aceita mes=AAAA-MM ou ano=AAAA, mutuamente exclusivos; sem filtro assume mês atual em São Paulo. UI Mensal padrão e Anual substituem Geral. A projeção filtra dataAula pelo período; não zera tabelas nem precisa cron/migração. Página acompanha a mudança de mês/ano (focus, visibilitychange e verificação30s), conservando consultas históricas. Total anual soma presenças confirmadas do ano civil, não posições mensais. Mesmas exclusões, permissões e regra de empate.267testes/build aprovados localmente; Supabase sem acesso.

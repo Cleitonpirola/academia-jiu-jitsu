@@ -1,5 +1,15 @@
 # Responsáveis, menores e transferência de acesso
 
+## Regra atual — 05/11/2026
+
+O professor configura **Possui celular** somente para alunos menores de 18 anos. Desmarcado: campos do responsável aparecem e são obrigatórios; ele administra aulas e check-ins. Marcado: os campos e o botão de convite do responsável somem; o aluno usa sua própria conta, sem exigir responsável. O bloco inteiro fica oculto para adultos. Não basta ocultar os campos: o servidor também recusa acesso parental ao aluno que possui celular/acesso próprio, inclusive com um vínculo operacional antigo.
+
+Para quem passa do acesso pelo responsável ao próprio, informar e-mail/telefone do aluno e usar **Ativar acesso próprio** gera convite de uso único. Dados e histórico são preservados. Vínculos anteriores viram contato sem acesso; irmãos ainda administrados pelo responsável continuam disponíveis. Salvar uma conta própria já ativa não troca senha nem encerra sua sessão. Ao voltar para sem celular, responsável é obrigatório e sessões/convites próprios anteriores são invalidados.
+
+Sem nova tabela, coluna ou migração. A transferência por maioridade continua disponível na API administrativa; seu formulário foi retirado das fichas adultas conforme solicitação. O ajuste do mês no teste de fotos/ranking serve apenas para tornar o ensaio independente da virada do mês; não muda a regra do ranking.
+
+Verificações novas: 287 testes aprovados, incluindo 17 de família, build/typecheck e conferência visual com cadastros fictícios em SQLite na memória. Conferidos adulto, limite de 18 anos, marcar/ocultar, ativar acesso próprio, reabrir a ficha com a escolha salva e desmarcar/salvar novamente. Nenhuma conta real usada no ensaio visual. As verificações externas de Supabase anteriores não são apresentadas como um novo teste desta alteração. [Prévia protegida READY](https://tatame-homologacao-bomdkv0wn-cleiton-pirola.vercel.app); 159 fontes conferidas por hash, sem commit/push. Login e navegação online aguardam validação pessoal no Chrome.
+
 Entrega de 25/10/2026, implementada e testada localmente e no Supabase de homologação. **Aguardando validação do usuário; sem commit/push desta entrega e sem publicação no Render.**
 
 ## Para entender do zero
@@ -12,9 +22,9 @@ O responsável tem uma chave própria que abre somente as fichas dos menores vin
 
 | Situação | Acesso do aluno | Acesso do responsável | Quem faz check-in |
 | --- | --- | --- | --- |
-| Menor sem celular | Principal com responsável | Consulta dados, histórico, mensalidades, débitos e comunicados; responde autorizações; pode confirmar aula adicional com débito | Responsável |
-| Menor com celular | Conta própria | Continua acompanhando dados, finanças e autorizações destinadas a ele | Aluno |
-| Passou a ter celular | Administrador prepara convite de acesso próprio | Continua vinculado até a maioridade | Aluno após ativar a conta |
+| Menor sem celular | Principal com responsável | Consulta dados, histórico, mensalidades e débitos, confirma leitura de comunicados e pode confirmar aula adicional com débito | Responsável |
+| Menor com celular | Conta própria, sem exigir responsável | Sem acesso parental à conta; vínculos anteriores somente como contato | Aluno |
+| Passou a ter celular | Administrador prepara convite de acesso próprio | Vínculo anterior passa a contato sem acesso | Aluno após ativar a conta |
 | Completou 18 anos | Administrador finaliza transferência ao aluno | Acesso aos dados é encerrado; vínculo pode ficar como contato ou ser arquivado | Aluno |
 
 O responsável pode acompanhar vários menores com uma única conta. Nesta primeira implementação, cada aluno tem um responsável operacional ativo. Vínculos substituídos ficam arquivados para preservar o histórico; não são apagados.
@@ -24,14 +34,14 @@ Um e-mail pertence a um único perfil de acesso. Se ele já for usado por aluno 
 ## Como conferir nas telas
 
 1. Entre como administrador e abra **Alunos → Cadastrar aluno**.
-2. Informe o nascimento. Sendo menor, aparece **Possui celular próprio**, inicialmente marcado.
+2. Informe o nascimento. Sendo menor, aparece **Possui celular**, inicialmente marcado.
 3. Sem celular, desmarque e preencha nome, e-mail, telefone e parentesco do responsável. E-mail e telefone próprios do aluno tornam-se opcionais. O cadastro e o vínculo são salvos juntos.
-4. Com celular, mantenha marcado. A opção **Vincular responsável também** permite cadastrá-lo no mesmo formulário. Em cadastros existentes, faça a vinculação pela ficha.
+4. Com celular, mantenha marcado. Os campos do responsável ficam ocultos e não são exigidos.
 5. Abra **Alunos → Ver ficha → Responsável e acesso**. Salve o vínculo e use **Gerar acesso do responsável**.
 6. Entregue o convite privado somente à pessoa indicada. Ela abre o link, escolhe a própria frase de senha e entra normalmente pelo e-mail. O perfil direciona automaticamente à área do responsável.
-7. Na área do responsável, escolha o aluno no seletor superior. Consulte **Aulas e check-in**, **Meus treinos**, **Mensalidades**, **Débitos**, **Avisos e autorizações** e **Meu perfil**.
-8. Para preparar o acesso do menor que passou a ter celular, na ficha informe o e-mail e telefone próprios e use **Ativar acesso próprio**. Entregue o convite ao aluno. O responsável continua vinculado, mas não faz mais check-in por ele.
-9. Aos 18, use **Transferir responsabilidade ao aluno**. Escolha se deseja manter o responsável anterior como contato. A transferência encerra o acesso anterior do aluno e gera um novo convite; o mesmo `Aluno.id` permanece.
+7. Na área do responsável, escolha o aluno no seletor superior. Consulte **Aulas e check-in**, **Meus treinos**, **Mensalidades**, **Débitos**, **Comunicados** e **Meu perfil**.
+8. Para preparar o acesso do menor que passou a ter celular, marque **Possui celular**, informe o e-mail e telefone próprios e use **Ativar acesso próprio**. Entregue o convite ao aluno. O responsável anterior permanece somente como contato, sem acesso à conta.
+9. Aos 18, o bloco familiar fica oculto. A API administrativa de transferência por maioridade foi preservada, mas não há mais esse formulário na ficha adulta.
 
 O administrador também pode voltar um menor ao acesso pelo responsável: desmarcar celular próprio e salvar o vínculo. Isso invalida sessões, senha e convite antigos do aluno. Uma nova ativação própria exigirá outro convite.
 
@@ -45,11 +55,11 @@ As mesmas regras do aluno continuam valendo: aula publicada para hoje, cadastro 
 
 Mesmo com bloqueio financeiro, o login permite consultar os débitos e comunicados. As pendências de mensalidade continuam apresentadas pelo bloqueio financeiro já existente.
 
-## Avisos e autorizações
+## Comunicados
 
-Na ficha, o administrador cria um **Aviso** ou **Pedido de autorização**, para o **Acesso principal do aluno** ou para o **Responsável vinculado**. O destinatário é identificado no momento do envio. Se ainda não houver conta preparada, a operação pede sua criação primeiro.
+Em **Comunicados**, o administrador pode enviar uma mensagem para o **Acesso principal do aluno** ou para o **Responsável vinculado**. O destinatário é identificado no momento do envio. Se ainda não houver conta preparada, a operação pede sua criação primeiro.
 
-O destinatário recebe a mensagem dentro do Tatame. Aviso permite **Estou ciente**; autorização permite **Autorizar** ou **Não autorizar**. A primeira resposta fica registrada com data e conta destinatária. Repetir a mesma resposta conserva o registro; tentar substituí-la é recusado. A gravação revalida vínculo/idade em uma transação para não aceitar uma autorização depois da perda de acesso.
+O destinatário recebe a mensagem dentro do Tatame e confirma pelo botão **Estou ciente**. A primeira confirmação fica registrada com data e conta destinatária. Repetir a confirmação conserva o registro. A gravação confere novamente o vínculo e a idade.
 
 A conta do aluno não herda mensagens privadas destinadas ao responsável. Esses registros continuam na ficha administrativa e no histórico armazenado. Mensalidades, débitos e treinos continuam ligados ao aluno e ficam disponíveis em seu novo acesso.
 
@@ -69,7 +79,7 @@ Este recurso envia mensagens **dentro da plataforma**. Não envia e-mail, WhatsA
 | `apps/web/src/components/ControleParental.tsx` | Formulários administrativos, convite e histórico das trocas de acesso. |
 | `apps/web/src/pages/ResponsavelPortal.tsx` | Seletor de dependente e montagem do portal. Trocar de filho recria a tela para não exibir respostas antigas do filho anterior. |
 | `apps/web/src/pages/StudentPortal.tsx` | Portal compartilhado com endereço de API delimitado por aluno. A permissão do check-in aparece na tela e também é imposta no backend. |
-| `apps/web/src/components/Comunicados.tsx` | Criação administrativa, caixa de entrada e confirmação de leitura/autorização. |
+| `apps/web/src/components/Comunicados.tsx` | Criação administrativa, caixa de entrada e confirmação de leitura. |
 | `apps/api/src/familia.test.ts` e `familia-migration.test.ts` | Regras, autenticação, isolamento, transações, migração e preservação. |
 
 ### Dados e migração 9
@@ -90,7 +100,7 @@ SQLite: `009_responsaveis.sql` reconstrói somente a tabela `Usuario` para ampli
 | --- | --- | --- |
 | `POST /api/alunos` | Admin | Cadastro; aceita `possuiCelular` e `responsavel` opcional, obrigatório quando menor sem celular. |
 | `GET /api/alunos/:id/familia` | Admin | Situação, responsáveis e eventos de acesso. |
-| `PUT /api/alunos/:id/familia` | Admin | Define responsável e modo de acesso com `{possuiCelular,responsavel:{nome,email,telefone,parentesco}}`. |
+| `PUT /api/alunos/:id/familia` | Admin | Com celular: `{possuiCelular:true}` sem exigir responsável. Sem celular: `{possuiCelular:false,responsavel:{nome,email,telefone,parentesco}}`. |
 | `POST /api/alunos/:id/familia/convidar` | Admin | Convite único de 24 horas para responsável. |
 | `POST /api/alunos/:id/familia/transferir` | Admin | `{email,telefone,maioridade,manterContato}`; prepara acesso próprio e, na maioridade, encerra o vínculo operacional. |
 | `GET/POST /api/alunos/:id/comunicados` | Admin | Consulta e criação de comunicados. |

@@ -65,8 +65,8 @@ it('migração 11 preserva todas as tabelas anteriores e mantém nome histórico
     const id = randomUUID(); db.prepare('INSERT INTO Aula VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)').run(id, 'Histórica', today(), '12:00', '13:00', 'Professor antigo, sem separar', 'extra', null, null, null, 'agendada', null, null, '2026-01-01');
     const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name!='_tatame_migrations' ORDER BY name").all().map(r => String(r.name));
     const snapshot = () => tables.map(table => db.prepare(`SELECT * FROM "${table}" ORDER BY id`).all()); const antes = snapshot();
-    assert.deepEqual(migrateSqlite(db).applied, [11]); assert.deepEqual(snapshot(), antes);
+    assert.deepEqual(migrateSqlite(db,undefined,sqliteMigrations.slice(0,12)).applied, [11,12]); assert.deepEqual(snapshot(), antes);
     assert.deepEqual({...db.prepare('SELECT * FROM AulaProfessor').get()}, { id, aulaId: id, nome: 'Professor antigo, sem separar', ordem: 0 });
-    assert.deepEqual(migrateSqlite(db).applied, []); assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(), []);
+    assert.deepEqual(migrateSqlite(db,undefined,sqliteMigrations.slice(0,12)).applied, []); assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(), []);
   } finally { db.close(); }
 });

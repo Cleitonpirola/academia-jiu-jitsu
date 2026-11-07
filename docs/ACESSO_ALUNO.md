@@ -4,6 +4,24 @@
 
 A configuração inicial e a ativação de conta exigem pelo menos oito caracteres. Use espaços entre palavras. A API recusa espaços nas pontas e combinações da lista interna de senhas comuns. Na tela, o botão de olho mostra ou oculta o texto. A confirmação tem seu próprio botão. Senhas existentes continuam sendo aceitas no login.
 
+## Recuperação de senha e senhas comuns — 05/11/2026
+
+O Tatame recusa senhas da lista interna, como `aluno123` e `12345678`, ao criar uma conta ou escolher uma nova senha. O mínimo é de oito caracteres. Espaços são permitidos entre palavras. Se houver espaço no início ou no fim, o formulário pede a correção. A lista cobre exemplos comuns e variações ligadas ao Tatame.
+
+Com o e-mail configurado, **Esqueci minha senha** solicita um link para o e-mail da conta. A tela responde da mesma forma para endereços cadastrados e desconhecidos. O link vale 15 minutos e funciona uma vez. Ao salvar a nova senha, o Tatame encerra as sessões anteriores daquela conta. Um pedido só pode gerar outro e-mail para a mesma conta após um minuto. [Orientação de recuperação da OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html).
+
+Para habilitar, configure `RESEND_API_KEY`, `RESEND_FROM` e `PASSWORD_RESET_ORIGIN` no servidor. Use em `PASSWORD_RESET_ORIGIN` e `APP_ORIGIN` o mesmo endereço HTTPS que o destinatário consegue abrir. Na Vercel, o valor `preview` em `PASSWORD_RESET_ORIGIN` usa a origem HTTPS validada da própria implantação quando `VERCEL_ENV` é `preview`. No Tatame Test, as três variáveis estão configuradas em Preview com o remetente de teste `onboarding@resend.dev`. Para enviar a alunos e professores, o remetente precisa pertencer a um domínio verificado. [Domínios verificados no Resend](https://resend.com/docs/dashboard/domains/introduction).
+
+A migração Prisma `202611050001_recuperacao_senha` foi aplicada no Supabase de testes de São Paulo. A tabela tem RLS e acesso revogado para os papéis da API. Uma API executada localmente com o PostgreSQL brasileiro confirmou a troca de senha, o uso único do link e o encerramento da sessão anterior com e-mail simulado. Para validar a entrega real, há uma conta de aluno de teste vinculada ao e-mail do titular do Resend. Abra a prévia protegida, mantenha a sessão da Vercel no navegador e use **Esqueci minha senha**. O envio real foi adiado a pedido do usuário.
+
+O usuário confirmou a entrega real pelo Resend e a recusa da troca após o vencimento. O Tatame agora consulta a validade do link ao abrir a página. Quando ele já venceu ou foi usado, a tela oferece a opção de solicitar outro link. O servidor também confere o prazo ao salvar. Os campos de senha e de confirmação têm botões independentes para mostrar ou ocultar o texto. O build, 36 testes locais e a verificação da API com PostgreSQL de São Paulo passaram. O teste com PostgreSQL usou envio simulado e reverteu os dados fictícios. A prévia protegida está pronta para validação visual. [Abrir a nova prévia](https://tatame-test-en6hefwej-cleiton-pirola.vercel.app/).
+
+## Acesso de menores simplificado — 05/11/2026
+
+Prévia para validação: [Tatame brasileiro](https://tatame-homologacao-bomdkv0wn-cleiton-pirola.vercel.app), deployment `dpl_F43wMCTdb1PS9pp6NTq8nfgWi6vF`, READY, staging, gru1. SSO global mantido; sem links de compartilhamento. Os testes visuais são locais, não um login automatizado nessa publicação. O usuário valida esta entrega antes do commit ou da troca definitiva do banco.
+
+Menores: checkbox Possui celular visível. Desmarcado mostra e exige responsável para aulas/check-ins; marcado oculta os controles familiares e permite acesso próprio, sem exigir responsável. Adultos não exibem o bloco. Vínculos anteriores viram contato sem acesso ao aluno, preservando histórico e outros dependentes. Sem migração. 287 testes, build/typecheck e QA visual com dados fictícios em memória aprovados. Sem commit/push; prévia protegida READY, sem troca definitiva do banco. [Regras e evidências](RESPONSAVEIS.md).
+
 ## Edição dos dados básicos pelo aluno — 26/10/2026
 
 **Implementado e testado, aguardando validação do usuário antes de commit/envio.** Em **Meu perfil → Editar meus dados**, o aluno altera nome, telefone e e-mail. Nome/telefone não pedem senha. Troca de e-mail exige a senha atual, porque também muda o endereço do próximo login; a senha permanece a mesma e a sessão atual continua válida. Outras sessões e convites anteriores são invalidados quando o e-mail muda. Não há envio ou confirmação de propriedade da caixa de e-mail nesta entrega: a integração externa continua futura.
@@ -92,7 +110,7 @@ Migração SQLite 005 acrescenta as três tabelas, com backup automático, sem c
 
 ## Como usar no seu computador
 
-1. Abra o endereço local informado no README. No primeiro acesso, preencha seu nome, e-mail e uma senha com pelo menos oito caracteres. Confirme a senha e crie sua conta. Essa etapa deve ser feita pelo próprio usuário; não compartilhe a senha no chat.
+1. Abra o endereço local informado no README. No primeiro acesso, preencha seu nome, e-mail e uma senha com pelo menos 8 caracteres. Confirme a senha e crie sua conta.
 2. Entre em **Alunos → Ver ficha → Área do aluno → Gerar link de acesso**. O aluno precisa estar ativo. O acesso fica vinculado ao cadastro escolhido; não há cadastro público que permita escolher outro aluno ou perfil de administrador.
 3. Copie o link privado e entregue somente ao aluno correspondente. Vence em 24 horas e funciona uma vez. Gerar outro invalida o anterior. A senha atual só muda quando o novo link é utilizado.
 4. O aluno abre o link, escolhe e confirma a própria senha. Depois, entra pelo e-mail de acesso. Pode trocar esse endereço em **Meu perfil → Editar meus dados**, confirmando a senha atual; ficha e conta são atualizadas juntas. Na gestão, a troca de e-mail de conta existente passa pela ativação/transferência na seção Responsável e acesso.

@@ -1,19 +1,39 @@
+import {AvatarFoto} from './components/FotoPerfil';
 import { nomeGrau, useGraduacoes } from './graduacoes';
+import { fundoFaixa } from '@tatame/shared';
 import { useEffect, useId, useRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 import { X, ChevronLeft, ChevronRight, Inbox, type LucideIcon } from 'lucide-react';
-import { initials, monthOffset, today } from './lib';
+import { monthOffset, today } from './lib';
 export function Button({children,variant='primary',className='',...props}:ButtonHTMLAttributes<HTMLButtonElement>&{variant?:'primary'|'secondary'|'danger'|'ghost'}) { return <button type="button" className={`btn btn-${variant} ${className}`} {...props}>{children}</button>; }
-export function Modal({title,description,children,onClose,wide=false}:{title:string;description?:string;children:ReactNode;onClose:()=>void;wide?:boolean}) {
+export function Modal({title,description,children,onClose,wide=false,closeOnBackdrop=false}:{title:string;description?:string;children:ReactNode;onClose:()=>void;wide?:boolean;closeOnBackdrop?:boolean}) {
   const ref=useRef<HTMLDialogElement>(null);
   const titleId=useId();
   useEffect(()=>{ref.current?.showModal();return()=>ref.current?.close();},[]);
-  return <dialog ref={ref} className={`modal ${wide?'modal-wide':''}`} onCancel={e=>{e.preventDefault();onClose();}} aria-labelledby={titleId}><div className="modal-header"><div><h2 id={titleId}>{title}</h2>{description&&<p>{description}</p>}</div><button type="button" className="icon-btn" aria-label="Fechar janela" onClick={onClose}><X size={20}/></button></div><div className="modal-body">{children}</div></dialog>;
+  const panelClass = wide ? 'modal modal-wide' : 'modal';
+  const content = <>
+    <div className="modal-header">
+      <div><h2 id={titleId}>{title}</h2>{description && <p>{description}</p>}</div>
+      <button type="button" className="icon-btn" aria-label="Fechar janela" onClick={onClose}><X size={20}/></button>
+    </div>
+    <div className="modal-body">{children}</div>
+  </>;
+  return <dialog ref={ref} className={closeOnBackdrop ? 'modal-overlay' : panelClass}
+    onCancel={event => {
+      if (event.target !== event.currentTarget) return;
+      event.preventDefault();
+      onClose();
+    }} aria-labelledby={titleId}>
+    {closeOnBackdrop ? <>
+      <div className="modal-overlay-backdrop" aria-hidden="true" onClick={onClose}/>
+      <div className={panelClass}>{content}</div>
+    </> : content}
+  </dialog>;
 }
 export function Field({label,children,full=false}:{label:string;children:ReactNode;full?:boolean}) { return <label className={`field ${full?'field-full':''}`}><span>{label}</span>{children}</label>; }
 export function FormError({message}:{message:string}) { return message?<div className="form-error" role="alert">{message}</div>:null; }
 export function Badge({value}:{value:string}) { const labels:Record<string,string>={ativo:'Ativo',inativo:'Inativo',pago:'Pago',cancelado:'Cancelado',pendente:'Pendente',atrasado:'Atrasado',baixo:'Baixo',medio:'Médio',alto:'Alto'};return <span className={`badge badge-${value}`}><i/>{labels[value]||value}</span>; }
-export function Belt({value,grauId}:{value:string;grauId?:string|null}) {const faixa=useGraduacoes()?.faixas.find(f=>f.nome===value),grau=faixa?.graus.find(g=>g.id===grauId);return <span className={`belt belt-${value.toLowerCase()}`}><i style={faixa?{backgroundColor:faixa.cor}:undefined}/>{value}{grau?` · ${nomeGrau(grau.numero)}`:null}</span>;}
-export function Person({name,secondary}:{name:string;secondary?:string}) {return <div className="person"><span className="avatar">{initials(name)}</span><div><strong>{name}</strong>{secondary&&<small>{secondary}</small>}</div></div>;}
+export function Belt({value,grauId}:{value:string;grauId?:string|null}) {const faixa=useGraduacoes()?.faixas.find(f=>f.nome===value),grau=faixa?.graus.find(g=>g.id===grauId);return <span className={`belt belt-${value.toLowerCase()}`}><i style={{background:fundoFaixa(value,faixa?.cor)}}/>{value}{grau?` · ${nomeGrau(grau.numero)}`:null}</span>;}
+export function Person({name,secondary,alunoId}:{name:string;secondary?:string;alunoId?:string}) {return <div className="person"><AvatarFoto nome={name} src={alunoId?`/api/equipe/alunos/${alunoId}/foto`:null}/><div><strong>{name}</strong>{secondary&&<small>{secondary}</small>}</div></div>;}
 export function Empty({title='Nenhum registro encontrado',description='Os registros aparecerão aqui.',action}:{title?:string;description?:string;action?:ReactNode}) {return <div className="empty"><span><Inbox size={28}/></span><h3>{title}</h3><p>{description}</p>{action}</div>;}
 export function Stat({label,value,note,icon:Icon,tone='green'}:{label:string;value:ReactNode;note:string;icon:LucideIcon;tone?:string}) {return <div className="stat"><div className="stat-top"><span>{label}</span><i className={`stat-icon tone-${tone}`}><Icon size={19}/></i></div><strong>{value}</strong><small>{note}</small></div>;}
 export function MonthPicker({value,onChange}:{value:string;onChange:(v:string)=>void}) {return <div className="month-picker"><button aria-label="Mês anterior" onClick={()=>onChange(monthOffset(value,-1))}><ChevronLeft size={17}/></button><input type="month" aria-label="Mês de referência" value={value} max={today().slice(0,7)} onChange={e=>{if(e.target.value && e.target.value<=today().slice(0,7)) onChange(e.target.value);}}/><button aria-label="Próximo mês" disabled={value>=today().slice(0,7)} onClick={()=>onChange(monthOffset(value,1))}><ChevronRight size={17}/></button></div>;}

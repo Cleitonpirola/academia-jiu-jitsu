@@ -1,24 +1,23 @@
+import {DiasAulas} from '../components/DiasAulas';
+import {dateLabel} from '../lib';
 import { useState } from 'react';
 import { Search, Check, X, CalendarCheck, Users, UserCheck } from 'lucide-react';
 import { useAcademia } from '../store';
 import { Belt, Button, Empty, FormError, Person } from '../components';
 import { fold, today } from '../lib';
 import { ChamadaAula } from '../components/ChamadaAula';
-const types=['Com kimono','Sem kimono','Fundamentos','Competição'];
-export function AttendancePage({ onAgenda }: { onAgenda: () => void }) {
-  const { aulas, resourceStatus, reload } = useAcademia();
-  const [mode, setMode] = useState<'aula' | 'modalidade'>('aula');
-  const [date, setDate] = useState(today);
-  const [aulaId, setAulaId] = useState('');
-  const rows = aulas.filter(aula => aula.dataAula === date);
-  const selected = rows.find(aula => aula.id === aulaId) ?? rows[0];
-  return <>
-    <div className="page-heading"><div><div className="eyebrow">CADA TREINO CONTA</div><h1>Presenças<span className="heading-dot">.</span></h1><p>Uma chamada para cada aula. Vários horários, várias participações.</p></div><Button variant="secondary" onClick={onAgenda}><CalendarCheck size={16}/>Ver agenda</Button></div>
-    <div className="tabs attendance-tabs" aria-label="Forma de registrar presença"><button aria-pressed={mode === 'aula'} className={mode === 'aula' ? 'active' : ''} onClick={() => setMode('aula')}>Chamada por aula</button><button aria-pressed={mode === 'modalidade'} className={mode === 'modalidade' ? 'active' : ''} onClick={() => setMode('modalidade')}>Registro por modalidade</button></div>
-    {mode === 'aula' && resourceStatus.aulas.error ? <><FormError message={resourceStatus.aulas.error}/><Button variant="secondary" onClick={() => void reload()}>Recarregar aulas</Button></> : mode === 'aula' && resourceStatus.aulas.loading && !resourceStatus.aulas.loaded ? <p className="helper">Carregando aulas…</p> : mode === 'aula' ? <><div className="attendance-controls"><label>Data das aulas<input aria-label="Data das aulas para chamada" type="date" min="1900-01-01" max="9999-12-31" value={date} onChange={event => { if (event.target.value) { setDate(event.target.value); setAulaId(''); } }}/></label><label className="attendance-aula-select">Aula<select aria-label="Selecionar aula para chamada" value={selected?.id ?? ''} onChange={event => setAulaId(event.target.value)}>{!rows.length && <option value="">Nenhuma aula neste dia</option>}{rows.map(aula => <option key={aula.id} value={aula.id}>{aula.horaInicio}–{aula.horaFim} · {aula.titulo}{aula.situacao === 'cancelada' ? ' · Cancelada' : ''}</option>)}</select></label></div>
-      {selected ? <><p className="helper chamada-intro">Professor: {selected.professor} · {selected.turmaNome ?? 'Aula avulsa'}</p><ChamadaAula key={selected.id} aula={selected}/></> : <section className="card"><Empty title="Nenhuma aula na agenda para este dia" description="Crie uma aula da grade fixa ou uma aula extra para abrir a chamada." action={<Button onClick={onAgenda}>Abrir agenda de aulas</Button>}/></section>}
-    </> : <>{resourceStatus.presencas.error ? <FormError message={resourceStatus.presencas.error}/> : resourceStatus.presencas.loading && !resourceStatus.presencas.loaded ? <p className="helper">Carregando registros por modalidade…</p> : <LegacyAttendance/>}</>}
-  </>;
+const types=['Com kimono','Sem kimono'];
+export function AttendancePage({onAgenda}:{onAgenda:()=>void}){
+ const {aulas,resourceStatus,reload}=useAcademia();
+ const [mode,setMode]=useState<'aula'|'modalidade'>('aula'),[date,setDate]=useState(today),[aulaId,setAulaId]=useState('');
+ const rows=aulas.filter(a=>a.dataAula===date).sort((a,b)=>a.horaInicio.localeCompare(b.horaInicio)||a.titulo.localeCompare(b.titulo));
+ const selected=rows.find(a=>a.id===aulaId);
+ return <><div className="page-heading"><div><div className="eyebrow">CADA TREINO CONTA</div><h1>Presenças<span className="heading-dot">.</span></h1><p>Escolha o dia e abra a lista de cada aula.</p></div><Button variant="secondary" onClick={onAgenda}><CalendarCheck size={16}/>Ver agenda</Button></div>
+ <div className="tabs attendance-tabs" aria-label="Forma de registrar presença"><button aria-pressed={mode==='aula'} className={mode==='aula'?'active':''} onClick={()=>setMode('aula')}>Por aula</button><button aria-pressed={mode==='modalidade'} className={mode==='modalidade'?'active':''} onClick={()=>setMode('modalidade')}>Registro por modalidade</button></div>
+ {mode==='modalidade'?(resourceStatus.presencas.error?<><FormError message={resourceStatus.presencas.error}/><Button onClick={()=>void reload()}>Recarregar presenças</Button></>:resourceStatus.presencas.loading&&!resourceStatus.presencas.loaded?<p>Carregando registros…</p>:<LegacyAttendance/>):<><DiasAulas dia={date} onChange={v=>{setDate(v);setAulaId('');}} diasComAula={aulas.filter(a=>a.situacao!=='cancelada').map(a=>a.dataAula)}/><FormError message={resourceStatus.aulas.error??''}/>{resourceStatus.aulas.error&&<Button onClick={()=>void reload()}>Recarregar aulas</Button>}
+ {selected?<><div className="portal-section-heading"><div><h2>{selected.horaInicio} · {selected.titulo}</h2><p>{dateLabel(date)} · {selected.professor}</p></div><Button variant="secondary" onClick={()=>setAulaId('')}>Voltar às aulas do dia</Button></div><ChamadaAula key={selected.id} aula={selected}/></>:<><h2>Aulas de {dateLabel(date)}</h2>{rows.length?<div className="aulas-do-dia">{rows.map(a=><article className="card aula-dia" key={a.id}><div className="aula-dia-horario"><strong>{a.horaInicio}</strong><small>até {a.horaFim}</small></div><div><h3>{a.titulo}</h3><p>{a.professor}</p><small>{a.situacao==='cancelada'?'Aula cancelada':`${a.chamada.filter(p=>p.presente).length} presentes · ${a.checkins.filter(c=>!a.chamada.some(p=>p.alunoId===c.alunoId)).length} aguardando confirmação`}</small></div><Button variant="secondary" onClick={()=>setAulaId(a.id)}>Ver presenças</Button></article>)}</div>:<Empty title={resourceStatus.aulas.loading?'Carregando aulas…':'Nenhuma aula neste dia'} description="Escolha outro dia ou publique as aulas da turma na agenda." action={<Button onClick={onAgenda}>Abrir agenda</Button>}/>}</>}
+ </>}
+ </>;
 }
 
 function LegacyAttendance() {

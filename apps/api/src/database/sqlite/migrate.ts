@@ -18,6 +18,14 @@ export const sqliteMigrations: readonly SqliteMigration[] = [
   { version: 9, name: '009_responsaveis', sql: readFileSync(new URL('./migrations/009_responsaveis.sql', import.meta.url), 'utf8'), rebuildForeignKeys: true },
   { version: 10, name: '010_graduacoes', sql: readFileSync(new URL('./migrations/010_graduacoes.sql', import.meta.url), 'utf8') },
   { version: 11, name: '011_professores_aula', sql: readFileSync(new URL('./migrations/011_professores_aula.sql', import.meta.url), 'utf8') },
+  { version: 12, name: '012_evolucao_graduacao', sql: readFileSync(new URL('./migrations/012_evolucao_graduacao.sql', import.meta.url), 'utf8') },
+  { version: 13, name: '013_faixas_padrao', sql: readFileSync(new URL('./migrations/013_faixas_padrao.sql', import.meta.url), 'utf8') },
+  { version: 14, name: '014_categorias_faixa', sql: readFileSync(new URL('./migrations/014_categorias_faixa.sql', import.meta.url), 'utf8') },
+  { version: 15, name: '015_preferencias_academia', sql: readFileSync(new URL('./migrations/015_preferencias_academia.sql', import.meta.url), 'utf8') },
+  { version: 16, name: '016_comunicados_equipe', sql: readFileSync(new URL('./migrations/016_comunicados_equipe.sql', import.meta.url), 'utf8') },
+  { version: 17, name: '017_fotos_perfil', sql: readFileSync(new URL('./migrations/017_fotos_perfil.sql', import.meta.url), 'utf8') },
+  { version: 18, name: '018_tecnicas', sql: readFileSync(new URL('./migrations/018_tecnicas.sql', import.meta.url), 'utf8') },
+  { version: 19, name: '019_recuperacao_senha', sql: readFileSync(new URL('./migrations/019_recuperacao_senha.sql', import.meta.url), 'utf8') },
 ];
 
 const checksum = (sql: string) => createHash('sha256').update(sql.replace(/\r\n/g, '\n').trim()).digest('hex');

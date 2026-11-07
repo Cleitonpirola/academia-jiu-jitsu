@@ -1,5 +1,31 @@
 # Ambiente online de testes
 
+## Publicação atualizada e refresh corrigido — 01/11/2026
+
+Prévia final READY: [Abrir o Tatame](https://tatame-homologacao-f1fi4dmth-cleiton-pirola.vercel.app), deployment `dpl_HzupaAG1JgiEW7KEKkiCZCG5oz2S`, ambiente API staging/Preview. Substitui a prévia original e o candidato intermediário de segurança. Mantidos os dois acessos fictícios, sem alterar senhas. Arquivos privados de acesso atualizados; não encaminhados automaticamente a terceiros.
+
+Base recomposta das159 fontes exatas da publicação anterior, conferidas por SHA1. Somente quatro arquivos diferem: package.json/package-lock.json/app.ts para segurança do commit510eb87 e AuthGate.tsx para corrigir o botão durante o refresh, relatado por Gabriel. Storage não incluído nem ativado. O pacote não é um checkout integral do commit510eb87: reutiliza também funcionalidades já publicadas a partir da fonte local; metadados dirty=true registram essa composição.
+
+Pacote de segurança sem Storage:279 testes, build/typecheck e npm audit sem alertas. Ajuste adicional só de renderização: build/typecheck e QA visual controlada com conexão pendente/erro/recuperação. Não foram adicionados testes espelho nem alegada nova execução da suíte285 após esse ajuste visual. Na publicação final: login dos dois perfis, autorização401/403, banco Supabase/Python, catálogo, presença fictícia anterior e indicadores conferidos; rota de Storage404.159 fontes remotas conferidas por hash. Relatório privado .test-output/deploy-seguranca-validacao-online.json.
+
+Acesso direto limitado ao deployment final, login/permissões do Tatame e SSO global preservados; revogadas as exceções anteriores e o compartilhamento temporário antigo após confirmação da versão final. Sem expiração automática: revogar a exceção final ao terminar os testes. Os links antigos podem pedir login Vercel; encaminhar o endereço novo.
+
+Git: segurança já enviada em510eb8761be09b5c65b6459746e03b270c57ea0b, branch codex/evolucao-tatame. A correção visual e esta atualização documental aguardam validação específica antes de novo commit/push, conforme AGENTS.md. Nenhuma migração, bucket, chave de Storage, pagamento, main/tag/release ou conta nova nesta publicação.
+
+## Acesso direto autorizado para estes testes — 31/10/2026
+
+Usuário confirmou “autorizo apenas para esses testes” após a rejeição inicial da revisão automática. A nova chamada autorizada criou `alias-protection-override` somente no deployment `dpl_4Wnh38NWzR3VFZZzXkHcVFU1a6b9`. URL: https://tatame-homologacao-aum8h1pc1-cleiton-pirola.vercel.app/. Proteção global SSO continua habilitada; autenticação e permissões do Tatame preservadas. A exceção não tem expiração automática: revogar ao encerrar estes testes; não estender a outras publicações. O prazo do antigo link temporário não se aplica ao acesso direto.
+
+Verificação nova sem cookies/parâmetros: página200, estado200/usuario:null, alunos401, portal401. Navegador confirmou formulário de login após logout apenas do aluno fictício. Arquivos privados dos dois acessos atualizados sem alterar senhas. Evidência `.test-output/acesso-direto-validacao.json` e `docs/screenshots/homologacao-login-direto.png`. Nenhuma migração, alteração de lógica, nova publicação, commit ou push nesta liberação. Os registros anteriores abaixo são históricos.
+
+## Publicação validada — 31/10/2026
+
+Preview `dpl_4Wnh38NWzR3VFZZzXkHcVFU1a6b9` pronta, com PostgreSQL e Python. Fluxo de login/perfis/cadastro/turma/aula/check-in/chamada, graduação por categoria e indicadores verificado; contas fictícias e guia [TESTES_EXTERNOS.md](TESTES_EXTERNOS.md). Link temporário completo e senhas apenas em arquivo privado local, sem exposição em Git. Proteção Vercel preservada. Segurança19 aplicada,34 tabelas incluindo histórico com RLS,62 registros anteriores reconferidos e idênticos após provas. 278 testes locais aprovados. Sem commit/push, merge ou release; SQLite não alterado. Estados anteriores abaixo superados por este.
+
+## Estado atual — 31/10/2026
+
+Supabase `tatame-homologacao` atualizado por autorização explícita: **18 migrações concluídas, 33 tabelas de domínio**. Exportação lógica privada das23 tabelas anteriores, ensaio revertido e comparação final aprovados; dois alunos/vínculos preservados e leitura Prisma dos11 modelos novos validada. [Relatório](MIGRACOES_11_18.md). Onze tabelas novas com RLS; antigas ainda precisam da [correção preparada para aprovação](SEGURANCA_HOMOLOGACAO.md). Vercel DATABASE_URL Secret/Preview confirmada, mas aplicação ainda não publicada. Sem commit/push desta rodada; SQLite não alterado. As notas abaixo registram operações anteriores.
+
 ## Graduações e migração 10 — 26/10/2026
 
 Dez migrações concluídas e 22 tabelas de domínio. A migração 10 preservou os campos das 20 tabelas anteriores, vinculou faixas e manteve grau não informado. TLS/certificado verificado. QA restrita ao catálogo/aluno/turma sintéticos confirmou concorrência de grau, associação/constraint, renomeação, proteção e publicação coringa; nenhuma chamada de login/ativação. Registros removidos por IDs exclusivos e hashes das 22 tabelas iguais ao início. Guia em [GRADUACOES.md](GRADUACOES.md). Não representa publicação no Render ou liberação de ambiente público.

@@ -1,0 +1,21 @@
+# Arquivos privados e dados locais nunca fazem parte da publicação.
+.git
+.vercel
+.env
+.env.*
+**/.env
+**/.env.*
+node_modules
+**/node_modules
+.venv
+**/.venv
+.test-output
+data
+**/*.sqlite
+**/*.sqlite-wal
+**/*.sqlite-shm
+**/*.sqlite-journal
+**/__pycache__
+**/*.pyc
+**/*.log
+docs/screenshots

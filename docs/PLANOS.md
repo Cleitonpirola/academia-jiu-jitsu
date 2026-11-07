@@ -1,5 +1,7 @@
 # Planos de treino e liberações extras
 
+**Apresentação atual — 27/10/2026:** controles de planos são opcionais em **Configurações** e começam ocultos. Desativar não suspende limites nem altera débitos; só oculta os controles administrativos. Portal ilimitado não exibe cartões de cota, e Meus treinos usa Aulas realizadas com presenças confirmadas. Portal limitado mantém consumo e saldo. [Guia e testes atuais](CONFIGURACOES_ACADEMIA.md).
+
 ## Adicionais com cobrança — 25/10/2026
 
 Implementado fluxo distinto da liberação nominal gratuita descrita abaixo: a academia habilita preço/prazo, o aluno com cota mensal esgotada confirma uma aula publicada e recebe um débito. Essa reserva permite a aula específica sem consumir novamente cotas regulares; respeita bloqueio financeiro e check-in somente no dia. Baixa manual e atraso em [DEBITOS.md](DEBITOS.md). Uma liberação semanal gratuita continua sem ignorar o limite mensal. Não há catálogo de planos por preço nem integração bancária automática nesta entrega.

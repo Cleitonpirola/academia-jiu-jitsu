@@ -5,6 +5,8 @@ datasource db {
   provider = "postgresql"
 }
 model Aluno {
+  acessoTecnicas AcessoTecnicas?
+  foto FotoPerfil?
   id             String       @id @default(uuid()) @db.Uuid
   nome           String
   telefone       String
@@ -26,6 +28,8 @@ model Aluno {
   responsabilidadeTransferidaEm String?
   responsaveis ResponsavelAluno[]
   eventosAcesso EventoAcessoAluno[]
+  estadoGraduacao EstadoGraduacao?
+  eventosGraduacao EventoGraduacao[]
   comunicados ComunicadoAluno[]
   mensalidades   Mensalidade[]
   presencas      Presenca[]
@@ -48,6 +52,9 @@ model FaixaGraduacao {
   criadoEm String
   atualizadoEm String
   graus GrauFaixa[]
+  regra RegraGraduacao? @relation("faixaRegra")
+  regrasDestino RegraGraduacao[] @relation("faixaDestino")
+  estadosGraduacao EstadoGraduacao[]
   alunos Aluno[]
 }
 model GrauFaixa {
@@ -183,6 +190,8 @@ model PresencaAula {
 }
 
 model Usuario {
+  liberacoesTecnicas AcessoTecnicas[]
+  foto FotoPerfil?
   id String @id @default(uuid()) @db.Uuid
   nome String
   email String @unique
@@ -194,13 +203,26 @@ model Usuario {
   conviteExpiraEm String?
   criadoEm String
   sessoes Sessao[]
+  recuperacaoSenha RecuperacaoSenha?
   liberacoes LiberacaoAula[]
   baixasDebitos DebitoAula[]
   configuracoes ConfiguracaoAcademia[]
+  preferencias PreferenciasAcademia[]
   dependentes ResponsavelAluno[]
   eventosAcesso EventoAcessoAluno[]
   comunicadosRecebidos ComunicadoAluno[] @relation("destinatario")
   comunicadosEnviados ComunicadoAluno[] @relation("autor")
+  lotesComunicados LoteComunicado[]
+  eventosGraduacao EventoGraduacao[]
+}
+model RecuperacaoSenha {
+  id String @id @db.Uuid
+  usuario Usuario @relation(fields: [id], references: [id], onDelete: Cascade)
+  tokenHash String @unique
+  email String
+  credencialHash String
+  solicitadoEm String
+  expiraEm String
 }
 model ResponsavelAluno {
   id String @id @default(uuid()) @db.Uuid
@@ -226,6 +248,7 @@ model EventoAcessoAluno {
   criadoEm String
 }
 model ComunicadoAluno {
+  entrega EntregaComunicado?
   id String @id @default(uuid()) @db.Uuid
   alunoId String @db.Uuid
   aluno Aluno @relation(fields: [alunoId], references: [id], onDelete: Restrict)
@@ -315,4 +338,114 @@ model DebitoAula {
   motivoCancelamento String?
   @@unique([alunoId, aulaId])
   @@index([alunoId, dataVencimento])
+}
+model RegraGraduacao {
+  id String @id @default(uuid()) @db.Uuid
+  faixaId String @unique @db.Uuid
+  faixa FaixaGraduacao @relation("faixaRegra",fields:[faixaId],references:[id],onDelete:Cascade)
+  aulasPorGrau Int?
+  mesesPorGrau Int?
+  grausParaFaixa Int
+  mesesMinimosFaixa Int
+  proximaFaixaId String? @db.Uuid
+  proximaFaixa FaixaGraduacao? @relation("faixaDestino",fields:[proximaFaixaId],references:[id],onDelete:Restrict)
+  atualizadoEm String
+}
+model EstadoGraduacao {
+  id String @id @default(uuid()) @db.Uuid
+  alunoId String @unique @db.Uuid
+  aluno Aluno @relation(fields:[alunoId],references:[id],onDelete:Restrict)
+  faixaId String @db.Uuid
+  faixa FaixaGraduacao @relation(fields:[faixaId],references:[id],onDelete:Restrict)
+  dataInicioFaixa String
+  aulasAnteriores Int
+  marcoAulas String @default("[]")
+  versao Int
+  atualizadoEm String
+}
+model EventoGraduacao {
+  id String @id @default(uuid()) @db.Uuid
+  alunoId String @db.Uuid
+  aluno Aluno @relation(fields:[alunoId],references:[id],onDelete:Restrict)
+  tipo String
+  faixaAnterior String
+  faixaNova String
+  grauAnterior Int?
+  grauNovo Int?
+  aulasConsideradas Int
+  motivo String
+  autorId String @db.Uuid
+  autor Usuario @relation(fields:[autorId],references:[id],onDelete:Restrict)
+  versaoEstado Int
+  regraSnapshot String?
+  criadoEm String
+  @@index([alunoId,criadoEm],map:"EventoGraduacao_aluno_criado")
+}
+
+model PreferenciasAcademia {
+  id String @id
+  exibirControlePlanos Boolean @default(false)
+  atualizadoEm String
+  atualizadoPorId String @db.Uuid
+  atualizadoPor Usuario @relation(fields:[atualizadoPorId],references:[id],onDelete:Restrict)
+}
+
+model LoteComunicado {
+ id String @id @db.Uuid
+ tipo String
+ titulo String
+ mensagem String
+ autorId String @db.Uuid
+ autor Usuario @relation(fields:[autorId],references:[id],onDelete:Restrict)
+ criadoEm String
+ pendencias String
+ entregas EntregaComunicado[]
+}
+model EntregaComunicado {
+ id String @id @db.Uuid
+ loteId String @db.Uuid
+ lote LoteComunicado @relation(fields:[loteId],references:[id],onDelete:Restrict)
+ comunicadoId String @unique @db.Uuid
+ comunicado ComunicadoAluno @relation(fields:[comunicadoId],references:[id],onDelete:Restrict)
+ nome String
+ @@index([loteId],map:"EntregaComunicado_lote")
+}
+
+model FotoPerfil {
+ id String @id @db.Uuid
+ alunoId String? @unique @db.Uuid
+ aluno Aluno? @relation(fields:[alunoId],references:[id],onDelete:Cascade)
+ usuarioId String? @unique @db.Uuid
+ usuario Usuario? @relation(fields:[usuarioId],references:[id],onDelete:Cascade)
+ imagem String
+ atualizadoEm String
+}
+
+model ConfiguracaoTecnicas {
+ id String @id
+ ativa Boolean @default(false)
+ valorMensalCentavos Int
+ instrucoes String
+ atualizadoEm String
+}
+model VideoTecnica {
+ id String @id @db.Uuid
+ titulo String
+ descricao String
+ semana String @db.VarChar(10)
+ tipoTreino String
+ url String
+ publicado Boolean @default(false)
+ criadoEm String
+ atualizadoEm String
+ @@index([semana])
+}
+model AcessoTecnicas {
+ id String @id @db.Uuid
+ aluno Aluno @relation(fields:[id],references:[id],onDelete:Restrict)
+ validoAte String @db.VarChar(10)
+ liberadoPorId String @db.Uuid
+ liberadoPor Usuario @relation(fields:[liberadoPorId],references:[id],onDelete:Restrict)
+ atualizadoEm String
+ @@index([liberadoPorId])
 }

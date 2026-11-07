@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { FAIXAS, type Analytics } from '@tatame/shared';
+import type { Analytics } from '@tatame/shared';
 import { isDate, monthSchema } from '../../domain.js';
 
 const count = z.number().int().nonnegative();
@@ -17,7 +17,7 @@ export const analyticsResponseSchema = z.object({
   alunosEmRisco: count,
   presencasNoMes: count,
   riscos: z.array(z.object({
-    alunoId: z.string().min(1), nome: z.string().min(1), faixa: z.enum(FAIXAS),
+    alunoId: z.string().min(1), nome: z.string().min(1), faixa: z.string().trim().min(1).max(80),
     frequenciaAtual: count, frequenciaAnterior: count, diasSemTreinar: count,
     pontos: count.max(100), nivel: z.enum(['baixo', 'medio', 'alto']), sinais: z.array(z.string()),
   })),

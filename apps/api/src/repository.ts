@@ -1,9 +1,17 @@
+import type {FotoPerfil} from '@tatame/shared';
+import type {ConfiguracaoTecnicas,VideoTecnica,AcessoTecnicas} from './modules/tecnicas/models.js';
+import {planejarEnvioEquipe,type EnvioEquipe} from './modules/comunicados/equipe.js';
+import type {LoteComunicado,EntregaComunicado} from '@tatame/shared';
+import { contextoEvolucao, planejarRegra, planejarEvolucao, type ContextoEvolucao, type EntradaEvolucao } from './modules/graduacoes/evolucao.js';
+import type { PreferenciasAcademia, RegraGraduacao, EstadoGraduacao, EventoGraduacao } from '@tatame/shared';
 import { graduacaoValida, validarCatalogo, type AcaoGraduacao } from './modules/graduacoes/rules.js';
 import type { FaixaGraduacao,GrauFaixa,AulaProfessor } from '@tatame/shared';
 import { planejarPerfilAluno } from './modules/auth/perfil.js';
 import type { PerfilBasicoAluno } from '@tatame/shared';
 import type { ResponsavelAluno, EventoAcessoAluno, ComunicadoAluno, UsuarioView } from '@tatame/shared';
-import { planejarFamilia, assertAcessoPortal, usuarioHabilitado, type AcaoFamiliar } from './modules/auth/familia.js';
+import { planejarFamilia, assertAcessoPortal, emailProprio, usuarioHabilitado, type AcaoFamiliar } from './modules/auth/familia.js';
+import { tokenHash } from './modules/auth/password.js';
+import { INTERVALO_RECUPERACAO_MS, VALIDADE_RECUPERACAO_MS, type RecuperacaoSenha } from './modules/auth/recuperacao.js';
 import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -22,11 +30,22 @@ import { assertSaldoMensal, camposSaldo, limparSaldoNulo, saldoMensal } from './
 import type { AceiteAulaAdicional, CondicoesAulaAdicional, ConfiguracaoAcademia, DebitoAula } from '@tatame/shared';
 import { adicionalAtivo, assertDebitosEmDia, condicoesPadrao, novoDebito, validarDataBaixa } from './modules/planos/debitos.js';
 
-export type Tables = { AulaProfessor:AulaProfessor; FaixaGraduacao:FaixaGraduacao; GrauFaixa:GrauFaixa; ResponsavelAluno: ResponsavelAluno; EventoAcessoAluno: EventoAcessoAluno; ComunicadoAluno: ComunicadoAluno; ConfiguracaoAcademia: ConfiguracaoAcademia; DebitoAula: DebitoAula; Aluno: Aluno; Mensalidade: Mensalidade; Presenca: Presenca; Analise: Analise; Turma: Turma; HorarioTurma: HorarioTurma; AlunoTurma: AlunoTurma; Aula: Aula; AulaAlunoPrevisto: AulaAlunoPrevisto; PresencaAula: PresencaAula; Usuario: Usuario; Sessao: Sessao; CheckinAula: CheckinAula; PlanoAluno: PlanoAluno; LiberacaoAula: LiberacaoAula };
+export type Tables = { ConfiguracaoTecnicas:ConfiguracaoTecnicas; VideoTecnica:VideoTecnica; AcessoTecnicas:AcessoTecnicas; FotoPerfil:FotoPerfil; LoteComunicado:LoteComunicado; EntregaComunicado:EntregaComunicado; PreferenciasAcademia:PreferenciasAcademia; RegraGraduacao:RegraGraduacao; EstadoGraduacao:EstadoGraduacao; EventoGraduacao:EventoGraduacao; AulaProfessor:AulaProfessor; FaixaGraduacao:FaixaGraduacao; GrauFaixa:GrauFaixa; ResponsavelAluno: ResponsavelAluno; EventoAcessoAluno: EventoAcessoAluno; ComunicadoAluno: ComunicadoAluno; ConfiguracaoAcademia: ConfiguracaoAcademia; DebitoAula: DebitoAula; Aluno: Aluno; Mensalidade: Mensalidade; Presenca: Presenca; Analise: Analise; Turma: Turma; HorarioTurma: HorarioTurma; AlunoTurma: AlunoTurma; Aula: Aula; AulaAlunoPrevisto: AulaAlunoPrevisto; PresencaAula: PresencaAula; Usuario: Usuario; Sessao: Sessao; CheckinAula: CheckinAula; PlanoAluno: PlanoAluno; LiberacaoAula: LiberacaoAula };
 export type Table = keyof Tables;
 export interface Repository {
+  reservarRecuperacao(email: string, hash: string, agora: string): Promise<boolean>;
+  validarRecuperacao(hash: string, agora: string): Promise<boolean>;
+  redefinirSenha(hash: string, senhaHash: string, agora: string): Promise<boolean>;
+  saveConfiguracaoTecnicas(row:ConfiguracaoTecnicas):Promise<ConfiguracaoTecnicas>;
+  saveAcessoTecnicas(row:AcessoTecnicas):Promise<AcessoTecnicas>;
   kind: 'sqlite' | 'supabase';
+  saveFotoPerfil(foto:FotoPerfil):Promise<void>;
+  saveComunicadoEquipe(input:EnvioEquipe,autorId:string,timestamp:string):Promise<LoteComunicado>;
+  excluirComunicado(id: string, alunoId: string): Promise<void>;
+  excluirComunicadoEquipe(id: string): Promise<void>;
   saveCatalogoGraduacao(acao: AcaoGraduacao): Promise<void>;
+  saveRegraGraduacao(faixaId:string,body:unknown,timestamp:string):Promise<RegraGraduacao>;
+  saveEvolucaoGraduacao(alunoId:string,autorId:string,input:EntradaEvolucao,timestamp:string):Promise<void>;
   saveCadastroAluno(aluno: Aluno, create: boolean): Promise<Aluno>;
   savePerfilAluno(usuarioId: string, sessaoId: string, input: PerfilBasicoAluno, senhaHashVerificada?: string): Promise<Aluno>;
   responderComunicado(id: string, usuarioId: string, resposta: NonNullable<ComunicadoAluno['resposta']>, timestamp: string): Promise<ComunicadoAluno>;
@@ -47,6 +66,7 @@ export interface Repository {
   saveCheckin(aulaId: string, alunoId: string, timestamp: string, ator?: Pick<UsuarioView, 'id'|'perfil'>): Promise<CheckinAula>;
   removeCheckin(aulaId: string, alunoId: string, timestamp: string): Promise<void>;
   saveSaldoMensalAluno(alunoId: string, limiteMensal: number | null): Promise<ReturnType<typeof saldoMensal>>;
+  savePreferenciasAcademia(exibirControlePlanos:boolean,usuarioId:string,timestamp:string):Promise<PreferenciasAcademia>;
   saveConfiguracaoAdicionais(input: CondicoesAulaAdicional, usuarioId: string, timestamp: string): Promise<ConfiguracaoAcademia>;
   confirmarAulaAdicional(alunoId: string, aulaId: string, aceite: AceiteAulaAdicional, timestamp: string, ator?: Pick<UsuarioView, 'id'|'perfil'>): Promise<DebitoAula>;
   baixarDebito(id: string, usuarioId: string, dataPagamento: string): Promise<DebitoAula>;
@@ -56,6 +76,16 @@ export interface Repository {
   close(): Promise<void>;
 }
 const columns: Record<Table, string[]> = {
+  ConfiguracaoTecnicas:['id','ativa','valorMensalCentavos','instrucoes','atualizadoEm'],
+  VideoTecnica:['id','titulo','descricao','semana','tipoTreino','url','publicado','criadoEm','atualizadoEm'],
+  AcessoTecnicas:['id','validoAte','liberadoPorId','atualizadoEm'],
+  FotoPerfil:['id','alunoId','usuarioId','imagem','atualizadoEm'],
+  LoteComunicado:['id','tipo','titulo','mensagem','autorId','criadoEm','pendencias'],
+  EntregaComunicado:['id','loteId','comunicadoId','nome'],
+  PreferenciasAcademia:['id','exibirControlePlanos','atualizadoEm','atualizadoPorId'],
+  RegraGraduacao:['id','faixaId','aulasPorGrau','mesesPorGrau','grausParaFaixa','mesesMinimosFaixa','proximaFaixaId','atualizadoEm'],
+  EstadoGraduacao:['id','alunoId','faixaId','dataInicioFaixa','aulasAnteriores','marcoAulas','versao','atualizadoEm'],
+  EventoGraduacao:['id','alunoId','tipo','faixaAnterior','faixaNova','grauAnterior','grauNovo','aulasConsideradas','motivo','autorId','versaoEstado','regraSnapshot','criadoEm'],
   AulaProfessor:['id','aulaId','nome','ordem'],
   FaixaGraduacao:['id','nome','chave','cor','ordem','situacao','criadoEm','atualizadoEm'],
   GrauFaixa:['id','faixaId','numero','situacao','criadoEm','atualizadoEm'],
@@ -80,6 +110,25 @@ const columns: Record<Table, string[]> = {
   ConfiguracaoAcademia: ['id','valorAulaAdicionalCentavos','prazoPagamentoDias','atualizadoEm','atualizadoPorId'],
   DebitoAula: ['id','alunoId','aulaId','motivo','aulaTitulo','dataAula','horaInicio','valorCentavos','prazoPagamentoDias','criadoEm','dataVencimento','statusPagamento','dataPagamento','baixadoPorId','canceladoEm','motivoCancelamento'],
 };
+
+function novoPedidoRecuperacao(usuario: Usuario, hash: string, agora: string): RecuperacaoSenha {
+  return {
+    id: usuario.id, email: usuario.email, tokenHash: hash, credencialHash: tokenHash(usuario.senhaHash!),
+    solicitadoEm: agora, expiraEm: new Date(Date.parse(agora) + VALIDADE_RECUPERACAO_MS).toISOString(),
+  };
+}
+
+function pedidoRecente(pedido: RecuperacaoSenha | null | undefined, agora: string) {
+  return Boolean(pedido && Date.parse(agora) - Date.parse(pedido.solicitadoEm) < INTERVALO_RECUPERACAO_MS);
+}
+
+function credencialRecuperavel(usuario: Usuario | null | undefined): usuario is Usuario & { senhaHash: string } {
+  return Boolean(usuario?.senhaHash && emailProprio(usuario.email));
+}
+
+function credencialDoPedido(pedido: RecuperacaoSenha, usuario: Usuario | null | undefined): usuario is Usuario & { senhaHash: string } {
+  return credencialRecuperavel(usuario) && usuario.email === pedido.email && tokenHash(usuario.senhaHash) === pedido.credencialHash;
+}
 export class SqliteRepository implements Repository {
   kind = 'sqlite' as const;
   db: DatabaseSync;
@@ -97,9 +146,56 @@ export class SqliteRepository implements Repository {
       throw error;
     }
   }
+  async saveComunicadoEquipe(input:EnvioEquipe,autorId:string,timestamp:string){
+    this.db.exec('BEGIN IMMEDIATE');
+    try{
+      const read=<K extends Table>(table:K)=>this.db.prepare(`SELECT * FROM "${table}"`).all().map(r=>this.decode(table,r));
+      const anterior=this.db.prepare('SELECT * FROM LoteComunicado WHERE id=?').get(input.id) as unknown as LoteComunicado|undefined;
+      const plano=planejarEnvioEquipe({alunos:read('Aluno'),usuarios:read('Usuario'),vinculos:read('ResponsavelAluno')},input,autorId,timestamp,anterior);
+      if(plano.novo){this.insertRow('LoteComunicado',plano.lote);for(const c of plano.comunicados)this.insertRow('ComunicadoAluno',c);for(const e of plano.entregas)this.insertRow('EntregaComunicado',e);}
+      this.db.exec('COMMIT');return plano.lote;
+    }catch(e){this.db.exec('ROLLBACK');throw e;}
+  }
+  async excluirComunicado(id: string, alunoId: string) {
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      const comunicado = this.db.prepare("SELECT id FROM ComunicadoAluno WHERE id=? AND alunoId=? AND tipo='aviso'").get(id, alunoId);
+      if (!comunicado) throw new HttpError(404, 'Comunicado não encontrado.');
+      this.db.prepare('DELETE FROM EntregaComunicado WHERE comunicadoId=?').run(id);
+      this.db.prepare('DELETE FROM ComunicadoAluno WHERE id=?').run(id);
+      this.db.exec('COMMIT');
+    } catch (error) {
+      this.db.exec('ROLLBACK');
+      throw error;
+    }
+  }
+  async excluirComunicadoEquipe(id: string) {
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      const lote = this.db.prepare("SELECT id FROM LoteComunicado WHERE id=? AND tipo='aviso'").get(id);
+      if (!lote) throw new HttpError(404, 'Comunicado não encontrado.');
+      const entregas = this.db.prepare('DELETE FROM EntregaComunicado WHERE loteId=? RETURNING comunicadoId').all(id);
+      const excluir = this.db.prepare('DELETE FROM ComunicadoAluno WHERE id=?');
+      for (const entrega of entregas) excluir.run(entrega.comunicadoId);
+      this.db.prepare('DELETE FROM LoteComunicado WHERE id=?').run(id);
+      this.db.exec('COMMIT');
+    } catch (error) {
+      this.db.exec('ROLLBACK');
+      throw error;
+    }
+  }
+  async saveFotoPerfil(foto:FotoPerfil){
+    this.db.prepare('INSERT INTO FotoPerfil(id,alunoId,usuarioId,imagem,atualizadoEm) VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET imagem=excluded.imagem,atualizadoEm=excluded.atualizadoEm').run(foto.id,foto.alunoId,foto.usuarioId,foto.imagem,foto.atualizadoEm);
+  }
+  async saveConfiguracaoTecnicas(row:ConfiguracaoTecnicas){
+    this.db.prepare('INSERT INTO ConfiguracaoTecnicas(id,ativa,valorMensalCentavos,instrucoes,atualizadoEm) VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET ativa=excluded.ativa,valorMensalCentavos=excluded.valorMensalCentavos,instrucoes=excluded.instrucoes,atualizadoEm=excluded.atualizadoEm').run(row.id,Number(row.ativa),row.valorMensalCentavos,row.instrucoes,row.atualizadoEm);return row;
+  }
+  async saveAcessoTecnicas(row:AcessoTecnicas){
+    this.db.prepare('INSERT INTO AcessoTecnicas(id,validoAte,liberadoPorId,atualizadoEm) VALUES(?,?,?,?) ON CONFLICT(id) DO UPDATE SET validoAte=excluded.validoAte,liberadoPorId=excluded.liberadoPorId,atualizadoEm=excluded.atualizadoEm').run(row.id,row.validoAte,row.liberadoPorId,row.atualizadoEm);return row;
+  }
   private decode<K extends Table>(table: K, row: unknown): Tables[K] {
     const record = row as Record<string, unknown>;
-    return limparSaldoNulo({ ...record, ...(table === 'Aluno' ? {possuiCelular:Boolean(record.possuiCelular)} : {}), ...(['Presenca', 'PresencaAula'].includes(table) ? { presente: Boolean(record.presente) } : {}) }) as unknown as Tables[K];
+    return limparSaldoNulo({ ...record, ...(table==='ConfiguracaoTecnicas'?{ativa:Boolean(record.ativa)}:{}), ...(table==='VideoTecnica'?{publicado:Boolean(record.publicado)}:{}), ...(table==='PreferenciasAcademia'?{exibirControlePlanos:Boolean(record.exibirControlePlanos)}:{}), ...(table === 'Aluno' ? {possuiCelular:Boolean(record.possuiCelular)} : {}), ...(['Presenca', 'PresencaAula'].includes(table) ? { presente: Boolean(record.presente) } : {}) }) as unknown as Tables[K];
   }
   async list<K extends Table>(table: K) { return this.db.prepare(`SELECT * FROM "${table}"`).all().map(row => this.decode(table, row)); }
   async get<K extends Table>(table: K, id: string) { const row = this.db.prepare(`SELECT * FROM "${table}" WHERE id=?`).get(id); return row ? this.decode(table, row) : null; }
@@ -213,6 +309,48 @@ export class SqliteRepository implements Repository {
       this.db.exec('COMMIT'); return result.changes === 1;
     } catch (error) { this.db.exec('ROLLBACK'); throw error; }
   }
+  async reservarRecuperacao(email: string, hash: string, agora: string) {
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      const usuario = this.db.prepare('SELECT * FROM Usuario WHERE email=?').get(email) as unknown as Usuario | undefined;
+      let reservou = false;
+      if (credencialRecuperavel(usuario) && usuarioHabilitado(usuario, this.db.prepare('SELECT * FROM Aluno').all() as unknown as Aluno[], this.db.prepare('SELECT * FROM ResponsavelAluno').all() as unknown as ResponsavelAluno[])) {
+        const anterior = this.db.prepare('SELECT * FROM RecuperacaoSenha WHERE id=?').get(usuario.id) as unknown as RecuperacaoSenha | undefined;
+        if (!pedidoRecente(anterior, agora)) {
+          const pedido = novoPedidoRecuperacao(usuario, hash, agora);
+          this.db.prepare(`INSERT INTO RecuperacaoSenha (id,tokenHash,email,credencialHash,solicitadoEm,expiraEm) VALUES (?,?,?,?,?,?)
+            ON CONFLICT(id) DO UPDATE SET tokenHash=excluded.tokenHash,email=excluded.email,credencialHash=excluded.credencialHash,solicitadoEm=excluded.solicitadoEm,expiraEm=excluded.expiraEm`)
+            .run(pedido.id, pedido.tokenHash, pedido.email, pedido.credencialHash, pedido.solicitadoEm, pedido.expiraEm);
+          reservou = true;
+        }
+      }
+      this.db.exec('COMMIT');
+      return reservou;
+    } catch (error) { this.db.exec('ROLLBACK'); throw error; }
+  }
+  private pedidoDeRecuperacao(hash: string, agora: string) {
+    return this.db.prepare('SELECT * FROM RecuperacaoSenha WHERE tokenHash=? AND expiraEm>?').get(hash, agora) as unknown as RecuperacaoSenha | undefined;
+  }
+  async validarRecuperacao(hash: string, agora: string) {
+    const pedido = this.pedidoDeRecuperacao(hash, agora);
+    return !!pedido && credencialDoPedido(pedido, await this.get('Usuario', pedido.id));
+  }
+  async redefinirSenha(hash: string, senhaHash: string, agora: string) {
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      const pedido = this.pedidoDeRecuperacao(hash, agora);
+      const usuario = pedido ? this.db.prepare('SELECT * FROM Usuario WHERE id=?').get(pedido.id) as unknown as Usuario | undefined : undefined;
+      const valido = Boolean(pedido && credencialDoPedido(pedido, usuario)
+        && usuarioHabilitado(usuario, this.db.prepare('SELECT * FROM Aluno').all() as unknown as Aluno[], this.db.prepare('SELECT * FROM ResponsavelAluno').all() as unknown as ResponsavelAluno[]));
+      if (valido && pedido) {
+        this.db.prepare('UPDATE Usuario SET senhaHash=?, conviteHash=NULL, conviteExpiraEm=NULL WHERE id=?').run(senhaHash, pedido.id);
+        this.db.prepare('DELETE FROM Sessao WHERE usuarioId=?').run(pedido.id);
+        this.db.prepare('DELETE FROM RecuperacaoSenha WHERE id=?').run(pedido.id);
+      }
+      this.db.exec('COMMIT');
+      return valido;
+    } catch (error) { this.db.exec('ROLLBACK'); throw error; }
+  }
   async saveCheckin(aulaId: string, alunoId: string, timestamp: string, ator?: Pick<UsuarioView,'id'|'perfil'>) {
     this.db.exec('BEGIN IMMEDIATE');
     try {
@@ -277,6 +415,10 @@ export class SqliteRepository implements Repository {
     this.db.exec('BEGIN IMMEDIATE');
     try { const saldo = this.sincronizarSaldoMensal(alunoId, limiteMensal); this.db.exec('COMMIT'); return saldo; }
     catch (error) { this.db.exec('ROLLBACK'); throw error; }
+  }
+  async savePreferenciasAcademia(exibirControlePlanos:boolean,usuarioId:string,timestamp:string){
+    this.db.prepare('INSERT INTO PreferenciasAcademia(id,exibirControlePlanos,atualizadoEm,atualizadoPorId) VALUES(?,?,?,?) ON CONFLICT(id) DO UPDATE SET exibirControlePlanos=excluded.exibirControlePlanos,atualizadoEm=excluded.atualizadoEm,atualizadoPorId=excluded.atualizadoPorId').run('principal',Number(exibirControlePlanos),timestamp,usuarioId);
+    return (await this.get('PreferenciasAcademia','principal'))!;
   }
   async saveConfiguracaoAdicionais(input: CondicoesAulaAdicional, usuarioId: string, timestamp: string) {
     const row: ConfiguracaoAcademia = { id: 'principal', ...input, atualizadoPorId: usuarioId, atualizadoEm: timestamp };
@@ -376,6 +518,31 @@ export class SqliteRepository implements Repository {
       this.db.exec('COMMIT');return this.decode('Aluno',plano.aluno);
     }catch(error){this.db.exec('ROLLBACK');throw error;}
   }
+  private contextoEvolucaoSync():ContextoEvolucao {
+    const rows=<K extends Table>(table:K)=>this.db.prepare(`SELECT * FROM "${table}"`).all().map(row=>this.decode(table,row));
+    return {alunos:rows('Aluno'),faixas:rows('FaixaGraduacao'),graus:rows('GrauFaixa'),regras:rows('RegraGraduacao'),estados:rows('EstadoGraduacao'),eventos:rows('EventoGraduacao'),aulas:rows('Aula'),chamada:rows('PresencaAula'),usuarios:rows('Usuario'),vinculos:rows('ResponsavelAluno')};
+  }
+  async saveRegraGraduacao(faixaId:string,body:unknown,timestamp:string){
+    this.db.exec('BEGIN IMMEDIATE');try{
+      const ctx=this.contextoEvolucaoSync(),plano=planejarRegra(ctx,faixaId,body,timestamp);
+      for(const g of plano.graus)this.insertRow('GrauFaixa',g);
+      if(ctx.regras.some(r=>r.id===plano.row.id)){
+        const keys=columns.RegraGraduacao.filter(k=>k!=='id'),r=plano.row as unknown as Record<string,string|number|null>;
+        this.db.prepare('UPDATE RegraGraduacao SET '+keys.map(k=>'"'+k+'"=?').join(',')+' WHERE id=?').run(...keys.map(k=>r[k]),plano.row.id);
+      }else this.insertRow('RegraGraduacao',plano.row);
+      this.db.exec('COMMIT');return plano.row;
+    }catch(error){this.db.exec('ROLLBACK');throw error;}
+  }
+  async saveEvolucaoGraduacao(alunoId:string,autorId:string,input:EntradaEvolucao,timestamp:string){
+    this.db.exec('BEGIN IMMEDIATE');try{
+      const ctx=this.contextoEvolucaoSync(),plano=planejarEvolucao(ctx,alunoId,autorId,input,timestamp);
+      if(plano.novoGrau)this.insertRow('GrauFaixa',plano.novoGrau);
+      if(plano.aluno)this.db.prepare('UPDATE Aluno SET faixa=?,faixaId=?,grauId=? WHERE id=?').run(plano.aluno.faixa,plano.aluno.faixaId!,plano.aluno.grauId??null,alunoId);
+      if(plano.estado){if(ctx.estados.some(e=>e.id===plano.estado!.id)){const keys=columns.EstadoGraduacao.filter(k=>k!=='id'),r=plano.estado as unknown as Record<string,string|number>;this.db.prepare('UPDATE EstadoGraduacao SET '+keys.map(k=>'"'+k+'"=?').join(',')+' WHERE id=?').run(...keys.map(k=>r[k]),plano.estado.id);}else this.insertRow('EstadoGraduacao',plano.estado);}
+      if(plano.evento)this.insertRow('EventoGraduacao',plano.evento);
+      this.db.exec('COMMIT');
+    }catch(error){this.db.exec('ROLLBACK');throw error;}
+  }
   async saveCatalogoGraduacao(acao: AcaoGraduacao) {
     this.db.exec('BEGIN IMMEDIATE');
     try {
@@ -396,7 +563,8 @@ export class SqliteRepository implements Repository {
     try {
       const old=this.db.prepare('SELECT * FROM Aluno WHERE id=?').get(aluno.id) as unknown as Aluno | undefined;
       if(!create&&!old)throw new HttpError(404,'Aluno não encontrado.');
-      const row={...aluno,...graduacaoValida(aluno,this.db.prepare('SELECT * FROM FaixaGraduacao').all() as unknown as FaixaGraduacao[],this.db.prepare('SELECT * FROM GrauFaixa').all() as unknown as GrauFaixa[],old)};
+      const dados=create?aluno:{...aluno,faixa:old!.faixa,faixaId:old!.faixaId,grauId:old!.grauId};
+      const row={...dados,...graduacaoValida(dados,this.db.prepare('SELECT * FROM FaixaGraduacao').all() as unknown as FaixaGraduacao[],this.db.prepare('SELECT * FROM GrauFaixa').all() as unknown as GrauFaixa[],old)};
       if(create)this.insertRow('Aluno',row);
       else {const keys=columns.Aluno.filter(k=>k!=='id'&&k in row),data=row as unknown as Record<string,unknown>;this.db.prepare('UPDATE Aluno SET '+keys.map(k=>'"'+k+'"=?').join(',')+' WHERE id=?').run(...keys.map(k=>typeof data[k]==='boolean'?Number(data[k]):data[k]) as (string|number|null)[],row.id);}
       this.db.exec('COMMIT');return this.decode('Aluno',row);
@@ -433,6 +601,39 @@ export class PrismaRepository implements Repository {
   kind = 'supabase' as const;
   private client: PrismaClient;
   constructor(url: string) { this.client = new PrismaClient({ adapter: new PrismaPg({ connectionString: url }) }); }
+  async saveComunicadoEquipe(input:EnvioEquipe,autorId:string,timestamp:string){
+    return this.client.$transaction(async client=>{
+      await client.$executeRaw`SELECT pg_advisory_xact_lock(74192501)`;
+      const anterior=await client.loteComunicado.findUnique({where:{id:input.id}});
+      const [alunos,usuarios,vinculos]=await Promise.all([client.aluno.findMany(),client.usuario.findMany(),client.responsavelAluno.findMany()]);
+      const plano=planejarEnvioEquipe({alunos:alunos as Aluno[],usuarios:usuarios as Usuario[],vinculos:vinculos as ResponsavelAluno[]},input,autorId,timestamp,anterior as LoteComunicado|null);
+      if(plano.novo){await client.loteComunicado.create({data:plano.lote});await client.comunicadoAluno.createMany({data:plano.comunicados});await client.entregaComunicado.createMany({data:plano.entregas});}
+      return plano.lote;
+    });
+  }
+  async excluirComunicado(id: string, alunoId: string) {
+    await this.client.$transaction(async client => {
+      await client.$executeRaw`SELECT pg_advisory_xact_lock(74192501)`;
+      const comunicado = await client.comunicadoAluno.findFirst({where:{id, alunoId, tipo:'aviso'},select:{id:true}});
+      if (!comunicado) throw new HttpError(404, 'Comunicado não encontrado.');
+      await client.entregaComunicado.deleteMany({where:{comunicadoId:id}});
+      await client.comunicadoAluno.delete({where:{id}});
+    });
+  }
+  async excluirComunicadoEquipe(id: string) {
+    await this.client.$transaction(async client => {
+      await client.$executeRaw`SELECT pg_advisory_xact_lock(74192501)`;
+      const lote = await client.loteComunicado.findFirst({where:{id,tipo:'aviso'},select:{id:true}});
+      if (!lote) throw new HttpError(404, 'Comunicado não encontrado.');
+      const entregas = await client.entregaComunicado.findMany({where:{loteId:id},select:{comunicadoId:true}});
+      await client.entregaComunicado.deleteMany({where:{loteId:id}});
+      await client.comunicadoAluno.deleteMany({where:{id:{in:entregas.map(entrega=>entrega.comunicadoId)}}});
+      await client.loteComunicado.delete({where:{id}});
+    });
+  }
+  async saveFotoPerfil(foto:FotoPerfil){await this.client.fotoPerfil.upsert({where:{id:foto.id},create:foto,update:{imagem:foto.imagem,atualizadoEm:foto.atualizadoEm}});}
+  async saveConfiguracaoTecnicas(row:ConfiguracaoTecnicas){return this.client.configuracaoTecnicas.upsert({where:{id:row.id},create:row,update:row});}
+  async saveAcessoTecnicas(row:AcessoTecnicas){return this.client.acessoTecnicas.upsert({where:{id:row.id},create:row,update:row});}
   private delegate(table: Table): Delegate { const name = table[0].toLowerCase() + table.slice(1); return (this.client as unknown as Record<string, Delegate>)[name]; }
   async list<K extends Table>(table: K) { return (await this.delegate(table).findMany() as Tables[K][]).map(limparSaldoNulo); }
   async get<K extends Table>(table: K, id: string) { return limparSaldoNulo(await this.delegate(table).findUnique({ where: { id } }) as Tables[K] | null); }
@@ -516,6 +717,37 @@ export class PrismaRepository implements Repository {
       return result.count === 1;
     });
   }
+  async reservarRecuperacao(email: string, hash: string, agora: string) {
+    return this.client.$transaction(async client => {
+      await client.$executeRaw`SELECT pg_advisory_xact_lock(74192501)`;
+      const usuario = await client.usuario.findUnique({where:{email}}) as Usuario | null;
+      if (!credencialRecuperavel(usuario) || !usuarioHabilitado(usuario, await client.aluno.findMany() as Aluno[], await client.responsavelAluno.findMany() as ResponsavelAluno[])) return false;
+      const anterior = await client.recuperacaoSenha.findUnique({where:{id:usuario.id}});
+      if (pedidoRecente(anterior, agora)) return false;
+      const pedido = novoPedidoRecuperacao(usuario, hash, agora);
+      await client.recuperacaoSenha.upsert({where:{id:usuario.id},create:pedido,update:pedido});
+      return true;
+    });
+  }
+  async validarRecuperacao(hash: string, agora: string) {
+    const pedido = await this.client.recuperacaoSenha.findUnique({where:{tokenHash:hash},include:{usuario:true}});
+    return !!pedido && pedido.expiraEm > agora && credencialDoPedido(pedido, pedido.usuario as Usuario);
+  }
+  async redefinirSenha(hash: string, senhaHash: string, agora: string) {
+    return this.client.$transaction(async client => {
+      await client.$executeRaw`SELECT pg_advisory_xact_lock(74192501)`;
+      const pedido = await client.recuperacaoSenha.findUnique({where:{tokenHash:hash},include:{usuario:true}});
+      if (!pedido || pedido.expiraEm <= agora) return false;
+      const usuario = pedido.usuario as Usuario;
+      if (!credencialDoPedido(pedido, usuario)
+        || !usuarioHabilitado(usuario, await client.aluno.findMany() as Aluno[], await client.responsavelAluno.findMany() as ResponsavelAluno[])) return false;
+      const updated = await client.usuario.updateMany({where:{id:usuario.id,email:pedido.email,senhaHash:usuario.senhaHash},data:{senhaHash,conviteHash:null,conviteExpiraEm:null}});
+      if (!updated.count) return false;
+      await client.sessao.deleteMany({where:{usuarioId:usuario.id}});
+      await client.recuperacaoSenha.delete({where:{id:usuario.id}});
+      return true;
+    });
+  }
   async saveCheckin(aulaId: string, alunoId: string, timestamp: string, ator?: Pick<UsuarioView,'id'|'perfil'>) {
     return this.client.$transaction(async client => {
       const [aula] = await client.$queryRaw<Aula[]>`SELECT * FROM "Aula" WHERE id=${aulaId}::uuid FOR UPDATE`;
@@ -558,6 +790,10 @@ export class PrismaRepository implements Repository {
   }
   async saveSaldoMensalAluno(alunoId: string, limiteMensal: number | null) {
     return this.client.$transaction(client => sincronizarSaldoPrisma(client, alunoId, limiteMensal));
+  }
+  async savePreferenciasAcademia(exibirControlePlanos:boolean,usuarioId:string,timestamp:string){
+    const data={exibirControlePlanos,atualizadoEm:timestamp,atualizadoPorId:usuarioId};
+    return this.client.preferenciasAcademia.upsert({where:{id:'principal'},create:{id:'principal',...data},update:data});
   }
   async saveConfiguracaoAdicionais(input: CondicoesAulaAdicional, usuarioId: string, timestamp: string) {
     const data = { ...input, atualizadoPorId:usuarioId, atualizadoEm:timestamp };
@@ -648,6 +884,27 @@ export class PrismaRepository implements Repository {
       return limparSaldoNulo(plano.aluno);
     });
   }
+  async saveRegraGraduacao(faixaId:string,body:unknown,timestamp:string){
+    return this.client.$transaction(async client=>{
+      await client.$executeRaw`SELECT pg_advisory_xact_lock(74192502)`;
+      const ctx=await contextoEvolucao({list:async<K extends Table>(table:K)=>(await (client as unknown as Record<string,Delegate>)[table[0].toLowerCase()+table.slice(1)].findMany()) as Tables[K][]});
+      const plano=planejarRegra(ctx,faixaId,body,timestamp);
+      if(plano.graus.length)await client.grauFaixa.createMany({data:plano.graus});
+      return await client.regraGraduacao.upsert({where:{faixaId},create:plano.row,update:plano.row}) as RegraGraduacao;
+    });
+  }
+  async saveEvolucaoGraduacao(alunoId:string,autorId:string,input:EntradaEvolucao,timestamp:string){
+    await this.client.$transaction(async client=>{
+      await client.$executeRaw`SELECT pg_advisory_xact_lock(74192502)`;
+      await client.$queryRaw`SELECT id FROM "Aluno" WHERE id=${alunoId}::uuid FOR UPDATE`;
+      const ctx=await contextoEvolucao({list:async<K extends Table>(table:K)=>(await (client as unknown as Record<string,Delegate>)[table[0].toLowerCase()+table.slice(1)].findMany()) as Tables[K][]});
+      const plano=planejarEvolucao(ctx,alunoId,autorId,input,timestamp);
+      if(plano.novoGrau)await client.grauFaixa.create({data:plano.novoGrau});
+      if(plano.aluno)await client.aluno.update({where:{id:alunoId},data:{faixa:plano.aluno.faixa,faixaId:plano.aluno.faixaId,grauId:plano.aluno.grauId}});
+      if(plano.estado)await client.estadoGraduacao.upsert({where:{alunoId},create:plano.estado,update:plano.estado});
+      if(plano.evento)await client.eventoGraduacao.create({data:plano.evento});
+    });
+  }
   async saveCatalogoGraduacao(acao: AcaoGraduacao) {
     await this.client.$transaction(async client=>{
       await client.$executeRaw`SELECT pg_advisory_xact_lock(74192502)`;
@@ -664,7 +921,7 @@ export class PrismaRepository implements Repository {
       const [old]=await client.$queryRaw<Aluno[]>`SELECT * FROM "Aluno" WHERE id=${aluno.id}::uuid FOR UPDATE`;
       if(!create&&!old)throw new HttpError(404,'Aluno não encontrado.');
       const [faixas,graus]=await Promise.all([client.faixaGraduacao.findMany(),client.grauFaixa.findMany()]);
-      const row={...aluno,...graduacaoValida(aluno,faixas as FaixaGraduacao[],graus as GrauFaixa[],old)};
+      const dados=create?aluno:{...aluno,faixa:old!.faixa,faixaId:old!.faixaId,grauId:old!.grauId};const row={...dados,...graduacaoValida(dados,faixas as FaixaGraduacao[],graus as GrauFaixa[],old)};
       return limparSaldoNulo(await (create?client.aluno.create({data:row}):client.aluno.update({where:{id:row.id},data:row})) as Aluno);
     });
   }

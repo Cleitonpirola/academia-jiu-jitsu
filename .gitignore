@@ -13,3 +13,6 @@ __pycache__/
 *.sqlite-wal
 *.sqlite-shm
 *.sqlite-journal
+
+# Identificação local e configuração privada da hospedagem.
+.vercel/

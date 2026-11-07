@@ -19,7 +19,9 @@ export const responsavelSchema = z.object({
   telefone: z.string().trim().max(40).refine(v => /^\d{8,15}$/.test(v.replace(/\D/g,'')), 'Informe o telefone do responsável.'),
   parentesco: z.string().trim().min(2).max(60),
 }).strict();
-export const vinculoSchema = z.object({ possuiCelular: z.boolean(), responsavel: responsavelSchema }).strict();
+export const vinculoSchema = z.object({ possuiCelular: z.boolean(), responsavel: responsavelSchema.optional() }).strict().superRefine((input,ctx)=>{
+  if(!input.possuiCelular&&!input.responsavel)ctx.addIssue({code:'custom',path:['responsavel'],message:'Cadastre o responsável quando o aluno não possui celular.'});
+});
 export const transferenciaSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(180).refine(emailProprio, 'Informe o e-mail próprio do aluno.'),
   telefone: responsavelSchema.shape.telefone, maioridade: z.boolean(), manterContato: z.boolean(),
@@ -49,6 +51,13 @@ export function planejarFamilia(estado: EstadoFamilia, acao: AcaoFamiliar): Plan
     if (aluno.responsabilidadeTransferidaEm) throw new HttpError(409,'A responsabilidade deste cadastro já foi transferida.');
     const {responsavel,possuiCelular}=acao.input;
     if (possuiCelular && (!emailProprio(aluno.email) || !aluno.telefone)) throw new HttpError(400,'Preencha e-mail e telefone próprios na ficha ou use Ativar acesso próprio.');
+    if(possuiCelular){
+      aluno.possuiCelular=true;aluno.acessoPrincipal='aluno';
+      for(const v of meusVinculos)if(v.tipoVinculo==='responsavel')gravar('ResponsavelAluno',{...v,tipoVinculo:'contato',atualizadoEm:acao.timestamp},true);
+      plano.usuarioId=proprio?.id??'';
+      evento('acesso_proprio_configurado',{possuiCelular:true,acessoPrincipal:'aluno'});
+    }else{
+    if(!responsavel)throw new HttpError(400,'Cadastre o responsável quando o aluno não possui celular.');
     const existente=estado.usuarios.find(u=>u.email===responsavel.email);
     if (existente && existente.perfil!=='responsavel') throw new HttpError(409,'Este e-mail já pertence a uma conta de aluno ou administrador. Use um e-mail exclusivo do responsável.');
     const usuario=existente ?? novoUsuario(responsavel.nome,responsavel.email,'responsavel');
@@ -61,6 +70,7 @@ export function planejarFamilia(estado: EstadoFamilia, acao: AcaoFamiliar): Plan
     if(!possuiCelular&&proprio){gravar('Usuario',{...proprio,senhaHash:null,conviteHash:null,conviteExpiraEm:null},true);plano.revogarSessoes.push(proprio.id);}
     plano.usuarioId=usuario.id;
     evento('vinculo_atualizado',{responsavelId:usuario.id,possuiCelular,acessoPrincipal:aluno.acessoPrincipal});
+    }
   } else if(acao.tipo==='convidar') {
     if(!menorDeIdade(aluno)||aluno.situacao!=='ativo')throw new HttpError(409,'O convite exige um dependente menor e ativo.');
     const vinculo=meusVinculos.find(v=>v.tipoVinculo==='responsavel');
@@ -77,8 +87,9 @@ export function planejarFamilia(estado: EstadoFamilia, acao: AcaoFamiliar): Plan
     aluno.email=input.email;aluno.telefone=input.telefone;aluno.possuiCelular=true;aluno.acessoPrincipal='aluno';
     const usuario={...(proprio??novoUsuario(aluno.nome,input.email,'aluno')),nome:aluno.nome,email:input.email,senhaHash:null,conviteHash:acao.conviteHash,conviteExpiraEm:acao.expiraEm};
     gravar('Usuario',usuario,Boolean(proprio));plano.revogarSessoes.push(usuario.id);plano.usuarioId=usuario.id;
-    if(input.maioridade){aluno.responsabilidadeTransferidaEm=acao.timestamp;for(const v of meusVinculos)if(v.tipoVinculo!=='arquivado')gravar('ResponsavelAluno',{...v,tipoVinculo:input.manterContato?'contato':'arquivado',atualizadoEm:acao.timestamp},true);}
-    evento(input.maioridade?'transferencia_maioridade':'acesso_proprio_ativado',{manterContato:input.maioridade?input.manterContato:true});
+    if(input.maioridade)aluno.responsabilidadeTransferidaEm=acao.timestamp;
+    for(const v of meusVinculos)if(v.tipoVinculo!=='arquivado')gravar('ResponsavelAluno',{...v,tipoVinculo:input.manterContato?'contato':'arquivado',atualizadoEm:acao.timestamp},true);
+    evento(input.maioridade?'transferencia_maioridade':'acesso_proprio_ativado',{manterContato:input.manterContato});
   }
   // Cadastro novo vem primeiro por causa das chaves estrangeiras.
   if(acao.novoAluno)plano.mutacoes.unshift({table:'Aluno',row:aluno,update:false});
@@ -86,7 +97,7 @@ export function planejarFamilia(estado: EstadoFamilia, acao: AcaoFamiliar): Plan
   return plano;
 }
 export function responsavelPodeAcessar(aluno: Aluno, vinculos: ResponsavelAluno[], usuarioId: string) {
-  return aluno.situacao==='ativo'&&menorDeIdade(aluno)&&vinculos.some(v=>v.alunoId===aluno.id&&v.usuarioId===usuarioId&&v.tipoVinculo==='responsavel');
+  return aluno.situacao==='ativo'&&menorDeIdade(aluno)&&!Boolean(aluno.possuiCelular)&&aluno.acessoPrincipal==='responsavel'&&vinculos.some(v=>v.alunoId===aluno.id&&v.usuarioId===usuarioId&&v.tipoVinculo==='responsavel');
 }
 export function usuarioHabilitado(usuario: Usuario, alunos: Aluno[], vinculos: ResponsavelAluno[]) {
   if(usuario.perfil==='admin')return true;

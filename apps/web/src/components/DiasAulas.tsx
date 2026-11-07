@@ -1,0 +1,8 @@
+import {ChevronLeft,ChevronRight} from 'lucide-react';
+import {Button,Field} from '../components';
+import {today} from '../lib';
+export function deslocarDia(dia:string,quantidade:number){const d=new Date(dia+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+quantidade);return d.toISOString().slice(0,10);}
+export function DiasAulas({dia,onChange,diasComAula=[]}:{dia:string;onChange:(v:string)=>void;diasComAula?:string[]}){
+ const atual=dia||today(),marcados=new Set(diasComAula);
+ return <div className="dias-aulas"><div className="dias-cabecalho"><Field label="Dia das aulas"><input aria-label="Dia das aulas" type="date" min="1900-01-08" max="9999-12-24" value={dia} onChange={e=>{if(e.target.value>= '1900-01-08'&&e.target.value<='9999-12-24')onChange(e.target.value);}}/></Field><Button variant="ghost" onClick={()=>onChange(today())}>Hoje</Button></div><div className="dias-faixa"><button aria-label="Semana anterior" disabled={atual<='1900-01-15'} onClick={()=>onChange(deslocarDia(atual,-7))}><ChevronLeft size={19}/></button>{[-3,-2,-1,0,1,2,3].map(n=>{const v=deslocarDia(atual,n),d=new Date(v+'T12:00:00Z');return <button className={dia===v?'selected':''} aria-pressed={dia===v} aria-label={d.toLocaleDateString('pt-BR',{timeZone:'UTC',weekday:'long',day:'numeric',month:'long'})} key={v} onClick={()=>onChange(v)}><small>{d.toLocaleDateString('pt-BR',{timeZone:'UTC',weekday:'short'}).replace('.','')}</small><strong>{d.getUTCDate()}</strong><i className={marcados.has(v)?'tem-aula':''}/></button>;})}<button aria-label="Próxima semana" disabled={atual>='9999-12-17'} onClick={()=>onChange(deslocarDia(atual,7))}><ChevronRight size={19}/></button></div></div>;
+}

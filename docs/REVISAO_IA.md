@@ -1,8 +1,89 @@
 # Revisão de IA
 
+## Senhas comuns e recuperação por e-mail — 05/11/2026
+
+Testada a separação entre tokens de convite e recuperação, o bloqueio de senha comum, a resposta genérica, a deduplicação de pedidos simultâneos, a recusa de link expirado ou ligado a e-mail anterior e a troca concorrente com um único aceite. A suíte passou com 291 testes e o navegador abriu o formulário pelo link simulado. A verificação de migração foi feita no SQLite e por validação do schema Prisma. A entrega real e a execução da migração no PostgreSQL hospedado ainda precisam ser validadas. A lista de senhas é local e cobre exemplos comuns. [Fluxo e configuração](ACESSO_ALUNO.md).
+
+## Mínimo de senha — 05/11/2026
+
+Uma constante compartilhada define o mínimo de oito caracteres na interface e na API. O build e 45 testes de autenticação e acesso familiar passaram. Os testes cobrem a recusa de sete caracteres e o aceite de oito na criação da conta e na ativação por convite. O NIST indica 15 caracteres quando a senha é o único fator de autenticação e admite oito com autenticação multifator. [NIST SP 800-63B-4](https://pages.nist.gov/800-63-4/sp800-63b.html#passwordver).
+
+## Excluir comunicado — 05/11/2026
+
+O botão usa confirmação e aparece na gestão. Os dois repositórios removem os vínculos e as mensagens em uma transação. O build passou após ajustar a consulta à versão do Prisma. Os 21 testes direcionados passaram em SQLite, incluindo permissão, escopo da remoção e rollback em caso de falha. O navegador local confirmou o cancelamento e que as mensagens excluídas saíram da caixa de entrada do aluno fictício. A operação de exclusão no PostgreSQL publicado fica para validação na prévia.
+
+## Simplificar comunicados — 05/11/2026
+
+Os dois formulários usam o tipo `aviso` internamente. As telas filtram pedidos de autorização antigos para manter o histórico no banco. A aba do aluno e do responsável passou a se chamar **Comunicados**. Build aprovado. No navegador local, os envios individual e coletivo chegaram ao aluno fictício, a confirmação **Estou ciente** foi registrada e o pedido antigo ficou fora da lista.
+
+## Clique fora da ficha — 05/11/2026
+
+O fechamento anterior dependia das coordenadas do clique no diálogo. A ficha agora tem uma camada clicável em volta do painel rolável. O teste no navegador também revelou que Esc no formulário de graduação fechava a ficha. O tratamento agora aplica Esc somente à janela que recebeu o evento. O build passou. No navegador local, foram conferidos o clique fora após rolar, o retorno ao topo ao reabrir, o clique interno, o botão de fechar e Esc na janela sobreposta. A tela estreita foi simulada com dados fictícios.
+
+## Ficha e graus de graduação — 05/11/2026
+
+O seletor dependia dos graus previamente gravados, por isso as 120 aulas não preenchiam a lista. A revisão separou os dados de frequência da graduação registrada e manteve a escrita no servidor na mesma transação da ficha. A suíte passou com 288 testes e o build passou. No navegador local com dados fictícios, foram conferidas as opções de branca antiga, infantil, juvenil, marrom e preta, o salvamento do 6º grau e a seleção persistida ao reabrir. Também foi conferido o fechamento pelo fundo e a reabertura da ficha no topo.
+
+## Acesso de menores simplificado — 05/11/2026
+
+Prévia para validação: [Tatame brasileiro](https://tatame-homologacao-bomdkv0wn-cleiton-pirola.vercel.app), deployment `dpl_F43wMCTdb1PS9pp6NTq8nfgWi6vF`, READY, staging, gru1. SSO global mantido; sem links de compartilhamento. Os testes visuais são locais, não um login automatizado nessa publicação. O usuário valida esta entrega antes do commit ou da troca definitiva do banco.
+
+Menores: checkbox Possui celular visível. Desmarcado mostra e exige responsável para aulas/check-ins; marcado oculta os controles familiares e permite acesso próprio, sem exigir responsável. Adultos não exibem o bloco. Vínculos anteriores viram contato sem acesso ao aluno, preservando histórico e outros dependentes. Sem migração. 287 testes, build/typecheck e QA visual com dados fictícios em memória aprovados. Sem commit/push; prévia protegida READY, sem troca definitiva do banco. Detectada diferença entre booleano nativo e 0/1 bruto do SQLite no verificador de acesso; normalização corrigida e suíte repetida. Novo teste respeita o valor true omitido pelo contrato legado. Teste preexistente de foto/ranking fixava aula de outubro mas consultava o mês atual: passou a consultar explicitamente outubro, sem alterar produto. A execução interrompida por limite da revisão automática não foi contada como teste executado; retomada em05/11 passou. Revisão React: hooks antes de retornos, requisição familiar só para menor, campos ocultos desmontados e checkbox com rótulo acessível. [Regras e evidências](RESPONSAVEIS.md).
+
+## Conexão e API brasileiras verificadas — 04/11/2026
+
+Conexão privada brasileira validada com TLS verify-full. Leitura Prisma das 33 tabelas de domínio e 24 verificações HTTP em cada pooler (5432 e 6543), total 48 aprovações, com login professor/aluno e permissões. Dados fictícios e sessões de teste desfeitos por rollback; 34 tabelas/82 registros reconferidos sem divergências. Aplicação publicada e banco original preservados. Navegador, Python e prévia Vercel brasileira não testados nesta rodada. Sem deploy, commit ou push. Corrigido erro do verificador privado: pg_stat_ssl mede o backend atrás do pooler; passou a conferir TLSSocket autorizado/criptografado do cliente, preservando verificação de certificado/hostname. A credencial atual foi aceita; não classificar a falha de medição como nova senha inválida. [Evidências e limites](REGIOES.md).
+
+## Cópia brasileira conferida — 04/11/2026
+
+Cópia autorizada e concluída no Supabase tatame-homologacao-br (sa-east-1). Comparadas 34 tabelas e 82 registros por quantidade e hash de conteúdo tipado, incluindo os 19 registros do histórico Prisma; destino e releitura da origem sem divergências. Corrigida a precisão de microssegundos nas datas técnicas do histórico durante a conferência. RLS mantida nas 34 tabelas, zero políticas públicas e zero restrições não validadas. A aplicação continua em iad1 usando o banco original us-east-1, preservado. Conexão brasileira e API local posteriormente verificadas; troca publicada ainda pendente. Sem deploy, commit ou push. [Evidências e próximos passos](REGIOES.md).
+
+
+## Refresh e prévia de segurança —01/11/2026
+
+Condição inicial do AuthGate foi revisada: state=null não indica falha. Corrigida apresentação do botão sem alterar autenticação, senha ou permissões. QA local controlada3355 comprovou carregamento sem botão,503 com botão e recuperação pelo clique. Build/typecheck aprovados. Fontes da publicação anterior recompostas por hash porque a ferramenta de leitura de arquivos Vercel truncava base64; conteúdo incompleto foi rejeitado, não publicado. Ensaios da cópia inicial falharam por auxiliar de teste ausente; incluído somente no overlay local,279 testes passaram. Primeira criação remota recusou target preview; usada nomenclatura staging aceita pela API, sem Production. Código de segurança comitado; correção visual/documentação aguarda validação.
+
 ## Revisão da correção de dependências —31/10/2026
 
 Conferidos npm audit e comunicados dos mantenedores. Corrigidas quatro bibliotecas dentro das versões compatíveis. A IA acrescentou teste de requisição comprimida inválida; a primeira execução identificou resposta500, corrigida especificamente no tratamento de erros de descompressão400. A expectativa não foi relaxada. Auditoria completa sem alertas; suíte isolada228 e workspace285 aprovados, build/typecheck aprovados. Seleção do commit usa conteúdo isolado para não misturar Storage ou outras funcionalidades pendentes. Sem alegar auditoria completa ou atualização da Preview. [Evidências e limitações](SEGURANCA_DEPENDENCIAS.md).
+
+## Revisão do Storage —31/10/2026
+
+Validados limites/MIME dos buckets, autorização administrativa, dono da foto, comprovante HMAC de upload, usuário/caminho/tamanho e cabeçalho MP4, catálogo sem URLs e link temporário somente após autorização. Fotos antigas preservadas; falha no provedor mantém a anterior. Arquivos e bytes não são passados por SQL, e chave nunca chega ao cliente. SDK oficial fixado e lock atualizado. Teste de tamanho inicialmente falhou porque a fixture tinha acidentalmente24 bytes; mudada para23 para representar divergência real. Suíte final284 e build passaram. Revisão React: hooks incondicionais, inputs rotulados, fieldset bloqueado durante envio, andamento com role=status, upload no evento, sem SDK/segredo no bundle web. Limites: sem DRM/transcodificação, links válidos até expirar e possíveis objetos órfãos; ensaio remoto pendente. Não apresentar testes simulados como upload Supabase real.
+
+## Acesso direto à homologação — 31/10/2026
+
+A primeira tentativa de exceção foi recusada pela revisão automática por falta de autorização específica. Após confirmação explícita, a chamada foi aceita. Teste novo sem cookies comprovou acesso à página200 e bloqueio401 nas APIs privadas. Configuração do projeto reconferida: SSO global habilitado. Sem expiração automática para a exceção; não confundir com o prazo do link temporário anterior. Suíte278 é da etapa anterior, não foi reexecutada para esta mudança de configuração.
+
+## Verificação final publicada — 31/10/2026
+
+Encontrada incompatibilidade entre catálogo por categoria e enum legado de analyticsResponseSchema. Teste novo falhou antes da correção, passou após aceitar stringtrim1–80 e continuar recusando vazios/excesso. Suíte278 aprovada; aplicação reconstruída e chamada real ao Python com aluno fictício Adulto Faixa Branca aprovada, sem mascarar a falha com outro nome de faixa.
+
+Preview final READY, perfis/auth401/403, cadastro/convite/ativação, turma/aula, check-in/chamada, presença persistida e cálculos externos conferidos. Navegador sem erros de console na prova, login/perfil/categoria/presença visíveis. Tokens de proteção/cookies e senhas gerados para fixtures mantidos em arquivos privados; não trocar por bypass global. Ferramenta de share genérica falhou em localizar deployment; endpoint específico com team/ID criou link temporário. RLS todas34 tabelas,0 tabelas antigas desprotegidas; advisors sóINFO sempolíticas públicas.62 registros anteriores integralmente preservados após testes. Não confundir essa prova com cobertura exaustiva de todos os planos/perfis ou IA externa ativada. Sem commit/push.
+
+## Segurança19, certificado e primeiro build — 31/10/2026
+
+Migração19 protegem somente acesso, sem alterar registros; backup/ensaio/rollback e comparação final aprovados. Leitura Prisma permanece; anon/authenticated não recebem dados das34 tabelas. Advisors restantes INFO sem políticas é negação pública intencional, não política permissiva.
+
+Identificada referência de certificado do computador na conexão hospedada. Em vez de reduzir verificação TLS, certificado público validado foi incluído e apontado por referência estática newURL/readFileSync para rastreamento no bundle; prova real pooler6543/TLS aprovado. Novo teste e suíte277 aprovados. Primeiro buildServices rejeitou nodejs24.x; JSON Schema tinha aceitado string, mas isso não validava semântica do runtime. Corrigida autodetecção, publicação remota ainda em verificação. Fonte de upload exclui ambientes/bancos/testes; retornos vazios de upload sem erro são deduplicação, não exigir URLs. Não declarar teste online concluído apenas por upload ou build.
+
+## Migrações externas11–18 — 31/10/2026
+
+Revisados alvo privado/TLS, checksums aplicados, SQL pendente e preservação. Sem pg_dump disponível, gerada exportação lógica privada do schema public com dados/metadados; não chamar de backup integral do Supabase nem afirmar restauração testada. Ensaio transacional e rollback conferidos antes da aplicação real. Resultado:18 migrações/33 tabelas de domínio,20 tabelas anteriores integrais, antigos registros de faixas/graus e dois alunos/vínculos preservados. Oito faixas receberam alterações visuais previstas, por isso não afirmar que todas as tabelas tiveram hashes idênticos.
+
+Verificação adicional inicial falhou ao comparar NULL do banco com campo omitido por limparSaldoNulo; ajustado somente o verificador e repetida leitura com sucesso. Onze modelos novos lidos via Prisma, vínculos e restrições validados; leitura pública não recebeu registros das tabelas novas. Nenhuma alteração de cadastro para fazer o teste passar. Advisors apontaram ausência de políticas nas11 novas (negação pública intencional) e search_path mutável da função antiga; SQL também confirmou23 tabelas anteriores sem RLS. Migração18 protege apenas as11 novas do conjunto; correção das antigas preparada em SEGURANCA_HOMOLOGACAO.md para aprovação separada. Sem teste HTTP de exposição da Data API, não afirmar vazamento. Sem nova execução dos276 testes locais, deploy, commit/push ou testes de login externo nesta operação.
+
+## Técnicas semanais — 31/10/2026
+
+Revisada autorização no servidor, sem expor URL no catálogo; aluno/dependente derivados de sessão/vínculo; não confiar em IDs enviados pelo cliente. Testes confirmam que acesso de um aluno não beneficia outro, responsável não acessa cadastro não vinculado e aluno não se libera. Ativação, validade inclusive, publicação e data verificadas na entrega do link. Validação recusa protocolos/hosts disfarçados/playlists; React renderiza descrições como texto, links abrem com noopener/noreferrer. Revisão React verificou estados, limpeza de efeitos/AbortController, campos rotulados e ausência de importação de módulos privados no cliente.
+
+276 testes aprovados, build/typecheck e Prisma gerado/validado; teste de migração verifica preservação e ausência de cobranças/liberações iniciais. Capturas de QA fictícia comprovam cadastro, bloqueio e entrega do link após liberação. Ajustada apenas a origem da QA após falha visual403. Não há prova de reprodução de vídeo real nem execução PostgreSQL da migração18. Links recebidos podem ser repassados; proteção no provedor, pagamentos automáticos, histórico financeiro, repasses e isolamento de várias academias permanecem futuros. Não declarar monetização completa implementada. Guia TECNICAS.md.
+
+## Preparação de hospedagem — 31/10/2026
+
+Revisada separação web/API/Python, origem HTTPS exata, cookie seguro, autenticação obrigatória e recusa de fallback SQLite/seed/administrador local. Atalho transforma a conexão privada em Transaction pooler sem mudar o Session pooler original nem enfraquecer TLS; valida o projeto/destino e não mostra credenciais. Testes usam valores fictícios, sem chamadas ao banco externo. A configuração foi comparada com documentação/JSON Schema atuais porque Services está em beta; esquemas não comprovam build remoto. Acesso do plugin ao espaço exigiu autorização adicional do usuário e foi confirmado depois dela. Dez migrações remotas existentes foram verificadas por SELECT, sem confundir versão do motor PostgreSQL com versão do schema do Tatame.
+
+Resultados novos: 270 testes TypeScript, dois do atalho, 15 Python, typecheck e build web aprovados. Proteção da Vercel preservada, sem deploy ou envio ao Git. Pendentes: variável privada, validação humana do conjunto, migrações 11–17 e teste completo do endereço publicado. Não declarar PostgreSQL, Python remoto ou sessões publicadas validados. [Guia](VERCEL_HOMOLOGACAO.md).
 
 ## Faixas/graus e fluxo de aulas por turma — 26/10/2026
 
@@ -341,3 +422,51 @@ Revisão: não contar previsão como confirmação; preservar ausência e impedi
 ## Lista de professores — 26/10/2026
 
 Revisados migração aditiva sem reescrever histórico, nomes ordenados, rejeição de duplicados normalizados, autorização administrativa e transação de lista/resumo. Cinco testes novos cobrem rollback/concorrência, migração e isolamento do encontro. Ajustes nos testes anteriores consideram nova versão/campo sem apagar assert de preservação. Corrigida fixture de horários sobrepostos e uso de objeto SQLite sem protótipo; regras de produção não foram relaxadas. Resultado: 227 testes TypeScript, build/typecheck, geração/validação Prisma e UI fictícia passaram. SQLite v11 com backup/preservação real, PostgreSQL ainda v10. Não afirmar validação externa por tipagem/configuração. Implementação pela IA, pendente de validação humana/commit.
+
+## Revisão de evolução da graduação — 27/10/2026
+
+Revisados contagem exclusiva de PresencaAula confirmada, aulas únicas/elegíveis, crédito manual explícito, datas de início não inferidas, regras por faixa sem obrigatoriedade por cor e aprovação humana. Corrigido marco para guardar IDs de aula, impedindo recontagem ao recriar presença antiga. A regra e o estado são revalidados em transação; versão evita duplicar promoção, assinatura impede confirmar critério desatualizado. Histórico registra ajustes/exceções com motivo e snapshot. Troca fora da ficha bloqueada, inclusive contra edição comum concorrente. Aluno consulta só a própria trajetória e apenas sinaliza; responsável segue vínculos; financeiro não é liberado por consultar trajetória. Pedidos idempotentes por versão e listagem restrita ao administrador.
+
+Falhas de migração/versionamento e fixtures foram corrigidas preservando os testes de dados antigos. 16 testes novos, suíte final 243, build/typecheck, Prisma e UI fictícia passaram. SQLite v12 com backup/preservação de 23 tabelas; nenhuma validação externa PostgreSQL nem alteração no Supabase, que aguarda autorização. Sem autoria manual inventada e sem afirmar validação no celular. Implementação pendente de avaliação humana/commit.
+
+## Revisão do catálogo padrão — 27/10/2026
+
+Conferidos catálogo completo de vinte faixas, contraste moderado, listras kids/corais, nomes/IDs legados preservados, graus e regras independentes. Antigas rotas de metadados retornam 409, sem permitir contornar a retirada de controles pela interface. GET usa ordem fixa e novo aluno inicia pelo padrão. Não inferir restrições de idade ou progressão automática do gráfico fornecido. Migração 13 é nova; teste separado verifica mudança de metadados sem perda de alunos/graus/regras.
+
+246 testes TypeScript e build/typecheck passaram. UI fictícia salvou e reabriu meta kids. SQLite local preservou 25 tabelas e identidades das nove faixas com backup/FKs. Tentativa inicial de HTTP sob restrição do ambiente falhou por EACCES; execução local autorizada passou. Não há nova execução PostgreSQL externa/Python, nem autorização de Supabase/commit.
+
+## Revisão da retirada de tempo — 27/10/2026
+
+Não bastava esconder inputs: configurações antigas poderiam continuar bloqueando promoções. Cálculo agora ignora meses/permanência, e API rejeita novas exigências de tempo; aceita campos omitidos ou neutros. Colunas/snapshots antigos preservados, sem migração desnecessária. Data inicial ainda filtra presenças elegíveis, sem espera mínima. Assinatura versionada impede confirmação com a tela da regra anterior. Testes verificam liberação por aulas/graus, recusa de novos meses e preservação de histórico antigo; 246 testes e build/typecheck passaram. UI fictícia de salvamento confirmada. Não houve validação externa PostgreSQL ou commit.
+
+## Revisão da simplificação final — 27/10/2026
+
+Conferida separação entre configurar aulas da faixa e conceder grau do aluno. Pedido reduzido {aulasPorGrau} não pode limpar destino anterior. Quatro graus efetivos nas faixas cobertas, sem permitir quinto por promoção ou associação nova, sem rebaixar legado. Preta/corais não recebem automaticamente a regra de quatro. Permissões, presenças confirmadas e histórico continuam exigidos. UI não expõe CRUD de graus. 248 testes e build/typecheck passaram; prova focada adicional de 16 testes passou após assert de recusa do quinto. UI fictícia confirmou concessão e próximo grau bloqueado até mais aulas. Nenhuma migração nova, validação externa ou commit.
+
+## Revisão sem justificativa e lista de datas — 27/10/2026
+
+Retirada de justificativa não pode abrir permissão ao aluno ou apagar o histórico. Default no servidor mantém evento automático; teste permite correção para cima/baixo pelo administrador e recusa aluno, verifica autor/data/antes/depois e evento anterior intacto. Lista filtra somente grau para não apresentar ajuste como recebimento; datas são registros de concessão no sistema. 249 testes aprovados, build/typecheck final aprovados e UI fictícia validada. Preservação da base de QA confirmada após reinício sem ressemear. Integração WhatsApp apenas planejada, sem provedor/enviado real ou garantia de leitura. Sem nova migração/validação externa/commit.
+
+## Revisão de categorias e Comunicados — 27/10/2026
+
+Conferida identidade distinta para mesma cor em categorias diferentes, 13/2/5 opções somente até preta e ausência de idade inferida. Migração 14 somente acrescenta; campos/vínculos/graduações anteriores preservados, dados legados atuais continuam selecionáveis sem reclassificação silenciosa. Regra por ID garante metas independentes; limites reconhecem nomes completos, sem impor quatro à preta. Comunicação reutiliza autorização existente e separa seleção de aluno da ficha; chave evita manter rascunho entre destinatários. Portal e resposta mantidos; nada externo enviado.
+
+252 testes, build/typecheck e UI fictícia passaram. Migração local/QA com backup, 25 tabelas fora do catálogo preservadas e vinte faixas antigas idênticas; scripts externos preparados sem execução. Estado de leitura apenas explícito Ciente, sem prometer compreensão. Código/documentação aguardam validação humana; nenhum commit/push.
+
+## Revisão de planos opcionais — 27/10/2026
+
+Conferida preferência apenas visual, padrão oculto e administrativa. Salvar/desativar não altera planos, saldos, check-ins ou débitos; teste mantém bloqueio de cota. Modelo separado evita misturar visibilidade com consumo. Aluno não pode mudar configuração. Aulas realizadas não conta reserva, ausência, cancelamento/futuro nem duplica encontro. UI sem cartões ilimitados, sem bloco de cadastros anteriores e com débitos acessíveis. Novo banco/migração aditivos, histórico de 11–14 preservado.
+
+256 testes, build/typecheck e geração/validação Prisma aprovados; UI com dois alunos fictícios conferida. Migração local/QA preservou 26 tabelas com backup; Supabase não acessado. Nova conta limitada criada apenas na QA depois da prova de preservação. Preferência da QA retornou a false após testar ambos os estados. Sem novos testes Python ou validação PostgreSQL externa. Commit/push continua pendente de validação humana.
+
+## 27/10/2026 — revisão de comunicados, ranking e fotos
+
+Revisados: aluno/responsável como destinatário principal; não prometer entrega sem conta; uma confirmação por cadastro; lote atômico e repetição sem duplicação; aluno não envia lote nem altera foto alheia; responsável restrito ao dependente; ranking sem contatos/finanças; confirmação/datas/cancelamento/duplicação e empate; limites de arquivo, JPEG e contrato estrito; preservação dos dados anteriores.
+
+Erro identificado em teste visual: prévia de foto criada com blob URL foi bloqueada pela política de imagens do servidor. Correção: FileReader + data URL e normalização canvas, mantendo CSP existente, sem liberar blob nem scripts. Reteste visual de seleção e salvamento aprovado, foto apareceu no ranking. Ajustada atualização do avatar após salvar/remover e removido botão Hoje duplicado.
+
+264 testes TypeScript aprovados; geração/validação Prisma e build/typecheck aprovados. UI distinta da suíte, conferida com fictícios. Migrações locais16/17 preservaram27 tabelas anteriores com backup. SQL PostgreSQL e lógica Prisma preparados, sem execução externa. Supabase permanece v10 por pedido explícito. Conjunto ainda não commitado; revisão humana pendente.
+
+## Ranking renovável — 27/10/2026
+
+Revisada diferença entre iniciar a contagem de um novo período e apagar o histórico. Implementação filtra registros por mês/ano civil; não usa contador acumulado nem agenda de reset. Evita misturar anos e mantém consulta a período anterior. Em ano corrente exclui futuro. API rejeita mes+ano simultâneos; a página acompanha a virada, preservando consulta histórica. Testes atravessam dezembro/janeiro, mês vazio e ano encerrado. Nova suíte267pass/0fail e build/typecheck aprovados; UI dos dois perfis conferida. Nenhuma alteração no schema, PostgreSQL ou Supabase. Sem commit/push.

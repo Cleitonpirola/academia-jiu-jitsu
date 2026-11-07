@@ -1,5 +1,7 @@
 # Saldo mensal de aulas
 
+**Apresentação atual — 27/10/2026:** controles de planos são opcionais em **Configurações** e começam ocultos. Desativar não suspende limites nem altera débitos; só oculta os controles administrativos. Portal ilimitado não exibe cartões de cota, e Meus treinos usa Aulas realizadas com presenças confirmadas. Portal limitado mantém consumo e saldo. [Guia e testes atuais](CONFIGURACOES_ACADEMIA.md).
+
 ## Ampliação para aulas adicionais — 25/10/2026
 
 Após o pedido seguinte, existe [compra de aula adicional e menu Débitos](DEBITOS.md). A compra confirmada autoriza exclusivamente a aula escolhida e gera débito, sem aumentar o saldo do plano. Check-ins de adicionais ativos aparecem como adicionaisUtilizadas e não consomem de novo a cota regular. O limite semanal manual continua sem ignorar o mensal; a nova reserva paga é uma autorização distinta. Débito vencido bloqueia novos check-ins/reservas, mas a lista de débitos próprios permanece acessível. A renovação do saldo incluído no dia 1 continua igual. Migração atual passa a 8; as verificações de versão 7 abaixo são o registro da entrega anterior.

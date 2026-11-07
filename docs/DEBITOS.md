@@ -1,5 +1,7 @@
 # Aulas adicionais e débitos
 
+**Apresentação atual — 27/10/2026:** controles de planos são opcionais em **Configurações** e começam ocultos. Desativar não suspende limites nem altera débitos; só oculta os controles administrativos. Portal ilimitado não exibe cartões de cota, e Meus treinos usa Aulas realizadas com presenças confirmadas. Portal limitado mantém consumo e saldo. [Guia e testes atuais](CONFIGURACOES_ACADEMIA.md).
+
 ## Aulas publicadas por turmas — 26/10/2026
 
 A retirada de criação/exclusão de avulsas não remove este recurso. O usuário confirmou manter adicionais pagos. Novas reservas exigem aula publicada pela grade de uma turma; reserva legada já confirmada continua idempotente e utilizável. Testes e fluxo atual em [AULAS.md](AULAS.md).

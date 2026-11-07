@@ -55,7 +55,7 @@ export function ChamadaAula({ aula }: { aula: AulaView }) {
       {filtered.length ? <div className="chamada-rows">{filtered.map(row => {
         const blocked = Boolean(readOnly) || disabled || (!row.registro && (!row.aluno || row.aluno.situacao !== 'ativo' || row.aluno.dataMatricula > aula.dataAula));
         return <div className="chamada-row" key={row.id}>
-          <div><Person name={row.nome} secondary={(byCheckin.has(row.id) ? 'Check-in nesta aula' : 'Registro do professor') + (row.aluno?.situacao === 'inativo' ? ' · cadastro inativo' : '')}/>
+          <div><Person alunoId={row.id} name={row.nome} secondary={(byCheckin.has(row.id) ? 'Check-in nesta aula' : 'Registro do professor') + (row.aluno?.situacao === 'inativo' ? ' · cadastro inativo' : '')}/>
             <span className={`attendance-status ${row.registro ? row.registro.presente ? 'is-present' : 'is-absent' : 'unmarked'}`}>{row.registro ? row.registro.presente ? 'Presente' : 'Ausente' : byCheckin.has(row.id) ? 'Check-in · aguardando validação' : 'Sem marcação'}</span>
             {!row.registro && row.aluno?.situacao === 'inativo' && <small className="helper">Reative o aluno para registrar uma nova marcação.</small>}
           </div>

@@ -27,6 +27,10 @@ export function familiaAdminRouter(repo: Repository) {
     res.status(201).json({token,expiraEm,email:usuario!.email});
   });
   router.get('/:id/comunicados',async(req,res)=>{const aluno=await alunoAtual(req.params.id);res.json((await repo.list('ComunicadoAluno')).filter(c=>c.alunoId===aluno.id).sort((a,b)=>b.criadoEm.localeCompare(a.criadoEm)));});
+  router.delete('/:id/comunicados/:comunicadoId',async(req,res)=>{
+    await repo.excluirComunicado(z.string().uuid().parse(req.params.comunicadoId),z.string().uuid().parse(req.params.id));
+    res.sendStatus(204);
+  });
   router.post('/:id/comunicados',async(req,res)=>{
     const aluno=await alunoAtual(req.params.id);
     const {destino,...input}=z.object({destino:z.enum(['principal','responsavel']),tipo:z.enum(['aviso','autorizacao']),titulo:z.string().trim().min(2).max(120),mensagem:z.string().trim().min(2).max(3000)}).strict().parse(req.body);

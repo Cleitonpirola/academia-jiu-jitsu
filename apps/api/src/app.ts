@@ -1,4 +1,9 @@
+import {equipeRouter,fotoPropriaRouter} from './modules/equipe/routes.js';
+import {tecnicasAdminRouter} from './modules/tecnicas/routes.js';
+import {comunicadosEquipeRouter} from './modules/comunicados/routes.js';
+import { ordemFaixa } from '@tatame/shared';
 import { graduacoesRouter } from './modules/graduacoes/routes.js';
+import { evolucaoRouter } from './modules/graduacoes/evolucao-routes.js';
 import { graduacaoValida } from './modules/graduacoes/rules.js';
 import { familiaAdminRouter, responsavelRouter } from './modules/auth/familia-routes.js';
 import { vinculoSchema } from './modules/auth/familia.js';
@@ -13,26 +18,44 @@ import OpenAI from 'openai';
 import type { Repository, Table } from './repository.js';
 import { alunoSchema, mensalidadeSchema, paymentSchema, presencaSchema, monthSchema, statusOf, dashboard, currentMonth } from './domain.js';
 import { HttpError } from './http-error.js';
+import {configurarArquivos,type Arquivos} from './modules/arquivos/storage.js';
+import {arquivosRouter} from './modules/arquivos/routes.js';
 import { calculateAnalytics } from './modules/analytics/service.js';
 import { turmasRouter } from './modules/turmas/routes.js';
 import { aulasRouter } from './modules/aulas/routes.js';
 import { authModule, protectWrites } from './modules/auth/routes.js';
+import type { EmailRecuperacao } from './modules/auth/recuperacao.js';
 import { portalRouter } from './modules/auth/portal.js';
 import { planosRouter } from './modules/planos/routes.js';
 import { debitosRouter } from './modules/planos/debitos-routes.js';
 const fold = (text: string) => text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-export function createApp(repo: Repository, options: { apiKey?: string; analyticsUrl?: string; localAdmin?: boolean } = {}) {
+export function createApp(repo: Repository, options: { apiKey?: string; analyticsUrl?: string; localAdmin?: boolean; serveFrontend?:boolean;arquivos?:Arquivos; emailRecuperacao?:EmailRecuperacao } = {}) {
   const app = express();
-  app.disable('x-powered-by'); app.use(helmet()); app.use(express.json({ limit:'32kb' }));
-  const auth = authModule(repo, { localAdmin: options.localAdmin });
+  const arquivos=options.arquivos??configurarArquivos(process.env);
+  app.locals.arquivos=arquivos;
+  app.disable('x-powered-by'); app.use(helmet());
+  const jsonNormal=express.json({limit:'32kb'}),jsonFoto=express.json({limit:'200kb'});
+  app.use((req,res,next)=>(/^\/api\/(perfil\/foto|portal\/foto|responsavel\/[^/]+\/portal\/foto)$/.test(req.path)?jsonFoto:jsonNormal)(req,res,next));
+  const auth = authModule(repo, { localAdmin: options.localAdmin, emailRecuperacao: options.emailRecuperacao });
   app.use('/api', protectWrites, auth.identify);
   app.use('/api/auth', auth.router);
   app.use('/api', auth.requireLogin);
+  app.use('/api/equipe',equipeRouter(repo));
+  app.use('/api/perfil',fotoPropriaRouter(repo));
   app.use('/api/graduacoes',graduacoesRouter(repo,auth.requireAdmin));
   app.use('/api/portal', portalRouter(repo));
   app.use('/api/responsavel', responsavelRouter(repo));
   app.use('/api', auth.requireAdmin);
+  app.use('/api/armazenamento',arquivosRouter(arquivos));
+  app.use('/api/tecnicas',tecnicasAdminRouter(repo));
+  app.use('/api/comunicados',comunicadosEquipeRouter(repo));
+  app.get('/api/configuracoes/academia',async(_req,res)=>res.json(await repo.get('PreferenciasAcademia','principal')??{exibirControlePlanos:false}));
+  app.put('/api/configuracoes/academia',async(req,res)=>{
+    const {exibirControlePlanos}=z.object({exibirControlePlanos:z.boolean()}).strict().parse(req.body);
+    res.json(await repo.savePreferenciasAcademia(exibirControlePlanos,usuarioAtual(res).id,new Date().toISOString()));
+  });
   app.use('/api/alunos', familiaAdminRouter(repo));
+  app.use('/api/alunos/:alunoId/graduacao',evolucaoRouter(repo));
   app.use('/api/alunos', planosRouter(repo));
   app.use('/api/debitos', debitosRouter(repo));
   const analyticsUrl = options.analyticsUrl || process.env.ANALYTICS_URL || 'http://127.0.0.1:8000';
@@ -54,7 +77,8 @@ export function createApp(repo: Repository, options: { apiKey?: string; analytic
   app.get('/api/alunos/:id',async(req,res)=>res.json(await find('Aluno',req.params.id)));
   app.post('/api/alunos',async(req,res)=>{
     const {responsavel,...dados}=req.body??{};
-    const parsed=alunoSchema.parse(dados),id=randomUUID();
+    const padrao=(await repo.list('FaixaGraduacao')).filter(f=>f.situacao==='ativo').sort((a,b)=>Number(b.nome==='Branca')-Number(a.nome==='Branca')||ordemFaixa(a.nome)-ordemFaixa(b.nome))[0];
+    const parsed=alunoSchema.parse({faixa:padrao?.nome,...dados}),id=randomUUID();
     const input={...parsed,...graduacaoValida(parsed,await repo.list('FaixaGraduacao'),await repo.list('GrauFaixa'))};
     const aluno={...input,email:input.email||'sem-email-'+id+'@cadastro.invalid',id,criadoEm:new Date().toISOString()};
     if(responsavel!==undefined||input.possuiCelular===false){
@@ -65,7 +89,8 @@ export function createApp(repo: Repository, options: { apiKey?: string; analytic
   });
   app.put('/api/alunos/:id',async(req,res)=>{
     const aluno=await repo.get('Aluno',z.string().uuid().parse(req.params.id));if(!aluno)throw new HttpError(404,'Aluno não encontrado.');
-    const parsed=alunoSchema.parse({...req.body,possuiCelular:req.body.possuiCelular??aluno.possuiCelular??true});
+    const parsed=alunoSchema.parse({faixa:aluno.faixa,faixaId:aluno.faixaId,grauId:aluno.grauId,...req.body,possuiCelular:req.body.possuiCelular??aluno.possuiCelular??true});
+    if(parsed.faixa!==aluno.faixa||(parsed.faixaId??aluno.faixaId)!==aluno.faixaId||(parsed.grauId??null)!==(aluno.grauId??null))throw new HttpError(409,'Altere a graduação pela seção Evolução da graduação na ficha do aluno.');
     const input={...parsed,...graduacaoValida(parsed,await repo.list('FaixaGraduacao'),await repo.list('GrauFaixa'),aluno)};
     if(input.possuiCelular!==(aluno.possuiCelular??true))throw new HttpError(409,'Altere o acesso pela seção Responsável e acesso.');
     // Mudanças de identidade de uma conta existente passam pela transferência auditada.
@@ -74,6 +99,8 @@ export function createApp(repo: Repository, options: { apiKey?: string; analytic
   });
   app.delete('/api/alunos/:id',async(req,res)=>{
     await find('Aluno',req.params.id);
+    if(await repo.get('AcessoTecnicas',req.params.id))throw new HttpError(409,'Este aluno possui acesso à biblioteca. Inative o cadastro para preservar seus vínculos.');
+    if((await repo.list('EstadoGraduacao')).some(e=>e.alunoId===req.params.id)||(await repo.list('EventoGraduacao')).some(e=>e.alunoId===req.params.id))throw new HttpError(409,'Este aluno possui histórico de graduação. Inative o cadastro para preservá-lo.');
     if((await repo.list('ResponsavelAluno')).some(v=>v.alunoId===req.params.id))throw new HttpError(409,'Este aluno possui vínculo familiar. Inative o cadastro para preservar o histórico.');
     if((await repo.list('Mensalidade')).some(m=>m.alunoId===req.params.id)) throw new HttpError(409,'Este aluno possui cobranças. Altere sua situação para inativo para preservar o histórico.');
     if((await repo.list('AlunoTurma')).some(v=>v.alunoId===req.params.id)) throw new HttpError(409,'Este aluno está vinculado a uma turma. Remova os vínculos antes de excluir ou apenas inative o cadastro para preservá-lo.');
@@ -128,9 +155,10 @@ export function createApp(repo: Repository, options: { apiKey?: string; analytic
   app.use('/api/aulas',aulasRouter(repo));
   app.use('/api',(_req,_res,next)=>next(new HttpError(404,'Rota não encontrada.')));
   const dist=resolve('apps/web/dist');
-  if(existsSync(dist)) { app.use(express.static(dist)); app.get('/{*path}',(_req,res)=>res.sendFile(resolve(dist,'index.html'))); }
+  if(options.serveFrontend!==false && existsSync(dist)) { app.use(express.static(dist)); app.get('/{*path}',(_req,res)=>res.sendFile(resolve(dist,'index.html'))); }
   const errors: ErrorRequestHandler=(error,_req,res,_next)=>{
     if(error.status===400&&['Z_DATA_ERROR','Z_BUF_ERROR'].includes(String(error.code))){res.status(400).json({message:'O corpo comprimido da requisição é inválido.'});return;}
+    if(error.type==='entity.too.large'){res.status(413).json({message:'O arquivo é muito grande. Escolha uma foto menor.'});return;}
     if(error instanceof ZodError) { res.status(400).json({message:error.issues.map(v=>v.message).join(' '),fields:error.issues.map(v=>({field:v.path.join('.'),message:v.message}))}); return; }
     if(error instanceof HttpError) { res.status(error.status).json({message:error.message}); return; }
     const code=String(error.code || ''); const message=String(error.message || '');

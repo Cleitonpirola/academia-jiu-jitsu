@@ -1,5 +1,54 @@
 # Evolução funcional do Tatame
 
+## Envio direto ao YouTube — proposta futura (01/11/2026)
+
+Usuário manifestou preferência por hospedar os vídeos no YouTube e perguntou sobre enviar diretamente pelo Tatame. Viável pela API oficial com OAuth e confirmação do professor; arquivo permanece no YouTube e o aplicativo registra o ID/link. Integração não implementada, nenhum canal conectado e nenhum vídeo enviado. Detalhes e dependências em [TECNICAS.md](TECNICAS.md). Upload em Supabase continua adiado. A intenção anterior de cobrar por assistir exige rever a solução: política da API proíbe cobrança pelo conteúdo em player incorporado e não listado não impede compartilhamento. Não presumir que essa consulta aprovou um modelo comercial ou contratação.
+
+## Prioridade futura — recuperar senha por e-mail (01/11/2026)
+
+**Estado em 05/11/2026.** O fluxo de recuperação e o bloqueio de senhas comuns foram implementados e testados localmente com entrega simulada. Para liberar a recuperação na hospedagem, faltam aplicar a migração no banco de homologação, configurar o remetente e validar a entrega real. [Configuração](ACESSO_ALUNO.md#recuperação-de-senha-e-senhas-comuns--05112026).
+
+Fluxo previsto: **Esqueci minha senha → informar e-mail da conta → receber link temporário → escolher e confirmar nova senha → entrar novamente**. Atender aluno, responsável e professor/administrador. Para menor que usa acesso do responsável, recuperar a conta do responsável, sem criar automaticamente acesso próprio ou perder vínculos/histórico.
+
+Requisitos para implementar:
+
+- Configurar provedor, remetente e endereço HTTPS estável; credenciais apenas no servidor. Avaliar custos na implementação, sem contratar serviço agora.
+- Enviar um link de uso único e validade curta; não enviar senha antiga ou nova em texto por e-mail. Guardar só o hash do token e distinguir sua finalidade de um convite de primeiro acesso.
+- Exibir resposta genérica que não revele se o e-mail está cadastrado. Limitar tentativas/reenvios de forma adequada às várias instâncias da hospedagem.
+- Invalidar o link após uso, revogar as sessões anteriores da própria conta e manter bloqueios/permissões/situação do cadastro. Não reativar aluno ou acesso desabilitado por redefinir senha.
+- Não incluir tokens ou senhas em logs, URLs de retorno não confiáveis ou documentação pública. Não enviar dados de outros alunos/dependentes.
+- Testar destinatário e entrega em caixa autorizada, conta inexistente, responsável, administrador, token inválido/expirado/reutilizado, concorrência, falha do provedor e novo login. Só afirmar envio real após comprová-lo.
+
+**Alternativa atual:** o administrador pode gerar um novo convite para o aluno ativo pela ficha; o destinatário escolhe uma nova senha no link entregue manualmente. Esse fluxo não é uma recuperação automática por e-mail nem resolve sozinho a perda da conta administrativa. A tela publicada orienta pedir um link à academia. Não foram alteradas contas, senhas, dependências, credenciais ou publicação por este registro.
+
+## Biblioteca de técnicas e monetização — 31/10/2026
+
+**Decisão do usuário:** deixar modelo e preço de cobrança para depois. Mensalidade, vídeo avulso ou pacote não foram aprovados. A demonstração mensal já construída é somente uma proposta; validar conteúdo/acesso antes de retomar a definição comercial.
+
+**Implementado para validação local:** aba de técnicas semanais, catálogo por data/tipo, rascunho/publicação, preço mensal opcional editável (hipótese aguardando confirmação do usuário), liberação manual por aluno/validade e leitura pelo aluno/responsável. Links externos autorizados pelo servidor, sem hospedagem privada. [TECNICAS.md](TECNICAS.md).
+
+**Futuro:** provedor com vídeo protegido/URLs temporárias, contratação/pagamento automático com webhook verificável e idempotente, histórico de cobranças/renovações, definição de receita/custos, isolamento por academia, direitos de conteúdos entre filiais/equipes e monetização externa. Usuário deseja custear inicialmente o aplicativo com essa receita; nenhum repasse/contabilidade automática implementado. Decidir mensalidade versus pacote/vídeo antes do lançamento comercial.
+
+## Modalidades da academia — evolução futura (27/10/2026)
+
+Pedido do usuário: no Jiu-Jitsu, deixar o tipo de treino somente **Com kimono** e **Sem kimono**. Mais adiante, oferecer seleção equivalente para outras lutas que a academia tenha. Estado atual: seletor de presença simplificado para duas opções; integração de modalidades múltiplas **planejada, não implementada**.
+
+Na etapa futura, definir modalidades habilitadas por academia e seus tipos de treino, relacionando alunos, turmas e aulas sem misturar a contagem dos encontros. Confirmar com o usuário como planos e graduações se aplicam por modalidade antes de implementar. Não preencher regras de outras lutas automaticamente. Registros antigos de Fundamentos/Competição continuam preservados; retirar opções da interface não apaga o histórico nem muda os indicadores passados.
+
+## Integrações complexas futuras — avisos coletivos por WhatsApp (27/10/2026)
+
+**Estado: planejado, não implementado.** O usuário pediu escrever um aviso uma única vez e enviá-lo aos alunos em conjunto, em vez de abrir cada ficha. Acrescenta comunicação geral ao planejamento de parabéns e e-mail; não autoriza disparos agora.
+
+Fluxo proposto: escrever título/mensagem → selecionar destinatários (todos os alunos, uma turma ou seleção específica) → conferir prévia e quantidade de pessoas → confirmar o envio coletivo. A seleção por turma e seu vínculo de participação serão detalhados na implementação. Para menor sem celular, respeitar o acesso principal e enviar ao responsável conforme preferências, sem duplicar mensagens ao mesmo telefone.
+
+- Uma única ação do professor prepara os envios aos destinatários; não exige um envio manual por aluno nem criar um grupo de WhatsApp.
+- Registrar resultado por destinatário, erros e novas tentativas, impedindo duplicações acidentais.
+- Diferenciar enviado, entregue, leitura informada pelo serviço (quando disponível) e confirmação explícita “Estou ciente” dentro do Tatame. Nenhum desses estados prova compreensão da mensagem; ausência de confirmação não prova que a pessoa não leu.
+- Manter o aviso consultável na plataforma e as permissões de aluno/responsável. Preferências de recebimento e opção de sair dos envios devem fazer parte do desenho.
+- Dependências a avaliar depois: integração de mensagens, configuração do remetente, condições/custos vigentes e ambiente online. Nenhum provedor foi contratado ou conectado.
+
+Aceite futuro: seleção correta e prévia do lote; isolamento por aluno/responsável; telefone ausente/inválido; prevenção de envio duplicado; falhas parciais e repetição só das falhas; estados de entrega/leitura sem confirmação falsa; teste inicial apenas com destinos autorizados. Implementação e validação externa continuam pendentes. Neste registro houve somente atualização de documentação, sem envio real ou agendamento.
+
 ## Configuração de graduação e turmas coringa — 26/10/2026
 
 Implementados cadastro de faixas e graus por faixa, atribuição administrativa ao aluno e uso de faixas personalizadas no serviço de dados. Criação/exclusão de avulsas retiradas; publicação parte dos horários das turmas, inclusive coringa. Usuário confirmou manter cobrança de aula adicional após esgotar o plano, agora para novas reservas de aulas por turma. Ícone de Mensalidades alterado para $. Testes e autorização de commit/envio registrados no README e PROCESSO.md. Edição individual do título da aula foi pedida depois e é o próximo incremento separado para validação.
@@ -327,3 +376,7 @@ Não há estimativa fechada de horas. Depois de escolhido o primeiro incremento,
 - Enunciado completo do desafio fornecido pelo usuário: páginas 3–13 e 18–19; não apenas as duas imagens iniciais.
 - Perguntas recentes do usuário sobre “Registrar um treino”, “Fundamentos” e acesso dos alunos. São dúvidas de produto; nenhuma alteração foi aprovada automaticamente por terem sido discutidas.
 - [Plano técnico e separação das duas entregas](PLANO_EVOLUCAO.md), [arquitetura implementada](ARQUITETURA.md), [revisão e evidências anteriores](REVISAO_IA.md) e [fluxo de validação](PROCESSO.md).
+
+## Atualização local — 27/10/2026
+
+Implementados e verificados localmente: comunicado coletivo dentro da plataforma (Todos da equipe e confirmações individuais); ranking geral/mensal por presença confirmada, pódio/lista; foto nos perfis; presenças por dia/aula. Novos guias COMUNICADOS.md e RANKING_FOTOS_PRESENCAS.md. WhatsApp coletivo, e-mail externo e outras modalidades continuam futuros; não confundir com envio interno já implementado. Supabase permanece aguardando autorização, sem conexão externa nesta rodada.

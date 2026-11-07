@@ -9,11 +9,18 @@ import { SqliteRepository } from './repository.js';
 import { currentMonth, monthAt, today } from './domain.js';
 import { calculateAnalytics } from './modules/analytics/service.js';
 import { randomUUID } from 'node:crypto';
+import {analyticsResponseSchema} from './modules/analytics/schema.js';
 
 const validMetrics = (): Analytics => ({
   mes: currentMonth(), dataReferencia: today(), alunosAtivos: 0, alunosInadimplentes: 0,
   receitaCentavos: 0, inadimplenciaCentavos: 0, frequenciaMedia: 0, alunosEmRisco: 0,
   presencasNoMes: 0, riscos: [], receitaMensal: [],
+});
+
+it('indicadores aceitam faixas por categoria e recusam graduação vazia ou excessiva',()=>{
+ const validar=(faixa:string)=>analyticsResponseSchema.safeParse({...validMetrics(),riscos:[{alunoId:'teste',nome:'Aluno de teste',faixa,frequenciaAtual:0,frequenciaAnterior:0,diasSemTreinar:0,pontos:0,nivel:'baixo',sinais:[]}]});
+ for(const faixa of ['Branca','Adulto Faixa Branca','Infantil Faixa Cinza / Branca','Juvenil Faixa Azul'])assert.equal(validar(faixa).success,true);
+ for(const faixa of ['', ' '.repeat(4),'x'.repeat(81)])assert.equal(validar(faixa).success,false);
 });
 
 async function withService(body: unknown, run: (url: string, received: unknown[]) => Promise<void>, status = 200, raw = false) {

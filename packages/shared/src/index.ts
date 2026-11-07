@@ -1,11 +1,20 @@
-export const SENHA_MINIMA = 8;
 export const FAIXAS = ['Branca', 'Cinza', 'Amarela', 'Laranja', 'Verde', 'Azul', 'Roxa', 'Marrom', 'Preta'] as const;
+export const SENHA_MINIMA = 8;
+export type {ConfiguracaoTecnicas,VideoTecnica,AcessoTecnicas,BibliotecaTecnicas,GestaoTecnicas} from './tecnicas.js';
+export { FAIXAS_PADRAO, FAIXAS_CATEGORIA, CATEGORIAS_FAIXA, faixaCategoria, faixaPadrao, ordemFaixa, fundoFaixa, limiteGrausPadrao, limiteGrausRegistro } from './faixas.js';
 export type Faixa = string;
 export interface FaixaGraduacao { id: string; nome: string; chave: string; cor: string; ordem: number; situacao: Situacao; criadoEm: string; atualizadoEm: string }
 export type FaixaGraduacaoInput = Pick<FaixaGraduacao,'nome'|'cor'|'ordem'|'situacao'>;
 export interface GrauFaixa { id: string; faixaId: string; numero: number; situacao: Situacao; criadoEm: string; atualizadoEm: string }
 export type GrauFaixaInput = Pick<GrauFaixa,'numero'|'situacao'>;
 export interface FaixaGraduacaoView extends FaixaGraduacao { graus: GrauFaixa[] }
+// Campos de meses permanecem para leitura de dados e snapshots antigos; não são requisitos atuais.
+export interface RegraGraduacao { id:string; faixaId:string; aulasPorGrau:number|null; mesesPorGrau:number|null; grausParaFaixa:number; mesesMinimosFaixa:number; proximaFaixaId:string|null; atualizadoEm:string }
+export type RegraGraduacaoInput = Pick<RegraGraduacao,'aulasPorGrau'> & {grausParaFaixa?:number;proximaFaixaId?:string|null;mesesPorGrau?:null;mesesMinimosFaixa?:0};
+export interface EstadoGraduacao { id:string; alunoId:string; faixaId:string; dataInicioFaixa:string; aulasAnteriores:number; marcoAulas:string; versao:number; atualizadoEm:string }
+export interface EventoGraduacao { id:string; alunoId:string; tipo:'ajuste'|'grau'|'faixa'|'solicitacao'; faixaAnterior:string; faixaNova:string; grauAnterior:number|null; grauNovo:number|null; aulasConsideradas:number; motivo:string; autorId:string; versaoEstado:number; regraSnapshot:string|null; criadoEm:string }
+export interface MetaGraduacao { aulasNecessarias:number|null; aulasRestantes:number; dataMinima:string; apto:boolean }
+export interface ProgressoGraduacao { alunoId:string; nome:string; faixa:string; grauAtual:number|null; estado:EstadoGraduacao|null; regra:RegraGraduacao|null; regraAssinatura:string|null; aulasConfirmadas:number; aulasAnteriores:number; aulasTotal:number; proximoGrau:number|null; metaGrau:MetaGraduacao|null; proximaFaixa:string|null; metaFaixa:MetaGraduacao|null; solicitacaoPendente:boolean; historico:EventoGraduacao[] }
 export type Situacao = 'ativo' | 'inativo';
 export type Status = 'pendente' | 'pago' | 'atrasado';
 export interface Aluno {
@@ -24,6 +33,7 @@ export interface EventoAcessoAluno { id: string; alunoId: string; usuarioId: str
 export interface ComunicadoAluno { id: string; alunoId: string; destinatarioId: string; autorId: string; tipo: 'aviso' | 'autorizacao'; titulo: string; mensagem: string; resposta: 'ciente' | 'aceito' | 'recusado' | null; respondidoEm: string | null; criadoEm: string }
 export interface ControleParental { aluno: Aluno; menor: boolean; responsaveis: (ResponsavelAluno & { nome: string; email: string; ativado: boolean })[]; eventos: EventoAcessoAluno[] }
 export interface SaldoMensal { competencia: string; limiteMensal: number | null; utilizadas: number; adicionaisUtilizadas: number; restantes: number | null; limiteAtingido: boolean }
+export interface PreferenciasAcademia { id:string; exibirControlePlanos:boolean; atualizadoEm:string; atualizadoPorId:string }
 export interface ConfiguracaoAcademia { id: string; valorAulaAdicionalCentavos: number | null; prazoPagamentoDias: number; atualizadoEm: string; atualizadoPorId: string }
 export type CondicoesAulaAdicional = Pick<ConfiguracaoAcademia, 'valorAulaAdicionalCentavos' | 'prazoPagamentoDias'>;
 export interface AceiteAulaAdicional { valorEsperadoCentavos: number; prazoEsperadoDias: number }
@@ -72,7 +82,7 @@ export interface GestaoPlano { plano: PlanoAluno | null; uso: UsoPlano; aulasHoj
 export interface AulaProfessor { id: string; aulaId: string; nome: string; ordem: number }
 export interface AulaView extends Aula { professores: string[]; alunosPrevistos: AulaAlunoPrevisto[]; chamada: PresencaAula[]; checkins: CheckinAula[] }
 export interface UsuarioView { id: string; nome: string; email: string; perfil: 'admin' | 'aluno' | 'responsavel'; alunoId: string | null }
-export interface AuthState { configuracaoInicial: boolean; usuario: UsuarioView | null }
+export interface AuthState { configuracaoInicial: boolean; usuario: UsuarioView | null; recuperacaoDisponivel?: boolean }
 export interface AulaAlunoView extends Aula { checkin: CheckinAula | null; presenca: PresencaAula | null }
 export interface PortalAluno {
   bloqueado: false;
@@ -125,3 +135,10 @@ export interface Analytics {
   alunosEmRisco: number; presencasNoMes: number; riscos: RiscoAluno[];
   receitaMensal: { mes: string; receitaCentavos: number }[];
 }
+
+export interface LoteComunicado { id:string; tipo:'aviso'|'autorizacao'; titulo:string; mensagem:string; autorId:string; criadoEm:string; pendencias:string }
+export interface EntregaComunicado { id:string; loteId:string; comunicadoId:string; nome:string }
+export interface LoteComunicadoView extends LoteComunicado { entregas:(EntregaComunicado & {resposta:ComunicadoAluno['resposta'];respondidoEm:string|null})[]; naoEnviados:{alunoId:string;nome:string;motivo:string}[] }
+
+export interface FotoPerfil {id:string;alunoId:string|null;usuarioId:string|null;imagem:string;atualizadoEm:string}
+export interface PosicaoRanking {alunoId:string;nome:string;aulas:number;posicao:number;fotoUrl:string|null}

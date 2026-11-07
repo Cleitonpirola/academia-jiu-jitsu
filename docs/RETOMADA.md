@@ -1,5 +1,9 @@
 # Ponto de retomada do Tatame
 
+## Recuperação por e-mail e migrações — 07/11/2026
+
+A prévia de São Paulo confirmou entrega pelo Resend e recusa do link vencido. O código valida o prazo na abertura e ao salvar. O remetente de testes atende à própria caixa do titular da conta Resend. Para envio aos alunos, configure um domínio verificado. A validação visual da última prévia e a proteção compartilhada contra excesso de tentativas seguem como próximos passos. [Fluxo e configuração](ACESSO_ALUNO.md) · [Ambiente de São Paulo](REGIOES.md).
+
 ## Estado vigente ao encerrar — 26/10/2026
 
 Usuário aprovou vários professores e autorizou commit/push, solicitou resumo para Matheus e informou que continuará à noite. Implementação e testes concluídos (227 TypeScript, build/typecheck e Prisma); sem alterações de código após essa validação. SQLite local v11, Supabase v10 (migração 11 preparada e pendente). Os conjuntos anteriores estão nos commits db08478 e e58d87d. O último conjunto de professores está autorizado para sincronização: conferir git log/status e origin/codex/evolucao-tatame antes de repetir qualquer commit/push. As notas históricas de falta de aprovação/testes mais abaixo foram superadas. Resumo completo do dia em RESUMO_2026-10-26.md.

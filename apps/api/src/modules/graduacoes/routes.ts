@@ -3,25 +3,27 @@ import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import type { Repository } from '../../repository.js';
 import { HttpError } from '../../http-error.js';
-import { chaveFaixa, faixaSchema, grauSchema } from './rules.js';
+import { grauSchema } from './rules.js';
+import { ordemFaixa } from '@tatame/shared';
+import { contextoEvolucao, progressoGraduacao } from './evolucao.js';
 
 export function graduacoesRouter(repo:Repository,requireAdmin:import('express').RequestHandler){
   const router=Router();
   router.get('/',async(_req,res)=>{
     const [faixas,graus]=await Promise.all([repo.list('FaixaGraduacao'),repo.list('GrauFaixa')]);
-    res.json(faixas.sort((a,b)=>a.ordem-b.ordem||a.nome.localeCompare(b.nome,'pt-BR')).map(f=>({...f,graus:graus.filter(g=>g.faixaId===f.id).sort((a,b)=>a.numero-b.numero)})));
+    res.json(faixas.sort((a,b)=>ordemFaixa(a.nome)-ordemFaixa(b.nome)||a.nome.localeCompare(b.nome,'pt-BR')).map(f=>({...f,graus:graus.filter(g=>g.faixaId===f.id).sort((a,b)=>a.numero-b.numero)})));
   });
   router.use(requireAdmin);
-  router.post('/faixas',async(req,res)=>{
-    const input=faixaSchema.parse(req.body),now=new Date().toISOString(),row={...input,id:randomUUID(),chave:chaveFaixa(input.nome),criadoEm:now,atualizadoEm:now};
-    await repo.saveCatalogoGraduacao({tipo:'faixa',row,create:true});res.status(201).json(row);
+  router.get('/regras',async(_req,res)=>res.json(await repo.list('RegraGraduacao')));
+  router.get('/pendencias',async(_req,res)=>{
+    const ctx=await contextoEvolucao(repo);
+    res.json(ctx.alunos.filter(a=>a.situacao==='ativo').map(a=>progressoGraduacao(ctx,a.id)).filter(p=>p.solicitacaoPendente||p.metaGrau?.apto||p.metaFaixa?.apto).map(p=>({alunoId:p.alunoId,nome:p.nome,faixa:p.faixa,solicitacaoPendente:p.solicitacaoPendente})));
   });
-  router.put('/faixas/:id',async(req,res)=>{
-    const id=z.string().uuid().parse(req.params.id),old=await repo.get('FaixaGraduacao',id);if(!old)throw new HttpError(404,'Faixa não encontrada.');
-    const input=faixaSchema.parse(req.body),row={...old,...input,chave:chaveFaixa(input.nome),atualizadoEm:new Date().toISOString()};
-    await repo.saveCatalogoGraduacao({tipo:'faixa',row,create:false});res.json(row);
-  });
-  router.delete('/faixas/:id',async(req,res)=>{await repo.saveCatalogoGraduacao({tipo:'excluir',tabela:'FaixaGraduacao',id:z.string().uuid().parse(req.params.id)});res.status(204).end();});
+  router.put('/faixas/:id/regra',async(req,res)=>res.json(await repo.saveRegraGraduacao(z.string().uuid().parse(req.params.id),req.body,new Date().toISOString())));
+  const catalogoFixo:import('express').RequestHandler=()=>{throw new HttpError(409,'As faixas seguem o catálogo padrão da plataforma. Configure apenas os graus e os critérios de evolução.');};
+  router.post('/faixas',catalogoFixo);
+  router.put('/faixas/:id',catalogoFixo);
+  router.delete('/faixas/:id',catalogoFixo);
   router.post('/faixas/:id/graus',async(req,res)=>{
     const input=grauSchema.parse(req.body),now=new Date().toISOString(),row={...input,id:randomUUID(),faixaId:z.string().uuid().parse(req.params.id),criadoEm:now,atualizadoEm:now};
     await repo.saveCatalogoGraduacao({tipo:'grau',row,create:true});res.status(201).json(row);

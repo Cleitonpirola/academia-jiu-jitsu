@@ -17,7 +17,7 @@ describe('Acesso familiar e transferência de responsabilidade',()=>{
   const call=(token:string,method:'get'|'post'|'put'|'patch'|'delete',path:string)=>request(app)[method](path).set('Cookie',COOKIE+'='+token).set('X-Tatame-Request','1');
   const admin=(method:'get'|'post'|'put'|'patch'|'delete',path:string)=>call('t'.repeat(43),method,path);
   const cadastrar=async(nome='Dependente',celular=false,email=responsavel.email)=>{
-    const r=await admin('post','/api/alunos').send({nome,telefone:celular?'11911111111':'',email:celular?nome.toLowerCase()+'@teste.invalid':'',dataNascimento:'2014-01-01',dataMatricula:'2020-01-01',faixa:'Branca',situacao:'ativo',possuiCelular:celular,responsavel:{...responsavel,email}}).expect(201);
+    const r=await admin('post','/api/alunos').send({nome,telefone:celular?'11911111111':'',email:celular?nome.toLowerCase()+'@teste.invalid':'',dataNascimento:'2014-01-01',dataMatricula:'2020-01-01',faixa:'Branca',situacao:'ativo',possuiCelular:celular,...(celular?{}:{responsavel:{...responsavel,email}})}).expect(201);
     return r.body as Aluno;
   };
   const sessao=async(usuarioId:string,token='r'.repeat(43))=>{
@@ -63,10 +63,10 @@ describe('Acesso familiar e transferência de responsabilidade',()=>{
     await call(token,'put',path+`/aulas/${b.id}/checkin`).send({}).expect(200);assert.equal((await repo.get('Aluno',aluno.id))!.aulasRestantesMes,0);
     await call(token,'patch',`/api/debitos/${extra.body.id}/pagamento`).send({dataPagamento:today()}).expect(403);
   });
-  it('menor com celular faz o próprio check-in; responsável apenas acompanha e autoriza',async()=>{
-    const aluno=await cadastrar('Comcelular',true),token=await pai(aluno),a=await aula();
-    await call(token,'get',`/api/responsavel/${aluno.id}/portal`).expect(200);
-    await call(token,'put',`/api/responsavel/${aluno.id}/portal/aulas/${a.id}/checkin`).send({}).expect(403);
+  it('menor com celular não exige responsável e faz o próprio check-in',async()=>{
+    const aluno=await cadastrar('Comcelular',true),a=await aula();
+    assert.equal((await repo.list('ResponsavelAluno')).length,0);
+    assert.equal((await repo.list('Usuario')).some(u=>u.perfil==='responsavel'),false);
     const convite=await admin('post',`/api/auth/alunos/${aluno.id}/convite`).expect(201);
     const ativacao=await request(app).post('/api/auth/ativar').set('X-Tatame-Request','1').send({token:convite.body.token,senha}).expect(200);
     assert.equal(ativacao.body.usuario.perfil,'aluno');
@@ -79,18 +79,19 @@ describe('Acesso familiar e transferência de responsabilidade',()=>{
     await request(app).post('/api/auth/ativar').set('X-Tatame-Request','1').send({token:convite.body.token,senha}).expect(400);
     await request(app).post('/api/auth/entrar').set('X-Tatame-Request','1').send({email:responsavel.email,senha}).expect(200);
   });
-  it('transfere acesso próprio sem apagar histórico e mantém acompanhamento até maioridade',async()=>{
+  it('transfere para acesso próprio preservando histórico e encerrando acesso parental',async()=>{
     const aluno=await cadastrar(),token=await pai(aluno),a=await aula();await repo.saveCheckin(a.id,aluno.id,new Date().toISOString());
     const before=(await repo.list('CheckinAula'))[0];
     const r=await admin('post',`/api/alunos/${aluno.id}/familia/transferir`).send({email:'proprio@teste.invalid',telefone:'11900000001',maioridade:false,manterContato:true}).expect(201);
     const after=await repo.get('Aluno',aluno.id);assert.equal(after!.acessoPrincipal??'aluno','aluno');assert.equal(after!.email,'proprio@teste.invalid');assert.deepEqual((await repo.list('CheckinAula'))[0],before);
-    await call(token,'get',`/api/responsavel/${aluno.id}/portal`).expect(200);
-    await call(token,'put',`/api/responsavel/${aluno.id}/portal/aulas/${a.id}/checkin`).send({}).expect(403);
+    assert.equal((await repo.list('ResponsavelAluno'))[0].tipoVinculo,'contato');
+    await call(token,'get',`/api/responsavel/${aluno.id}/portal`).expect(401);
+    await call(token,'put',`/api/responsavel/${aluno.id}/portal/aulas/${a.id}/checkin`).send({}).expect(401);
     await request(app).post('/api/auth/ativar').set('X-Tatame-Request','1').send({token:r.body.token,senha}).expect(200);
     await admin('post',`/api/alunos/${aluno.id}/familia/transferir`).send({email:'proprio@teste.invalid',telefone:'11900000001',maioridade:true,manterContato:true}).expect(409);
   });
   it('ao voltar ao acesso pelo responsável revoga sessão e convite antigos do aluno',async()=>{
-    const aluno=await cadastrar('Celular',true);await pai(aluno);
+    const aluno=await cadastrar('Celular',true);
     await admin('post',`/api/auth/alunos/${aluno.id}/convite`).expect(201);
     const usuario=(await repo.list('Usuario')).find(u=>u.alunoId===aluno.id)!;const token=await sessao(usuario.id,'s'.repeat(43));
     await admin('put',`/api/alunos/${aluno.id}/familia`).send({possuiCelular:false,responsavel}).expect(200);
@@ -103,6 +104,26 @@ describe('Acesso familiar e transferência de responsabilidade',()=>{
     await call(token,'get',`/api/responsavel/${a.id}/portal`).expect(403);
     await call(token,'get',`/api/responsavel/${b.id}/portal`).expect(200);
     assert.equal((await repo.list('ResponsavelAluno')).filter(v=>v.alunoId===a.id).length,2);
+  });
+  it('salva celular marcado sem responsável e preserva a sessão própria já ativa',async()=>{
+    const aluno=await cadastrar('Celularproprio',true);
+    const convite=await admin('post',`/api/auth/alunos/${aluno.id}/convite`).expect(201);
+    const login=await request(app).post('/api/auth/ativar').set('X-Tatame-Request','1').send({token:convite.body.token,senha}).expect(200);
+    const user=(await repo.list('Usuario')).find(u=>u.alunoId===aluno.id)!;
+    await admin('put',`/api/alunos/${aluno.id}/familia`).send({possuiCelular:true}).expect(200);
+    assert.equal((await repo.get('Usuario',user.id))!.senhaHash,user.senhaHash);
+    await request(app).get('/api/portal').set('Cookie',login.headers['set-cookie']).expect(200);
+    await admin('put',`/api/alunos/${aluno.id}/familia`).send({possuiCelular:false}).expect(400);
+    assert.equal((await repo.get('Aluno',aluno.id))!.possuiCelular??true,true);
+  });
+  it('celular marcado impede acesso parental legado sem afetar outro dependente',async()=>{
+    const a=await cadastrar('Primeiro'),b=await cadastrar('Segundo'),token=await pai(a);
+    await repo.update('Aluno',a.id,{possuiCelular:true,acessoPrincipal:'aluno',email:'primeiro@teste.invalid',telefone:'11911111111'});
+    await call(token,'get',`/api/responsavel/${a.id}/portal`).expect(403);
+    await call(token,'get',`/api/responsavel/${b.id}/portal`).expect(200);
+    await admin('put',`/api/alunos/${a.id}/familia`).send({possuiCelular:true}).expect(200);
+    assert.equal((await repo.list('ResponsavelAluno')).find(v=>v.alunoId===a.id)!.tipoVinculo,'contato');
+    await call(token,'get',`/api/responsavel/${b.id}/portal`).expect(200);
   });
   it('bloqueia acesso parental aos 18, transfere responsabilidade e guarda contato ou arquiva',async()=>{
     const aluno=await cadastrar(),irma=await cadastrar('Irmã'),token=await pai(aluno);

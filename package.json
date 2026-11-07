@@ -22,11 +22,16 @@
     "test:analytics": "node scripts/test-python.mjs",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
-    "db:seed": "tsx apps/api/src/seed-command.ts"
+    "db:seed": "tsx apps/api/src/seed-command.ts",
+    "build:web": "tsc --noEmit -p apps/web/tsconfig.json && vite build --config apps/web/vite.config.ts",
+    "build:api": "npm run db:generate && tsc --noEmit -p apps/api/tsconfig.json",
+    "copiar:conexao-vercel": "node scripts/copiar-conexao-vercel.mjs",
+    "test:vercel": "node --test scripts/copiar-conexao-vercel.test.mjs"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.0.0",
     "@prisma/client": "^7.0.0",
+    "@supabase/supabase-js": "2.118.0",
     "@tailwindcss/vite": "^4.1.0",
     "@tatame/shared": "*",
     "dotenv": "^17.0.0",

@@ -1,3 +1,5 @@
+import {rotasFoto} from '../equipe/fotos.js';
+import {tecnicasPortalRouter} from '../tecnicas/routes.js';
 import { Router } from 'express';
 import { z } from 'zod';
 import type { Repository } from '../../repository.js';
@@ -11,6 +13,7 @@ import { condicoesPadrao, debitoVencido } from '../planos/debitos.js';
 import { assertAcessoPortal } from './familia.js';
 import { editarPerfilSchema } from './perfil.js';
 import { verifyPassword } from './password.js';
+import { contextoEvolucao, progressoGraduacao } from '../graduacoes/evolucao.js';
 
 export function portalRouter(repo: Repository, responsavel=false) {
   const router = Router({mergeParams:true});
@@ -26,10 +29,18 @@ export function portalRouter(repo: Repository, responsavel=false) {
     res.locals.portalAlunoId=id;
     next();
   });
+  rotasFoto(router,repo,res=>({id:alunoId(res),alunoId:alunoId(res),usuarioId:null}));
+  router.use('/tecnicas',tecnicasPortalRouter(repo));
   router.get('/perfil',async(_req,res)=>{
     if(responsavel)throw new HttpError(403,'A edição de perfil é exclusiva do próprio aluno.');
     const aluno=await repo.get('Aluno',alunoId(res));
     res.json({...aluno,email:usuarioAtual(res).email});
+  });
+  router.get('/graduacao',async(_req,res)=>res.json(progressoGraduacao(await contextoEvolucao(repo),alunoId(res))));
+  router.post('/graduacao/solicitacao',async(req,res)=>{
+    const input=z.object({versao:z.number().int().min(0)}).strict().parse(req.body);
+    await repo.saveEvolucaoGraduacao(alunoId(res),usuarioAtual(res).id,{tipo:'solicitacao',versao:input.versao},new Date().toISOString());
+    res.json(progressoGraduacao(await contextoEvolucao(repo),alunoId(res)));
   });
   router.put('/perfil',async(req,res)=>{
     if(responsavel)throw new HttpError(403,'A edição de perfil é exclusiva do próprio aluno.');

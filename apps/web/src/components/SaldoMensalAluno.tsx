@@ -5,6 +5,7 @@ import { api, money } from '../lib';
 import { useAcademia } from '../store';
 
 export function ResumoSaldoMensal({ saldo, valorAdicionalCentavos }: { saldo: SaldoMensal; valorAdicionalCentavos?: number | null }) {
+  if(saldo.limiteMensal===null)return null;
   return <section className="card portal-panel" aria-label="Saldo de aulas do mês"><h3>Aulas restantes no mês</h3>
     <p><strong>{saldo.restantes === null ? 'Ilimitadas' : `${saldo.restantes} de ${saldo.limiteMensal}`}</strong> · {saldo.competencia.split('-').reverse().join('/')}</p>
     <p className="helper">{saldo.utilizadas} check-in(s) do plano no mês{saldo.adicionaisUtilizadas?` + ${saldo.adicionaisUtilizadas} aula(s) adicional(is)`:''}. O saldo renova no dia 1; aulas canceladas pela academia devolvem o crédito.</p>

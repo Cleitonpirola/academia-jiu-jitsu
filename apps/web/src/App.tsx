@@ -1,6 +1,11 @@
+import {TecnicasPage} from './pages/TecnicasPage';
+import {RankingPage} from './pages/RankingPage';
+import { PreferenciasAcademiaProvider } from './preferencias-academia';
+import { ConfiguracoesPage } from './pages/ConfiguracoesPage';
+import { ComunicadosPage } from './pages/ComunicadosPage';
 import { GraduacoesPage } from './pages/GraduacoesPage';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { LayoutDashboard, Award, Users, CreditCard, DollarSign, CalendarCheck, CalendarDays, Clock3, Sparkles, ArrowUpRight, X, RotateCw, CheckCircle2, Activity, ChevronRight } from 'lucide-react';
+import { Video, LayoutDashboard, Settings, Award, Megaphone, Users, CreditCard, DollarSign, CalendarCheck, CalendarDays, Clock3, Sparkles, ArrowUpRight, X, RotateCw, CheckCircle2, Activity, ChevronRight } from 'lucide-react';
 import { MonthPicker, Button } from './components';
 import { api, today } from './lib';
 import { StoreContext } from './store';
@@ -15,10 +20,10 @@ import { TurmasPage } from './pages/TurmasPage';
 import { AulasPage } from './pages/AulasPage';
 import { DebitosPage } from './pages/DebitosPage';
 import type { UsuarioView } from '@tatame/shared';
-const navigation=[{id:'dashboard',label:'Visão geral',icon:LayoutDashboard},{id:'alunos',label:'Alunos',icon:Users},{id:'graduacoes',label:'Faixas e graus',icon:Award},{id:'turmas',label:'Turmas',icon:CalendarDays},{id:'aulas',label:'Aulas',icon:Clock3},{id:'mensalidades',label:'Mensalidades',icon:DollarSign},{id:'debitos',label:'Débitos',icon:CreditCard},{id:'presencas',label:'Presenças',icon:CalendarCheck},{id:'inteligencia',label:'Inteligência',icon:Sparkles}];
+const navigation=[{id:'dashboard',label:'Visão geral',icon:LayoutDashboard},{id:'alunos',label:'Alunos',icon:Users},{id:'graduacoes',label:'Regras de graduação',icon:Award},{id:'turmas',label:'Turmas',icon:CalendarDays},{id:'aulas',label:'Aulas',icon:Clock3},{id:'tecnicas',label:'Técnicas da semana',icon:Video},{id:'mensalidades',label:'Mensalidades',icon:DollarSign},{id:'debitos',label:'Débitos',icon:CreditCard},{id:'comunicados',label:'Comunicados',icon:Megaphone},{id:'ranking',label:'Ranking',icon:Award},{id:'presencas',label:'Presenças',icon:CalendarCheck},{id:'inteligencia',label:'Inteligência',icon:Sparkles},{id:'configuracoes',label:'Configurações',icon:Settings}];
 const requiredResources: Record<string, Resource[]> = {
   dashboard: ['dashboard', 'alunos', 'mensalidades'], alunos: ['alunos'],
-  graduacoes: [], debitos: [], mensalidades: ['mensalidades', 'alunos'], presencas: ['alunos'], inteligencia: [], turmas: ['turmas', 'alunos'], aulas: ['aulas', 'turmas'],
+  tecnicas: [], ranking: [], graduacoes: [], configuracoes: [], comunicados: ['alunos'], debitos: [], mensalidades: ['mensalidades', 'alunos'], presencas: ['alunos','aulas'], inteligencia: [], turmas: ['turmas', 'alunos'], aulas: ['aulas', 'turmas'],
 };
 export default function App({ usuario, onLogout }: { usuario: UsuarioView; onLogout: () => void }) {
   const [page,setPage]=useState('dashboard');const [month,setMonth]=useState(today().slice(0,7));
@@ -65,7 +70,7 @@ export default function App({ usuario, onLogout }: { usuario: UsuarioView; onLog
   const loading=Object.values(resourceStatus).some(state=>state.loading);
   const partialUpdate=Object.values(resourceStatus).some(state=>state.error);
   return <StoreContext.Provider value={{...data,resourceStatus,month,revision,mutate,reload}}>
-    <div className="app-shell">
+    <PreferenciasAcademiaProvider><div className="app-shell">
       <aside className="sidebar">
         <a className="brand" href="#" onClick={event=>{event.preventDefault();goto('dashboard');}}>
           <span className="brand-mark">t</span><div>tatame<small>GESTÃO DE ACADEMIA</small></div>
@@ -92,7 +97,7 @@ export default function App({ usuario, onLogout }: { usuario: UsuarioView; onLog
           <div className="topbar-actions">
             <Button variant="ghost" onClick={onLogout} aria-label={`Sair da conta de ${usuario.nome}`}>Sair</Button>
             <span className={`env-badge ${data.health?'':'is-offline'}`}><i/>{data.health?(data.health.database==='supabase'?'Supabase conectado':'Banco local'):(resourceStatus.health.loading?'Conferindo conexão…':'Conexão indisponível')}</span>
-            {!['turmas','aulas','presencas','graduacoes'].includes(page)&&<MonthPicker value={month} onChange={setMonth}/>}
+            {!['turmas','aulas','presencas','graduacoes','comunicados','configuracoes','ranking','tecnicas'].includes(page)&&<MonthPicker value={month} onChange={setMonth}/>}
           </div>
         </header>
         <main>
@@ -102,10 +107,13 @@ export default function App({ usuario, onLogout }: { usuario: UsuarioView; onLog
             {page==='dashboard'&&<DashboardPage onNewStudent={()=>setStudentForm(true)} onPayments={()=>goto('mensalidades')} onStudents={()=>goto('alunos')}/>}
             {page==='alunos'&&<StudentsPage onPayments={viewPayments}/>}
             {page==='graduacoes'&&<GraduacoesPage/>}
+            {page==='comunicados'&&<ComunicadosPage/>}
+            {page==='configuracoes'&&<ConfiguracoesPage/>}
             {page==='turmas'&&<TurmasPage/>}
             {page==='aulas'&&<AulasPage/>}
             {page==='mensalidades'&&<PaymentsPage initialStudent={paymentStudent}/>}
             {page==='debitos'&&<DebitosPage/>}
+            {page==='ranking'&&<RankingPage/>}{page==='tecnicas'&&<TecnicasPage/>}
             {page==='presencas'&&<AttendancePage onAgenda={()=>goto('aulas')}/>}
             {page==='inteligencia'&&<IntelligencePage/>}
           </>}
@@ -121,5 +129,5 @@ export default function App({ usuario, onLogout }: { usuario: UsuarioView; onLog
       {toast&&<div className="toast" role="status"><CheckCircle2 size={20}/><span>{toast}</span><button aria-label="Fechar aviso" onClick={()=>setToast('')}><X size={17}/></button></div>}
       {studentForm&&<StudentForm onClose={()=>setStudentForm(false)}/>}
     </div>
-  </StoreContext.Provider>;
+  </PreferenciasAcademiaProvider></StoreContext.Provider>;
 }

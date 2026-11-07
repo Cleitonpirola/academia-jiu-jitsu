@@ -1,5 +1,6 @@
 import { Router, type RequestHandler, type Request, type Response } from 'express';
 import { randomUUID } from 'node:crypto';
+import { setTimeout as esperar } from 'node:timers/promises';
 import { z } from 'zod';
 import { SENHA_MINIMA, type UsuarioView } from '@tatame/shared';
 import type { Repository } from '../../repository.js';
@@ -8,6 +9,7 @@ import { HttpError } from '../../http-error.js';
 import { hashPassword, newToken, senhaComum, tokenHash, verifyPassword } from './password.js';
 import { allowsLocalAdmin } from './local-admin.js';
 import { usuarioHabilitado, emailProprio } from './familia.js';
+import { configurarEmailRecuperacao, type EmailRecuperacao } from './recuperacao.js';
 
 export const ADMIN_INICIAL_ID = '00000000-0000-4000-8000-000000000001';
 export const COOKIE = 'tatame_sessao';
@@ -17,12 +19,15 @@ const senhaSchema = z.string().min(SENHA_MINIMA, `Use uma senha com pelo menos $
   .refine(senha => !senhaComum(senha), 'Essa senha é muito comum. Escolha outra.');
 const loginSchema = z.object({ email: emailSchema, senha: z.string().min(1).max(128) }).strict();
 const setupSchema = z.object({ nome: z.string().trim().min(2).max(120), email: emailSchema, senha: senhaSchema }).strict();
-const activationSchema = z.object({ token: z.string().regex(/^[A-Za-z0-9_-]{43}$/), senha: senhaSchema }).strict();
+const tokenSchema = z.string().regex(/^[A-Za-z0-9_-]{43}$/);
+const activationSchema = z.object({ token: tokenSchema, senha: senhaSchema }).strict();
 const publicUser = ({ id, nome, email, perfil, alunoId }: Usuario): UsuarioView => ({ id, nome, email, perfil, alunoId });
 export const usuarioAtual = (res: Response): UsuarioView => res.locals.usuario;
 
-export function authModule(repo: Repository, options: { localAdmin?: boolean } = {}) {
+export function authModule(repo: Repository, options: { localAdmin?: boolean; emailRecuperacao?: EmailRecuperacao } = {}) {
   const router = Router();
+  const emailRecuperacao = options.emailRecuperacao ?? configurarEmailRecuperacao(process.env);
+  const capacidadeRecuperacao = emailRecuperacao ? { recuperacaoDisponivel: true } : {};
   if (process.env.APP_ORIGIN) {
     const origin = new URL(process.env.APP_ORIGIN);
     if (origin.origin !== process.env.APP_ORIGIN || (origin.protocol !== 'https:' && !(origin.protocol === 'http:' && ['localhost','127.0.0.1','[::1]'].includes(origin.hostname)))) throw new Error('APP_ORIGIN deve ser uma origem HTTPS, sem caminho, ou HTTP apenas no computador local.');
@@ -74,9 +79,9 @@ export function authModule(repo: Repository, options: { localAdmin?: boolean } =
     const token = newToken();
     await repo.insert('Sessao', { id: randomUUID(), usuarioId: user.id, tokenHash: tokenHash(token), credencialHash: tokenHash(user.senhaHash!), criadoEm: now, expiraEm: new Date(Date.now() + 8 * 3600_000).toISOString() });
     res.cookie(COOKIE, token, { ...cookieOptions, maxAge: 8 * 3600_000 });
-    return { configuracaoInicial: false, usuario: publicUser(user) };
+    return { configuracaoInicial: false, usuario: publicUser(user), ...capacidadeRecuperacao };
   }
-  router.get('/estado', async (_req, res) => res.json({ configuracaoInicial: await isInitial(), usuario: res.locals.usuario ?? null }));
+  router.get('/estado', async (_req, res) => res.json({ configuracaoInicial: await isInitial(), usuario: res.locals.usuario ?? null, ...capacidadeRecuperacao }));
   router.post('/configurar', limit, async (req, res) => {
     const host = req.hostname;
     const remote = req.socket.remoteAddress;
@@ -103,6 +108,39 @@ export function authModule(repo: Repository, options: { localAdmin?: boolean } =
     if (!await repo.activateUsuario(user.id, hash, password, new Date().toISOString())) throw new HttpError(400, 'Link inválido ou cadastro inativo. Solicite ajuda à academia.');
     res.json(await createSession(req, res, { ...user, senhaHash: password }));
   });
+  if (emailRecuperacao) {
+    router.post('/recuperar-senha', limit, async (req, res) => {
+      const { email } = z.object({ email: emailSchema }).strict().parse(req.body);
+      const inicio = performance.now();
+      const token = newToken();
+      try {
+        if (await repo.reservarRecuperacao(email, tokenHash(token), new Date().toISOString())) {
+          const link = new URL('/', emailRecuperacao.origem);
+          link.hash = new URLSearchParams({ redefinir: token }).toString();
+          await emailRecuperacao.enviar(email, link.href);
+        }
+      } catch {
+        console.error('Falha ao processar solicitação de recuperação de senha.');
+      }
+      // Uniformiza a resposta para contas existentes, desconhecidas e reenvios.
+      await esperar(Math.max(0, 1800 - (performance.now() - inicio)));
+      res.sendStatus(202);
+    });
+    router.post('/validar-recuperacao', limit, async (req, res) => {
+      const pedido = activationSchema.pick({ token: true }).safeParse(req.body);
+      const valido = pedido.success && await repo.validarRecuperacao(tokenHash(pedido.data.token), new Date().toISOString());
+      res.json({ valido });
+    });
+    router.post('/redefinir-senha', limit, async (req, res) => {
+      const { token, senha } = activationSchema.parse(req.body);
+      const novaSenha = await hashPassword(senha);
+      if (!await repo.redefinirSenha(tokenHash(token), novaSenha, new Date().toISOString())) {
+        throw new HttpError(400, 'Link inválido ou expirado. Solicite um novo e-mail.');
+      }
+      res.clearCookie(COOKIE, cookieOptions);
+      res.sendStatus(204);
+    });
+  }
   router.post('/sair', async (_req, res) => {
     if (res.locals.sessao) await repo.remove('Sessao', res.locals.sessao.id);
     res.clearCookie(COOKIE, cookieOptions); res.status(204).end();

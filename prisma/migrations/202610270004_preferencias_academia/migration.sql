@@ -1,0 +1,1 @@
+CREATE TABLE "PreferenciasAcademia"(id TEXT PRIMARY KEY NOT NULL,"exibirControlePlanos" BOOLEAN NOT NULL DEFAULT false,"atualizadoEm" TEXT NOT NULL,"atualizadoPorId" UUID NOT NULL REFERENCES "Usuario"(id) ON DELETE RESTRICT);
