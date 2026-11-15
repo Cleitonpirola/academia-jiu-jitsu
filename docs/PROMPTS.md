@@ -1,5 +1,9 @@
 # Registro de prompts
 
+## Chamada em lote
+
+O usuário pediu para selecionar todos da aula e registrar as presenças de uma vez. A tela permite ajustar a seleção entre os check-ins pendentes antes de confirmar.
+
 ## Senhas comuns e recuperação por e-mail — 05/11/2026
 
 O usuário aprovou começar pelo bloqueio de senhas comuns e por **Esqueci minha senha**. A implementação usa uma lista interna e um link temporário separado do convite. A integração local foi configurada com entrega simulada para verificar o fluxo.

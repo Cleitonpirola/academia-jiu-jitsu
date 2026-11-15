@@ -1,5 +1,9 @@
 # Arquitetura — Academia de Jiu-Jitsu
 
+## Chamada em lote
+
+A tela envia os IDs dos check-ins selecionados para `POST /api/aulas/:id/chamada`. A rota administrativa grava as presenças em uma transação na tabela `PresencaAula`. O servidor ignora check-ins que perderam a elegibilidade, incluindo cancelamentos e marcações feitas depois que o professor abriu a lista.
+
 ## Recuperação de senha — 05/11/2026
 
 `RecuperacaoSenha` guarda um pedido por usuário, indexado pelo hash do token. O pedido fica vinculado ao e-mail e à credencial vigentes. A API verifica acesso ativo no pedido e no resgate. O resgate troca a senha, consome o token, encerra as sessões e revoga o convite anterior na mesma transação. O controle de reenvio por conta é compartilhado pelo banco. O limite geral de tentativas de login continua em memória por processo. O adaptador de e-mail usa a API do Resend e a origem HTTPS configurada no servidor. [Fluxo e configuração](ACESSO_ALUNO.md#recuperação-de-senha-e-senhas-comuns--05112026).

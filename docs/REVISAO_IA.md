@@ -1,5 +1,9 @@
 # Revisão de IA
 
+## Chamada em lote
+
+A revisão cobriu reenvio da confirmação, check-ins cancelados ou de outra aula e marcações já registradas. A verificação HTTP passou com SQLite em memória. O caminho PostgreSQL foi verificado pelo TypeScript e ainda aguarda execução em ambiente de testes.
+
 ## Senhas comuns e recuperação por e-mail — 05/11/2026
 
 Testada a separação entre tokens de convite e recuperação, o bloqueio de senha comum, a resposta genérica, a deduplicação de pedidos simultâneos, a recusa de link expirado ou ligado a e-mail anterior e a troca concorrente com um único aceite. A suíte passou com 291 testes e o navegador abriu o formulário pelo link simulado. A verificação de migração foi feita no SQLite e por validação do schema Prisma. A entrega real e a execução da migração no PostgreSQL hospedado ainda precisam ser validadas. A lista de senhas é local e cobre exemplos comuns. [Fluxo e configuração](ACESSO_ALUNO.md).

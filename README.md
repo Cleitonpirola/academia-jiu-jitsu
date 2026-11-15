@@ -1,5 +1,7 @@
 # Tatame — Academia de Jiu-Jitsu
 
+**Chamada em lote.** Em **Presenças**, abra a aula, clique em **Selecionar todos**, desmarque quem não veio e confirme as presenças. A seleção abrange os check-ins pendentes da aula.
+
 O login e a ativação têm um botão para mostrar ou ocultar a senha. Ao criar uma senha, use pelo menos oito caracteres e evite combinações comuns. [Guia de acesso](docs/ACESSO_ALUNO.md).
 
 **Ambiente de testes atual.** O Tatame Test de São Paulo pede autenticação da Vercel antes do login do Tatame. [Abrir a prévia](https://tatame-test-en6hefwej-cleiton-pirola.vercel.app/) · [Estado da migração](docs/REGIOES.md).

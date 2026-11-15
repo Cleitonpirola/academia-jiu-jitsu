@@ -2,6 +2,7 @@ import { criarAulaDeTeste, type AulaDeTesteInput } from './test-aula-helper.js';
 import { afterEach, beforeEach, describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
+import supertest from 'supertest';
 
 import type { Aluno, AulaView } from '@tatame/shared';
 import { createApp, request } from './test-auth-helper.js';
@@ -20,6 +21,29 @@ describe('Chamada por aula', () => {
   const create = async (changes: Partial<AulaDeTesteInput> = {}): Promise<AulaView> => criarAulaDeTeste(repo,{...extra,...changes});
   const mark = (aulaId: string, alunoId: string, presente = true) => request(app).put(`/api/aulas/${aulaId}/chamada/${alunoId}`).send({ presente });
   const clear = (aulaId: string, alunoId: string) => request(app).delete(`/api/aulas/${aulaId}/chamada/${alunoId}`);
+
+  it('confirma os check-ins selecionados em lote e preserva faltas e registros de outra aula', async () => {
+    const aula = await create();
+    const outraAula = await create({ horaInicio: '18:00', horaFim: '19:00' });
+    const [ana, bia, caio, davi, eva] = await Promise.all(Array.from({ length: 5 }, () => student()));
+    const criarCheckin = (aluno: Aluno, aulaId: string) => repo.insert('CheckinAula', {
+      id: randomUUID(), alunoId: aluno.id, aulaId, nome: aluno.nome, criadoEm: aluno.criadoEm,
+    });
+    const checkins = await Promise.all([criarCheckin(ana, aula.id), criarCheckin(bia, aula.id), criarCheckin(caio, aula.id), criarCheckin(davi, outraAula.id)]);
+    const falta = (await mark(aula.id, caio.id, false).expect(201)).body;
+    const idCancelado = (await criarCheckin(eva, aula.id)).id;
+    await repo.remove('CheckinAula', idCancelado);
+    const url = `/api/aulas/${aula.id}/chamada`;
+    const ids = [...checkins.map(item => item.id), checkins[0].id, idCancelado];
+    await supertest(app).post(url).set('X-Tatame-Request', '1').send({ checkinIds: ids }).expect(401);
+    await request(app).post(url).send({ checkinIds: [] }).expect(400);
+    assert.deepEqual((await request(app).post(url).send({ checkinIds: ids }).expect(200)).body, { confirmados: 2, ignorados: 3 });
+    assert.deepEqual((await request(app).post(url).send({ checkinIds: ids }).expect(200)).body, { confirmados: 0, ignorados: 5 });
+    const marcas = await repo.list('PresencaAula');
+    assert.deepEqual(marcas.find(item => item.id === falta.id), falta);
+    assert.deepEqual(marcas.filter(item => item.presente).map(item => item.alunoId).sort(), [ana.id, bia.id].sort());
+    assert.ok(marcas.every(item => item.aulaId === aula.id));
+  });
 
   it('o mesmo aluno participa às 12h, 15h e 18h sem duplicar aula/aluno ou criar cobrança', async () => {
     const aluno = await student();

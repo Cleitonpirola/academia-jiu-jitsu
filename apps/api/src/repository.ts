@@ -16,7 +16,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { mkdirSync, existsSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { PrismaClient, type Prisma } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import type { Aluno, Mensalidade, Presenca, Analise, Turma, HorarioTurma, AlunoTurma, Aula, AulaAlunoPrevisto, PresencaAula, CheckinAula, PlanoAluno, LiberacaoAula } from '@tatame/shared';
 import type { Usuario, Sessao } from './modules/auth/models.js';
@@ -61,6 +61,7 @@ export interface Repository {
   saveProfessoresAula(aulaId: string, nomes: string[]): Promise<void>;
   cancelAula(id: string, motivo: string, timestamp: string): Promise<void>;
   savePresencaAula(aulaId: string, alunoId: string, presente: boolean, timestamp: string): Promise<{ registro: PresencaAula; created: boolean }>;
+  confirmarCheckins(aulaId: string, checkinIds: string[], timestamp: string): Promise<number>;
   removePresencaAula(aulaId: string, alunoId: string): Promise<void>;
   activateUsuario(id: string, conviteHash: string, senhaHash: string, timestamp: string): Promise<boolean>;
   saveCheckin(aulaId: string, alunoId: string, timestamp: string, ator?: Pick<UsuarioView, 'id'|'perfil'>): Promise<CheckinAula>;
@@ -287,6 +288,29 @@ export class SqliteRepository implements Repository {
       else this.insertRow('PresencaAula', registro);
       this.db.exec('COMMIT');
       return { registro, created: !existing };
+    } catch (error) { this.db.exec('ROLLBACK'); throw error; }
+  }
+  async confirmarCheckins(aulaId: string, checkinIds: string[], timestamp: string) {
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      const aula = (this.db.prepare('SELECT * FROM Aula WHERE id=?').get(aulaId) as unknown as Aula | undefined) ?? null;
+      validateAulaChamada(aula);
+      const pendente = this.db.prepare(`
+        SELECT aluno.id, aluno.nome FROM CheckinAula AS checkin
+        JOIN Aluno AS aluno ON aluno.id = checkin.alunoId
+        LEFT JOIN PresencaAula AS chamada ON chamada.aulaId = checkin.aulaId AND chamada.alunoId = aluno.id
+        WHERE checkin.id = ? AND checkin.aulaId = ? AND chamada.id IS NULL
+          AND aluno.situacao = 'ativo' AND aluno.dataMatricula <= ?
+      `);
+      let confirmados = 0;
+      for (const id of checkinIds) {
+        const aluno = pendente.get(id, aulaId, aula.dataAula) as { id: string; nome: string } | undefined;
+        if (!aluno) continue;
+        this.insertRow('PresencaAula', { id: randomUUID(), aulaId, alunoId: aluno.id, nome: aluno.nome, presente: true, criadoEm: timestamp, atualizadoEm: timestamp });
+        confirmados++;
+      }
+      this.db.exec('COMMIT');
+      return confirmados;
     } catch (error) { this.db.exec('ROLLBACK'); throw error; }
   }
   async removePresencaAula(aulaId: string, alunoId: string) {
@@ -697,6 +721,28 @@ export class PrismaRepository implements Repository {
       const registro = existing ? await client.presencaAula.update({ where: { id: existing.id }, data: { presente, atualizadoEm: timestamp } })
         : await client.presencaAula.create({ data: { id: randomUUID(), aulaId, alunoId, nome: aluno.nome, presente, criadoEm: timestamp, atualizadoEm: timestamp } });
       return { registro, created: !existing };
+    });
+  }
+  async confirmarCheckins(aulaId: string, checkinIds: string[], timestamp: string) {
+    return this.client.$transaction(async client => {
+      const [aula] = await client.$queryRaw<Aula[]>`SELECT * FROM "Aula" WHERE id=${aulaId}::uuid FOR UPDATE`;
+      validateAulaChamada(aula ?? null);
+      const alunos = await client.$queryRaw<Array<{ id: string; nome: string }>>`
+        SELECT aluno.id, aluno.nome FROM "CheckinAula" AS checkin
+        JOIN "Aluno" AS aluno ON aluno.id = checkin."alunoId"
+        LEFT JOIN "PresencaAula" AS chamada ON chamada."aulaId" = checkin."aulaId" AND chamada."alunoId" = aluno.id
+        WHERE checkin.id IN (${Prisma.join(checkinIds.map(id => Prisma.sql`${id}::uuid`))})
+          AND checkin."aulaId" = ${aulaId}::uuid AND chamada.id IS NULL
+          AND aluno.situacao = 'ativo' AND aluno."dataMatricula" <= ${aula.dataAula}
+        ORDER BY aluno.id FOR UPDATE OF aluno
+      `;
+      const { count } = await client.presencaAula.createMany({
+        data: alunos.map(aluno => ({
+          id: randomUUID(), aulaId, alunoId: aluno.id, nome: aluno.nome,
+          presente: true, criadoEm: timestamp, atualizadoEm: timestamp,
+        })),
+      });
+      return count;
     });
   }
   async removePresencaAula(aulaId: string, alunoId: string) {

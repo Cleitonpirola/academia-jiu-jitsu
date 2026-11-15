@@ -3,7 +3,7 @@ import { Check, X, RotateCcw, Search, UserPlus, UserCheck, CalendarCheck } from 
 import type { AulaView } from '@tatame/shared';
 import { Button, Empty, FormError, Person } from '../components';
 import { useAcademia } from '../store';
-import { fold, today } from '../lib';
+import { api, fold, today } from '../lib';
 import { RemoverCheckin } from './RemoverCheckin';
 
 export function ChamadaAula({ aula }: { aula: AulaView }) {
@@ -13,6 +13,8 @@ export function ChamadaAula({ aula }: { aula: AulaView }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [clearId, setClearId] = useState<string | null>(null);
+  const [selecao, setSelecao] = useState<Set<string>>(() => new Set());
+  const [resultadoLote, setResultadoLote] = useState('');
   const byAluno = new Map(alunos.map(aluno => [aluno.id, aluno]));
   const byRegistro = new Map(aula.chamada.map(registro => [registro.alunoId, registro]));
   const byCheckin = new Map(aula.checkins.map(registro => [registro.alunoId, registro]));
@@ -25,6 +27,27 @@ export function ChamadaAula({ aula }: { aula: AulaView }) {
   const readOnly = aula.situacao === 'cancelada' ? 'Esta aula foi cancelada. A chamada está indisponível.'
     : aula.dataAula > today() ? 'A chamada será liberada na data da aula.' : '';
   const disabled = busy || resourceStatus.aulas.loading;
+  const pendentes = new Set(rows.flatMap(row => {
+    const checkin = byCheckin.get(row.id);
+    return checkin && !row.registro && row.aluno?.situacao === 'ativo' && row.aluno.dataMatricula <= aula.dataAula
+      ? [checkin.id] : [];
+  }));
+  const selecionados = [...pendentes].filter(id => selecao.has(id));
+  const todosSelecionados = pendentes.size > 0 && selecionados.length === pendentes.size;
+  const confirmarLote = async () => {
+    if (readOnly || disabled || !selecionados.length) return;
+    setBusy(true); setError(''); setClearId(null); setResultadoLote('');
+    try {
+      const { confirmados, ignorados } = await api<{ confirmados: number; ignorados: number }>(`/aulas/${aula.id}/chamada`, {
+        method: 'POST',
+        body: JSON.stringify({ checkinIds: selecionados }),
+      });
+      setSelecao(new Set());
+      setResultadoLote(`${confirmados === 1 ? '1 presença confirmada.' : `${confirmados} presenças confirmadas.`}${ignorados ? ' Alguns check-ins já foram marcados ou ficaram indisponíveis.' : ''}`);
+      await reload();
+    } catch (error) { setError((error as Error).message); }
+    finally { setBusy(false); }
+  };
   const mark = async (alunoId: string, presente: boolean) => {
     setBusy(true); setError(''); setClearId(null);
     try {
@@ -50,12 +73,39 @@ export function ChamadaAula({ aula }: { aula: AulaView }) {
     <p className="helper chamada-intro">Cada marcação vale somente para esta aula. O mesmo aluno pode participar de outros horários. Sem marcação não significa ausência.</p>
     {aula.checkins.some(item => !byRegistro.has(item.alunoId)) && <p className="portal-notice" role="status">{aula.checkins.filter(item => !byRegistro.has(item.alunoId)).length} check-in(s) aguardando sua confirmação.</p>}
     <FormError message={error}/>
+    {resultadoLote && <p className="portal-notice" role="status">{resultadoLote}</p>}
     {clearId && <div className="chamada-clear" role="alert"><p>Limpar a marcação de <strong>{rows.find(row => row.id === clearId)?.nome}</strong>? Ela deixará de contar nos indicadores. Quem tiver check-in voltará a aguardar validação. Participantes sem check-in sairão desta lista.</p><div><Button variant="secondary" disabled={disabled} onClick={() => setClearId(null)}>Voltar</Button><Button variant="danger" disabled={disabled} onClick={() => void clear()}>Confirmar limpeza</Button></div></div>}
     <div className="card chamada-list"><div className="toolbar"><div className="search"><Search size={18}/><input aria-label="Buscar aluno nesta aula" placeholder="Buscar na chamada…" value={search} onChange={event => setSearch(event.target.value)}/></div><span className="helper">{aula.checkins.length} check-ins · {aula.chamada.length} marcações</span></div>
+      {!readOnly && pendentes.size > 0 && <div className="toolbar flex-wrap gap-3">
+        <Button variant="secondary" disabled={disabled} onClick={() => {
+          setSelecao(todosSelecionados ? new Set() : pendentes);
+          if (!todosSelecionados) setSearch('');
+        }}>{todosSelecionados ? 'Desmarcar todos' : 'Selecionar todos'}</Button>
+        <Button disabled={disabled || !selecionados.length} onClick={() => void confirmarLote()}>
+          <Check size={16}/>Confirmar presenças ({selecionados.length})
+        </Button>
+      </div>}
       {filtered.length ? <div className="chamada-rows">{filtered.map(row => {
+        const checkinId = byCheckin.get(row.id)?.id;
         const blocked = Boolean(readOnly) || disabled || (!row.registro && (!row.aluno || row.aluno.situacao !== 'ativo' || row.aluno.dataMatricula > aula.dataAula));
         return <div className="chamada-row" key={row.id}>
-          <div><Person alunoId={row.id} name={row.nome} secondary={(byCheckin.has(row.id) ? 'Check-in nesta aula' : 'Registro do professor') + (row.aluno?.situacao === 'inativo' ? ' · cadastro inativo' : '')}/>
+          <div>
+            <div className="flex items-center gap-3">
+              {!readOnly && checkinId && pendentes.has(checkinId) && <input
+                type="checkbox" aria-label={`Selecionar ${row.nome} para confirmar presença`}
+                checked={selecao.has(checkinId)} disabled={disabled}
+                onChange={event => {
+                  const { checked } = event.currentTarget;
+                  setSelecao(current => {
+                    const next = new Set(current);
+                    if (checked) next.add(checkinId);
+                    else next.delete(checkinId);
+                    return next;
+                  });
+                }}
+              />}
+              <Person alunoId={row.id} name={row.nome} secondary={(byCheckin.has(row.id) ? 'Check-in nesta aula' : 'Registro do professor') + (row.aluno?.situacao === 'inativo' ? ' · cadastro inativo' : '')}/>
+            </div>
             <span className={`attendance-status ${row.registro ? row.registro.presente ? 'is-present' : 'is-absent' : 'unmarked'}`}>{row.registro ? row.registro.presente ? 'Presente' : 'Ausente' : byCheckin.has(row.id) ? 'Check-in · aguardando validação' : 'Sem marcação'}</span>
             {!row.registro && row.aluno?.situacao === 'inativo' && <small className="helper">Reative o aluno para registrar uma nova marcação.</small>}
           </div>

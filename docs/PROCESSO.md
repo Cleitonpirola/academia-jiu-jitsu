@@ -1,5 +1,9 @@
 # Processo
 
+## Chamada em lote — 15/11/2026
+
+Na chamada, a gestão pode selecionar os check-ins pendentes, ajustar a seleção e confirmar as presenças de uma vez. Os 297 testes locais e o build passaram. O teste HTTP com SQLite em memória confirmou a gravação de várias presenças, a preservação da falta e o tratamento de check-ins cancelados, de outra aula e reenviados. A prévia local tem uma aula com dados fictícios para validação da tela.
+
 ## Verificação do conjunto de migrações e recuperação — 07/11/2026
 
 As migrações de graduação, preferências, comunicados, fotos e técnicas precedem a recuperação de senha no histórico SQLite. Foram verificadas em conjunto com a migração de recuperação, incluindo bancos anteriores. Passaram 293 testes TypeScript, 15 testes Python, cinco testes de configuração, o build e a validação do esquema Prisma. A entrega de e-mail e a recusa de um link vencido já foram observadas na prévia de São Paulo. [Fluxo de recuperação](ACESSO_ALUNO.md).
