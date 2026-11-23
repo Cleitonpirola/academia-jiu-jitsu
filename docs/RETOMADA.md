@@ -1,5 +1,13 @@
 # Ponto de retomada do Tatame
 
+## Acessos diários testados (23/11/2026)
+
+Usuário autorizou acesso diário protegido e pediu **testa**. Publicado somente o commit aprovado `18ce58e` em `dpl_6iFkciQ7Si2BbFSuf7GHPhJwJhcj` (READY/Preview/gru1); alias fixo **https://tatame-test-diario.vercel.app/** e APP_ORIGIN configurado em Preview. 167 fontes conferidas por hash. Supabase Brasil `yptdxyjqgvzmkoizavmj` retomado de INACTIVE para ACTIVE_HEALTHY, 20 migrações concluídas e contas de avaliação aluno/admin ativas. Sem migração ou troca de senha.
+
+O proprietário concluiu a entrada na Vercel e avisou **pronto**. Os dois logins passaram no navegador: portal do aluno, bloqueio administrativo, saída exigindo login, painel do professor e consulta da ficha/histórico. Atualizar preservou a sessão dos dois perfis. Nenhuma mensagem, cobrança ou alteração de cadastro foi produzida. Os primeiros arquivos continham senhas antigas; corrigidos a partir dos registros brasileiros atuais, sem trocar senhas. Credenciais conferidas em `.test-output/publicacao-diaria-20261123/privado/acessos-diarios.json` e nos arquivos separados `ACESSO_ALUNO_DIARIO.txt` e `ACESSO_PROFESSOR_DIARIO.txt`; não imprimir em logs nem versionar. Scripts/pacote/manifestos ficam no mesmo diretório ignorado.
+
+**Proteção preservada:** `vercel curl` criou uma credencial persistente; a revisão automática bloqueou a continuação daquele teste. A credencial foi revogada, sem regeneração, e proteção final conferida como `all` com zero bypasses. Não recriar bypass, link compartilhável ou exceção como forma de contornar o bloqueio. O teste foi concluído pela sessão normal autenticada pelo usuário. Capturas em `screenshots/acesso-diario-aluno.jpg` e `screenshots/acesso-diario-professor.jpg`. O usuário aprovou a documentação desta publicação e as duas capturas para commit e envio em 23/11/2026. As demais funcionalidades locais pendentes não foram publicadas e ficam fora desse commit.
+
 ## Recuperação por e-mail e migrações — 07/11/2026
 
 A prévia de São Paulo confirmou entrega pelo Resend e recusa do link vencido. O código valida o prazo na abertura e ao salvar. O remetente de testes atende à própria caixa do titular da conta Resend. Para envio aos alunos, configure um domínio verificado. A validação visual da última prévia e a proteção compartilhada contra excesso de tentativas seguem como próximos passos. [Fluxo e configuração](ACESSO_ALUNO.md) · [Ambiente de São Paulo](REGIOES.md).

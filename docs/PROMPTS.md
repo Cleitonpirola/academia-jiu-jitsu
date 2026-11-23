@@ -1,5 +1,13 @@
 # Registro de prompts
 
+## Acesso diário protegido e teste dos dois perfis — 23/11/2026
+
+Após perguntar sobre segurança, o usuário autorizou o acesso diário mantendo proteção Vercel e login do Tatame, com aluno e professor, e depois pediu **testa**. Codex publicou o commit aprovado em endereço fixo, retomou o banco pausado e preservou as contas de avaliação. O teste automático por bypass foi rejeitado e a credencial criada pela CLI foi revogada. Seguiu-se navegação normal até o login Vercel, sem retirar a proteção; autenticação manual do proprietário foi solicitada para prosseguir com o teste. Não inferir autorização para abrir acesso público, criar chaves persistentes, mudar senhas, migrar dados ou commitar documentos novos.
+
+O usuário concluiu o login Vercel e respondeu **pronto**. Codex verificou pelo navegador os acessos de aluno/professor, atualização da sessão, saída, bloqueio administrativo do aluno e consulta do histórico na ficha pelo professor. As senhas dos arquivos inicialmente reunidos estavam antigas; os registros atuais permitiram entrar, e os arquivos privados diários foram corrigidos sem alterar as contas. Nenhuma mensagem, presença ou cobrança foi criada pelo teste.
+
+Depois de perguntar sobre as pendências de Git, o usuário respondeu **pode commitar**. A autorização se refere à documentação do acesso diário e às duas capturas apresentadas; as funcionalidades anteriores pendentes ficam para revisão separada. Commit e push normais na branch de trabalho estão autorizados pelo fluxo do projeto, sem nova publicação, merge ou mudança de proteção.
+
 ## Aprovação para commit de comunicados — 22/11/2026
 
 Usuário perguntou se o histórico passou, recebeu o resultado das verificações e respondeu **commite**. Codex interpretou a autorização para versionar e enviar somente os comunicados apresentados: destaque/contador, histórico, destinatário e primeira confirmação, ficha de consulta e recolhimento. Não incluiu automaticamente as outras mudanças pendentes ou a futura integração Pix.

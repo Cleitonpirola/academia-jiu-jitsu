@@ -1,5 +1,15 @@
 # Processo
 
+## Publicação protegida para acesso diário — 23/11/2026
+
+Usuário autorizou publicação para acessar diariamente com dois logins. Preparado pacote por allowlist do commit aprovado `18ce58e`, sem alterações pendentes; enviados 167 arquivos de código/configuração. Vercel criou deployment READY em Preview/gru1, com alias fixo e APP_ORIGIN. Conferidos os 167 hashes remotos. Banco brasileiro pausado foi retomado, com 20 migrações e dois usuários de avaliação ativos; credenciais anteriores preservadas. Sem migração, importação ou nova conta.
+
+Um teste com a CLI criou um bypass persistente automaticamente. A revisão automática rejeitou a continuação por esse efeito de acesso e pela gravação de cookies. A credencial criada foi identificada e revogada, sem gerar outra; metadados finais mostram proteção `all` e zero bypasses. Não houve tentativa de contornar a rejeição. Controle do Chrome também parou por não identificar a URL com confiança. Em nova tentativa pelo navegador in-app, o proprietário concluiu a autenticação da Vercel e avisou **pronto**.
+
+Os dois acessos do Tatame passaram pelo fluxo normal. Aluno carregou portal/Comunicados e recebeu bloqueio administrativo; sair fez a rota administrativa exigir login. Professor carregou indicadores, lista de alunos e ficha com histórico recolhido, expandido em modo de consulta. Atualizar manteve ambas as sessões. As primeiras cópias locais de credenciais estavam antigas e foram corrigidas com os registros brasileiros atuais após verificar os logins; nenhuma senha foi alterada. Capturas em `screenshots/acesso-diario-aluno.jpg` e `screenshots/acesso-diario-professor.jpg`. Sem envio de mensagens, cobrança, alteração de cadastro ou nova suíte local nesta etapa.
+
+Após a apresentação do resultado e das pendências de Git, o usuário respondeu **pode commitar**. Autorizado o registro do acesso diário e suas duas capturas para commit e envio na branch de trabalho. Selecionar somente esses trechos dos documentos compartilhados; preservar fora do commit as alterações anteriores de funcionalidades e seus registros. A conferência desta seleção é documental; não repetir os testes funcionais como se tivessem sido executados novamente nesta aprovação.
+
 ## Aprovação do conjunto de comunicados — 22/11/2026
 
 Após a apresentação do histórico, da consulta administrativa e do recolhimento, o usuário respondeu **commite**. Autorizados commit e push desse conjunto. A seleção foi preparada a partir de `81fd7c6`, preservando as demais mudanças locais; vídeos/Pix, bolsistas, agenda e outras pendências ficaram fora. A versão selecionada foi conferida em uma cópia isolada, com seu próprio pacote compartilhado: build/typecheck e 295 testes TypeScript passaram. A primeira tentativa de vincular dependências foi bloqueada pelo ambiente; após corrigir o vínculo local, as verificações foram repetidas e passaram. As conferências de navegador anteriores usaram dados fictícios. Não houve nova validação externa de PostgreSQL nem autorização para publicação por este pedido.

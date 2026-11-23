@@ -1,5 +1,11 @@
 # Revisão de IA
 
+## Publicação e limite da validação externa — 23/11/2026
+
+Conferidos pacote derivado só de `18ce58e`, 167 hashes remotos idênticos, READY/Preview/gru1, alias fixo e APP_ORIGIN. Segredos continuam em Preview, e origem de recuperação segue o endereço configurado. Banco foi retomado com dados/migrações preservados. A ferramenta de teste da CLI criou bypass persistente; após rejeição da revisão automática, a credencial foi revogada por API, sem regeneração. Consulta confirmou `all` e zero bypasses; navegação anônima exige autenticação.
+
+Após o proprietário autenticar a aba in-app, os dois logins passaram no endereço fixo. Verificados carregamento dos dados, sessão após atualizar, bloqueio do aluno na rota administrativa, exigência de login após sair e consulta administrativa da ficha/histórico recolhido. O histórico estava vazio; este teste externo não comprova envio ou confirmação de mensagens, nem substitui os testes locais anteriores desses fluxos. Corrigidos arquivos privados que continham senhas antigas usando os registros atuais, sem mudar senhas do sistema. Capturas novas registradas. Não houve nova suíte local, e-mail, cobrança ou alteração de cadastro. Após esse resultado, o usuário aprovou o registro e as duas capturas para commit/push; as demais mudanças pendentes ficam fora da seleção.
+
 ## Revisão da seleção para commit — 22/11/2026
 
 Separados trechos de arquivos que também continham alterações de bolsa, agenda, convites e graduação. A cópia isolada contém somente HEAD mais os comunicados aprovados; usa seu próprio pacote compartilhado. Build/typecheck e suíte de 295 testes passaram nessa seleção, após corrigir um vínculo de dependências inicialmente negado pelo ambiente. A consulta administrativa continua limitada a nome/perfil do destinatário, com primeira confirmação preservada. Sem migração, segredos, artefatos privados ou publicação. A aprovação do usuário para commit/push foi explícita.

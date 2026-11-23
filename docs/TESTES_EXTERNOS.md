@@ -1,5 +1,13 @@
 # Testes externos do Tatame
 
+## Acesso diário — conferência em 23/11/2026
+
+Nova publicação protegida em **https://tatame-test-diario.vercel.app/**, deployment `dpl_6iFkciQ7Si2BbFSuf7GHPhJwJhcj`, baseada no commit `18ce58e`. READY confirmado e 167 fontes remotas iguais ao pacote aprovado. Banco brasileiro retomado e dois usuários de avaliação ativos encontrados. Proteção SSO global `all`, zero bypasses de automação ativos após revogação da credencial criada pelo teste da CLI. Visita sem autenticação redireciona para o login Vercel.
+
+Após autenticação manual do proprietário na Vercel, os dois logins passaram no endereço fixo. Aluno: portal próprio e Comunicados carregados, sessão preservada ao atualizar e bloqueio administrativo ao abrir `/api/alunos`. Depois de sair, a mesma rota exigiu login. Professor: indicadores, gestão de alunos e ficha com histórico de comunicados inicialmente recolhido; expandir mostrou a situação real de zero mensagens. A sessão do professor também permaneceu após atualizar. Capturas novas: [aluno](screenshots/acesso-diario-aluno.jpg) e [professor](screenshots/acesso-diario-professor.jpg).
+
+As senhas dos primeiros artefatos privados estavam desatualizadas e foram recusadas. Os registros atuais em `.test-output/regiao-br/` permitiram os dois logins; os artefatos de acesso diário foram corrigidos, sem mudar senhas no sistema. Não houve envio/ciência de comunicado, alteração de dados, cobrança ou novo teste de entrega de e-mail. Nenhuma suíte local foi repetida nesta rodada; os 295 testes anteriores pertencem à seleção do commit, não a este teste externo. [Instruções e detalhes](VERCEL_HOMOLOGACAO.md#acesso-diário-protegido--23112026).
+
 ## Publicação atualizada e refresh corrigido — 01/11/2026
 
 Prévia final READY: [Abrir o Tatame](https://tatame-homologacao-f1fi4dmth-cleiton-pirola.vercel.app), deployment `dpl_HzupaAG1JgiEW7KEKkiCZCG5oz2S`, ambiente API staging/Preview. Substitui a prévia original e o candidato intermediário de segurança. Mantidos os dois acessos fictícios, sem alterar senhas. Arquivos privados de acesso atualizados; não encaminhados automaticamente a terceiros.

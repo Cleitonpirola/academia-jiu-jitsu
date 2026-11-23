@@ -1,5 +1,17 @@
 # Tatame na Vercel — preparação de homologação
 
+## Acesso diário protegido — 23/11/2026
+
+Endereço fixo: **https://tatame-test-diario.vercel.app/**. Deployment `dpl_6iFkciQ7Si2BbFSuf7GHPhJwJhcj`, READY, projeto `tatame-test`, ambiente Preview/staging, região `gru1`. Fontes extraídas exclusivamente do commit aprovado `18ce58e25ce681b1fd0b367975364de1b731dc8a`: 167 arquivos de código/configuração conferidos com a árvore remota por SHA-1, sem diferenças ou arquivos ausentes. As outras alterações locais não foram publicadas. Nenhum `.env`, banco local, credencial, fixture ou documento privado foi enviado.
+
+`APP_ORIGIN` em Preview aponta para o endereço fixo; a recuperação configurada como `preview` deriva essa mesma origem. Segredos existentes foram mantidos em Preview, sem descriptografia ou cópia para Production. O alias normal não é um link compartilhável de uma hora. Salve-o nos favoritos. Primeiro entre com a conta Vercel autorizada, depois com a conta de aluno ou professor do Tatame. O computador local pode ficar desligado.
+
+A proteção Vercel continua para **todos** os deployments. A tentativa de teste com `vercel curl` criou uma credencial persistente de automação; a revisão automática bloqueou sua continuação. A credencial foi revogada explicitamente, sem substituição, e a consulta final confirmou zero bypasses ativos e SSO global `all`. Não usar `vercel curl`, share links ou exceções para contornar esse bloqueio sem autorização específica. A visita anônima recebeu redirecionamento de autenticação; a navegação normal na aba de teste mostrou o login da Vercel.
+
+O Supabase brasileiro `yptdxyjqgvzmkoizavmj` estava INACTIVE e foi retomado, chegando a ACTIVE_HEALTHY. Conferidas 20 migrações concluídas e a existência dos dois usuários de avaliação ativos, com papéis `aluno` e `admin`. Não houve migração, importação, exclusão, troca de senha ou criação de conta nesta etapa. Credenciais existentes foram reunidas em arquivo privado ignorado pelo Git; não incluí-las neste guia.
+
+**Teste funcional concluído em 23/11/2026:** após o proprietário entrar na Vercel e avisar **pronto**, aluno e professor entraram no Tatame pelo fluxo normal. Ambos mantiveram a sessão ao atualizar; o aluno carregou o próprio portal e Comunicados, recebeu bloqueio ao abrir `/api/alunos`, e após sair essa rota exigiu login. O professor carregou os indicadores, a lista de alunos e a ficha com histórico de comunicados recolhido e consulta vazia após expandir. Os arquivos privados inicialmente reunidos continham senhas antigas; foram corrigidos com os registros brasileiros atuais, que passaram nos logins, sem alterar as contas. Arquivos separados em `.test-output/publicacao-diaria-20261123/privado/ACESSO_ALUNO_DIARIO.txt` e `ACESSO_PROFESSOR_DIARIO.txt`, ignorados pelo Git. Capturas: [aluno](screenshots/acesso-diario-aluno.jpg) e [professor](screenshots/acesso-diario-professor.jpg). Não foram enviados comunicados, confirmadas presenças, alteradas senhas ou executada nova suíte local neste teste.
+
 ## Publicação atualizada e refresh corrigido — 01/11/2026
 
 Prévia final READY: [Abrir o Tatame](https://tatame-homologacao-f1fi4dmth-cleiton-pirola.vercel.app), deployment `dpl_HzupaAG1JgiEW7KEKkiCZCG5oz2S`, ambiente API staging/Preview. Substitui a prévia original e o candidato intermediário de segurança. Mantidos os dois acessos fictícios, sem alterar senhas. Arquivos privados de acesso atualizados; não encaminhados automaticamente a terceiros.

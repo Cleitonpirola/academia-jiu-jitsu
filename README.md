@@ -1,5 +1,7 @@
 # Tatame — Academia de Jiu-Jitsu
 
+**Acesso diário protegido — 23/11/2026.** [Abrir Tatame](https://tatame-test-diario.vercel.app/). O endereço fixo aponta para a publicação do commit `18ce58e`, com proteção da Vercel e login do Tatame. Não depende de executar o VS Code. Publicação READY e 167 fontes conferidas por hash; banco brasileiro retomado. Os dois logins passaram no navegador, com sessão preservada ao atualizar, bloqueio administrativo para aluno e exigência de login após sair. [Estado e instruções](docs/VERCEL_HOMOLOGACAO.md#acesso-diário-protegido--23112026).
+
 **Chamada em lote.** Em **Presenças**, abra a aula, clique em **Selecionar todos**, desmarque quem não veio e confirme as presenças. A seleção abrange os check-ins pendentes da aula.
 
 O login e a ativação têm um botão para mostrar ou ocultar a senha. Ao criar uma senha, use pelo menos oito caracteres e evite combinações comuns. [Guia de acesso](docs/ACESSO_ALUNO.md).
