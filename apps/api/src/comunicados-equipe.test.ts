@@ -71,6 +71,31 @@ it('envio coletivo é atômico, idempotente e mantém confirmação independente
   await aluno.post('/api/comunicados/lotes').set('Cookie',cookie).set('X-Tatame-Request','1').send({...input,id:randomUUID()}).expect(403);
  }finally{await repo.close();}
 });
+it('histórico administrativo por aluno distingue pendência e confirmação e preserva a primeira data',async()=>{
+ const {repo,app,alunos}=await fixture();try{
+  const [ana,bia]=alunos,path=`/api/alunos/${ana.id}/comunicados`;
+  const entrada=(await request(app).post(path).send({destino:'principal',tipo:'aviso',titulo:'Aviso individual',mensagem:'Confira o horário do próximo treino.'}).expect(201)).body;
+  await request(app).post(`/api/alunos/${bia.id}/comunicados`).send({destino:'principal',tipo:'aviso',titulo:'Somente Bia',mensagem:'Comunicado de outra aluna.'}).expect(201);
+  const aluno=supertest(app),cookie='tatame_sessao='+'a'.repeat(43);
+  const pendente=(await request(app).get(path).expect(200)).body;
+  assert.equal(pendente.length,1);assert.equal(pendente[0].resposta,null);assert.equal(pendente[0].respondidoEm,null);
+  assert.deepEqual(pendente[0].destinatario,{nome:'Ana',perfil:'aluno'});
+  assert.equal('senhaHash' in pendente[0].destinatario,false);
+  await aluno.get('/api/portal/comunicados').set('Cookie',cookie).expect(200);
+  assert.equal((await request(app).get(path).expect(200)).body[0].resposta,null);
+  const respostaPath=`/api/portal/comunicados/${entrada.id}/resposta`;
+  const confirmada=(await aluno.put(respostaPath).set('Cookie',cookie).set('X-Tatame-Request','1').send({resposta:'ciente'}).expect(200)).body;
+  assert.ok(confirmada.respondidoEm);
+  const repetida=(await aluno.put(respostaPath).set('Cookie',cookie).set('X-Tatame-Request','1').send({resposta:'ciente'}).expect(200)).body;
+  assert.equal(repetida.respondidoEm,confirmada.respondidoEm);
+  const historico=(await request(app).get(path).expect(200)).body;
+  assert.equal(historico.length,1);assert.equal(historico[0].id,entrada.id);assert.equal(historico[0].resposta,'ciente');
+  assert.equal(historico[0].respondidoEm,confirmada.respondidoEm);assert.equal(historico[0].criadoEm,entrada.criadoEm);
+  await aluno.get(path).set('Cookie',cookie).expect(403);
+  await supertest(app).get(path).expect(401);
+  await request(app).put(`${path}/${entrada.id}/resposta`).send({resposta:'ciente'}).expect(404);
+ }finally{await repo.close();}
+});
 it('falha na segunda entrega desfaz lote e todas as mensagens, permitindo tentar de novo',async()=>{
  const {repo,app}=await fixture();try{
   repo.db.exec(`CREATE TRIGGER falha_entrega BEFORE INSERT ON EntregaComunicado WHEN NEW.nome='Bia' BEGIN SELECT RAISE(ABORT,'falha controlada'); END;`);

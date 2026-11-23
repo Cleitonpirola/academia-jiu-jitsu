@@ -10,6 +10,10 @@ A tela envia os IDs dos check-ins selecionados para `POST /api/aulas/:id/chamada
 
 Na gestão de comunicados, a API tem rotas administrativas de exclusão para um destinatário ou para todo o envio coletivo. A camada de persistência apaga os vínculos e as mensagens juntas em uma transação, usando o esquema existente. [Contratos de comunicados](COMUNICADOS.md).
 
+No portal, `useComunicados` compartilha consulta e confirmação entre `StudentPortal` e `Comunicados`: o cartão de pendências, o contador e a lista usam a mesma resposta por base de acesso. A confirmação atualiza a caixa apenas com a resposta persistida pela API; versões de consulta descartam respostas antigas. O hook atualiza ao entrar, no retorno à janela e a cada 30 segundos em página visível, com timeout de 15 segundos na consulta. Falha conserva dados carregados do mesmo contexto e expõe erro. O portal familiar continua usando a base do dependente e suas verificações existentes. Não há novo contrato ou tabela nesta alteração de 20/11/2026.
+
+Em 22/11/2026, a ficha administrativa passou a reutilizar `Comunicados` com `admin` e `somenteConsulta`, com montagem por ID de aluno. Esse modo não oferece envio, exclusão ou confirmação. `GET /api/alunos/:id/comunicados`, já protegido por `requireAdmin`, acrescenta a projeção opcional `destinatario` (nome/perfil da conta atual) ao contrato `ComunicadoAlunoView`; `ComunicadoAluno` persistido permanece igual. A API projeta somente esses campos de usuário. `resposta`/`respondidoEm` existentes sustentam o estado e o primeiro horário de ciência; consulta e abertura não gravam resposta. Sem migração ou novo poder administrativo para confirmar mensagens.
+
 ## Registro de graus padrão — 05/11/2026
 
 O seletor usa os limites compartilhados com a API. Quando o grau padrão ainda não tem registro, o ajuste administrativo envia `grauNumero` com `grauId` nulo. O servidor valida o número, reutiliza a opção existente se houver e grava o grau novo, o vínculo com o aluno e o evento na transação de evolução. Os ajustes que já enviavam `grauId` continuam aceitos. A tabela existente `GrauFaixa` comporta o fluxo sem nova migração.

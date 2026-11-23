@@ -31,6 +31,7 @@ export interface ResponsavelInput { nome: string; email: string; telefone: strin
 export interface ResponsavelAluno { id: string; alunoId: string; usuarioId: string; telefone: string; parentesco: string; tipoVinculo: 'responsavel' | 'contato' | 'arquivado'; criadoEm: string; atualizadoEm: string }
 export interface EventoAcessoAluno { id: string; alunoId: string; usuarioId: string; tipo: string; detalhes: string; criadoEm: string }
 export interface ComunicadoAluno { id: string; alunoId: string; destinatarioId: string; autorId: string; tipo: 'aviso' | 'autorizacao'; titulo: string; mensagem: string; resposta: 'ciente' | 'aceito' | 'recusado' | null; respondidoEm: string | null; criadoEm: string }
+export interface ComunicadoAlunoView extends ComunicadoAluno { destinatario?: Pick<UsuarioView, 'nome' | 'perfil'> | null }
 export interface ControleParental { aluno: Aluno; menor: boolean; responsaveis: (ResponsavelAluno & { nome: string; email: string; ativado: boolean })[]; eventos: EventoAcessoAluno[] }
 export interface SaldoMensal { competencia: string; limiteMensal: number | null; utilizadas: number; adicionaisUtilizadas: number; restantes: number | null; limiteAtingido: boolean }
 export interface PreferenciasAcademia { id:string; exibirControlePlanos:boolean; atualizadoEm:string; atualizadoPorId:string }

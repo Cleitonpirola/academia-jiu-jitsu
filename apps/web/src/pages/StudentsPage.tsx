@@ -12,6 +12,7 @@ import { AcessoAluno } from '../components/AcessoAluno';
 import { PlanosAlunoOpcional } from '../components/PlanosAlunoOpcional';
 import { usePreferenciasAcademia } from '../preferencias-academia';
 import { ControleParental } from '../components/ControleParental';
+import { Comunicados } from '../components/Comunicados';
 export function StudentForm({aluno,onClose}:{aluno?:Aluno;onClose:()=>void}) {
   const {mutate}=useAcademia();const [form,setForm]=useState<AlunoInput>(aluno?{nome:aluno.nome,telefone:aluno.telefone,email:aluno.email.endsWith('@cadastro.invalid')?'':aluno.email,dataNascimento:aluno.dataNascimento,faixa:aluno.faixa,grauId:aluno.grauId??null,dataMatricula:aluno.dataMatricula,situacao:aluno.situacao}:{nome:'',telefone:'',email:'',dataNascimento:'',faixa:'Branca',dataMatricula:today(),situacao:'ativo'});const [error,setError]=useState('');const [busy,setBusy]=useState(false);
   const [possuiCelular,setPossuiCelular]=useState(aluno?.possuiCelular!==false);
@@ -38,6 +39,7 @@ export function StudentsPage({onPayments}:{onPayments:(id:string)=>void}) {
       !resourceStatus.mensalidades.loaded?<p className="helper">Carregando informações financeiras…</p>:
       <div className="detail-billing"><Users size={19}/><div><strong>{detailBills.length} mensalidades registradas</strong><span>{money(detailBills.filter(m=>m.status!=='pago').reduce((sum,bill)=>sum+bill.valorCentavos,0))} em aberto</span></div></div>}
     <AcessoAluno key={details.acessoPrincipal} aluno={details}/>
+    <Comunicados key={details.id} base={'/alunos/'+details.id} admin somenteConsulta/>
     <GraduacaoAluno alunoId={details.id} onUpdated={setDetails}/>
     <ControleParental aluno={details} onUpdated={setDetails}/>
     <PlanosAlunoOpcional key={details.id} aluno={details}/>

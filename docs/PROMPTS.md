@@ -1,5 +1,25 @@
 # Registro de prompts
 
+## Aprovação para commit de comunicados — 22/11/2026
+
+Usuário perguntou se o histórico passou, recebeu o resultado das verificações e respondeu **commite**. Codex interpretou a autorização para versionar e enviar somente os comunicados apresentados: destaque/contador, histórico, destinatário e primeira confirmação, ficha de consulta e recolhimento. Não incluiu automaticamente as outras mudanças pendentes ou a futura integração Pix.
+
+## Minimizar o histórico da ficha — 22/11/2026
+
+Com uma captura do histórico administrativo, o usuário pediu minimizar o bloco para evitar uma sequência de quinze recados poluindo a área. Codex implementou recolhimento inicial do histórico e abertura independente de cada recado. Totais e situações continuam consultáveis, e recolher não apaga ou confirma mensagens. Nenhuma mudança de acesso, persistência ou publicação foi inferida.
+
+## Professores conferem ciência por aluno — 22/11/2026
+
+O usuário pediu que professores/administradores abram o perfil de cada aluno e confiram se ele leu o recado. Implementação do Codex: histórico na ficha, mostrando ciência explícita e seu horário, com destinatário aluno/responsável; pendências não são rotuladas como prova de não abertura. Não foi inferida autorização para marcar mensagens pelo aluno, publicar, commitar ou enviar mensagens externas. Dados fictícios foram usados na conferência local.
+
+## Histórico e contador de recados — 22/11/2026
+
+O usuário reforçou que deseja conservar os recados enviados e lidos no perfil de cada aluno e retirar a notificação numérica somente após **Estou ciente**. A consulta e o contador já mantinham esse comportamento. Codex acrescentou data/horário de envio e confirmação e texto explícito sobre a permanência do histórico, preservando as rotas existentes e sem exclusão automática. A leitura confirmada representa a ação da pessoa, sem inferir compreensão.
+
+## Recados mais aparentes — 20/11/2026
+
+Pedido: “teria como ficar bem mais aparente no perfil de cada um? temos problemas com alunos que n veem os recados”. Codex implementou destaque persistente de pendências e contador na entrada e nas abas do aluno/responsável, com confirmação explícita. A pergunta anterior sobre notificação no celular/WhatsApp não foi tratada como autorização de disparo ou de integração externa. Implementação e conferência pela IA; validação humana e publicação pendentes.
+
 ## Chamada em lote
 
 O usuário pediu para selecionar todos da aula e registrar as presenças de uma vez. A tela permite ajustar a seleção entre os check-ins pendentes antes de confirmar.

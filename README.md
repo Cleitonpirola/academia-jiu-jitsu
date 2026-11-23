@@ -10,7 +10,13 @@ O login e a ativação têm um botão para mostrar ou ocultar a senha. Ao criar 
 
 Os registros datados abaixo descrevem o estado de cada entrega no momento em que foi testada.
 
-**Comunicados — 05/11/2026.** Os formulários de envio individual e para a equipe pedem título e mensagem. Alunos e responsáveis recebem os avisos em **Comunicados** e podem marcar **Estou ciente**. O administrador pode excluir uma mensagem para um destinatário ou para a equipe inteira. [Guia de comunicados](docs/COMUNICADOS.md).
+**Comunicados — destaque local em 20/11/2026.** Alunos e responsáveis veem um aviso destacado acima da agenda e das demais abas enquanto houver comunicados aguardando confirmação. O menu mostra a quantidade pendente, e **Ler comunicados** abre as mensagens, com as pendentes primeiro. O destaque só desaparece depois de **Estou ciente** ser salvo. Os formulários individuais e para a equipe pedem título e mensagem, e a gestão pode excluir os envios. [Guia e conferência](docs/COMUNICADOS.md).
+
+**Histórico de recados — 22/11/2026, local.** Recados confirmados permanecem na aba **Comunicados** de cada aluno. O histórico mostra data e horário de envio e de **Estou ciente**, quando registrado. Abrir o recado ou sair da conta mantém a pendência até a confirmação explícita.
+
+**Consulta pelos professores — 22/11/2026, local.** Em **Alunos → Ver ficha → Histórico de comunicados**, administradores conferem os recados, a conta destinatária e os estados **Sem confirmação de leitura** ou **Leitura confirmada**, com data e horário de **Estou ciente**. A ficha oferece consulta; envios e exclusões permanecem no menu **Comunicados**.
+
+Na ficha, o histórico começa recolhido, mostrando somente o resumo de enviados, confirmados e pendentes. Ao expandir, cada recado mostra título e situação; texto, destinatário e datas aparecem ao abrir aquele recado.
 
 **Ficha e graduação — 05/11/2026.** Em **Alunos → Ver ficha → Evolução da graduação**, o professor pode registrar de 1º a 4º grau nas faixas até marrom e de 1º a 6º na preta. As opções já aparecem antes de configurar metas de aulas. Clique no fundo escuro ao redor da ficha para fechar. Na próxima abertura, a ficha volta ao topo. [Guia](docs/EVOLUCAO_GRADUACAO.md) · [Prévia brasileira protegida](https://tatame-homologacao-pteo91412-cleiton-pirola.vercel.app).
 

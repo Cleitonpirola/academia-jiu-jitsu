@@ -26,7 +26,15 @@ export function familiaAdminRouter(repo: Repository) {
     const usuario=await repo.get('Usuario',result.usuarioId);
     res.status(201).json({token,expiraEm,email:usuario!.email});
   });
-  router.get('/:id/comunicados',async(req,res)=>{const aluno=await alunoAtual(req.params.id);res.json((await repo.list('ComunicadoAluno')).filter(c=>c.alunoId===aluno.id).sort((a,b)=>b.criadoEm.localeCompare(a.criadoEm)));});
+  router.get('/:id/comunicados',async(req,res)=>{
+    const aluno=await alunoAtual(req.params.id);
+    const [comunicados,usuarios]=await Promise.all([repo.list('ComunicadoAluno'),repo.list('Usuario')]);
+    const porId=new Map(usuarios.map(usuario=>[usuario.id,usuario]));
+    res.json(comunicados.filter(c=>c.alunoId===aluno.id).sort((a,b)=>b.criadoEm.localeCompare(a.criadoEm)).map(c=>{
+      const destinatario=porId.get(c.destinatarioId);
+      return {...c,destinatario:destinatario?{nome:destinatario.nome,perfil:destinatario.perfil}:null};
+    }));
+  });
   router.delete('/:id/comunicados/:comunicadoId',async(req,res)=>{
     await repo.excluirComunicado(z.string().uuid().parse(req.params.comunicadoId),z.string().uuid().parse(req.params.id));
     res.sendStatus(204);

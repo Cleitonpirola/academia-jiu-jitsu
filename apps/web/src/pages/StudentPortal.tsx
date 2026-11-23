@@ -7,8 +7,9 @@ import { contarAulasRealizadas } from '../treinos-realizados';
 import { GraduacaoAluno } from '../components/GraduacaoAluno';
 import { telefoneLabel } from '../telefone';
 import { Comunicados } from '../components/Comunicados';
+import { useComunicados } from '../use-comunicados';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { CalendarDays, CheckCircle2, Clock3, CreditCard, DollarSign, LogOut, RefreshCw, User, PartyPopper } from 'lucide-react';
+import { Bell, CalendarDays, CheckCircle2, Clock3, CreditCard, DollarSign, LogOut, RefreshCw, User, PartyPopper } from 'lucide-react';
 import type { AulaAlunoView, RespostaPortalAluno } from '@tatame/shared';
 import { Badge, Belt, Button, Empty, FormError, Field, Modal, Person } from '../components';
 import { api, dateLabel, money, today } from '../lib';
@@ -26,6 +27,13 @@ export function StudentPortal({ onLogout, apiBase='/portal', responsavel=false, 
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [page, setPage] = useState('agenda');
+  const caixaComunicados = useComunicados(apiBase);
+  const comunicadosPendentes = caixaComunicados.rows.filter(comunicado => !comunicado.resposta);
+  const destaque = [...comunicadosPendentes].sort((a, b) => b.criadoEm.localeCompare(a.criadoEm))[0];
+  const painelComunicados = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (page === 'avisos') painelComunicados.current?.focus();
+  }, [page]);
   const [dia, setDia] = useState(today());
   const [filter, setFilter] = useState(today());
   const [busy, setBusy] = useState(false);
@@ -76,15 +84,29 @@ export function StudentPortal({ onLogout, apiBase='/portal', responsavel=false, 
   const pendentes = data?.aulas.filter(aula => aula.checkin && !aula.presenca && aula.situacao !== 'cancelada').length ?? 0;
   const selected = data?.aulas.filter(aula => filter ? aula.dataAula === filter : aula.dataAula >= dia) ?? [];
   return <div className="portal-shell"><header className="portal-header"><a className="brand" href="#" onClick={event => { event.preventDefault(); setPage('agenda'); }}><span className="brand-mark">t</span><div>tatame<small>{responsavel?'ALUNO ACOMPANHADO':'ÁREA DO ALUNO'}</small></div></a><div><Button variant="ghost" disabled={loading} onClick={() => void load()} aria-label="Atualizar minha área"><RefreshCw size={17}/></Button><Button variant="secondary" onClick={onLogout}><LogOut size={16}/>Sair</Button></div></header>
-    <main className="portal-main">{!bloqueio && <section className="portal-welcome"><div><div className="eyebrow">SUA JORNADA NO TATAME</div><h1>Oss{data ? `, ${data.aluno.nome.trim().split(/\s+/)[0]}` : ''}!</h1><p>Um treino de cada vez. Sua evolução começa com a presença.</p></div>{data && <Belt value={data.aluno.faixa} grauId={data.aluno.grauId}/>}</section>}
+    <main className="portal-main">
+      {destaque && <section className="comunicados-destaque" aria-label="Comunicados aguardando confirmação">
+        <Bell size={26} aria-hidden="true"/>
+        <div>
+          <h2>{comunicadosPendentes.length === 1 ? 'Você tem um comunicado para ler' : `Você tem ${comunicadosPendentes.length} comunicados para ler`}</h2>
+          <strong>{destaque.titulo}</strong>
+          <p>{destaque.mensagem}</p>
+          <Button onClick={() => { setPage('avisos'); painelComunicados.current?.focus(); }}>Ler comunicados</Button>
+        </div>
+      </section>}
+      {caixaComunicados.error && page !== 'avisos' && <div className="comunicados-consulta-erro" role="alert">
+        <span>Não foi possível atualizar os comunicados.</span>
+        <Button variant="secondary" onClick={() => void caixaComunicados.load()}>Tentar novamente</Button>
+      </div>}
+      {!bloqueio && <section className="portal-welcome"><div><div className="eyebrow">SUA JORNADA NO TATAME</div><h1>Oss{data ? `, ${data.aluno.nome.trim().split(/\s+/)[0]}` : ''}!</h1><p>Um treino de cada vez. Sua evolução começa com a presença.</p></div>{data && <Belt value={data.aluno.faixa} grauId={data.aluno.grauId}/>}</section>}
       {data && data.aluno.dataNascimento.slice(5) === dia.slice(5) && <div className="portal-birthday"><PartyPopper size={28}/><div><strong>Hoje o tatame celebra você!</strong><p>{mensagemAniversario(data.aluno.nome)}</p></div></div>}
-      {(data || bloqueio) && <nav className="portal-nav" aria-label="Minha área">{nav.filter(item=>!bloqueio||item.id==='tecnicas'||item.id==='debitos'||item.id==='avisos'||(!responsavel&&item.id==='perfil')).map(({ id, label, icon: Icon }) => <button key={id} onClick={() => setPage(id)} aria-current={page === id ? 'page' : undefined} className={page === id ? 'active' : ''}><Icon size={18}/>{label}</button>)}</nav>}
+      {(data || bloqueio) && <nav className="portal-nav" aria-label="Minha área">{nav.filter(item=>!bloqueio||item.id==='tecnicas'||item.id==='debitos'||item.id==='avisos'||(!responsavel&&item.id==='perfil')).map(({ id, label, icon: Icon }) => <button key={id} onClick={() => setPage(id)} aria-current={page === id ? 'page' : undefined} className={page === id ? 'active' : ''}><Icon size={18}/>{label}{id==='avisos' && comunicadosPendentes.length > 0 && <span className="comunicados-contador" aria-label={`${comunicadosPendentes.length} aguardando confirmação`}>{comunicadosPendentes.length}</span>}</button>)}</nav>}
       {data && <ResumoPlano uso={data.plano}/>}
       {data?.saldoMensal && <ResumoSaldoMensal saldo={data.saldoMensal} valorAdicionalCentavos={data.condicoesAdicionais?.valorAulaAdicionalCentavos}/>}
       {data?.debitoVencido&&<p className="portal-notice" role="alert">Você possui débito de aula adicional vencido. Regularize com a academia para fazer novos check-ins.</p>}<FormError message={error}/>{error && <Button variant="secondary" disabled={loading} onClick={() => void load()}>Tentar novamente</Button>}
       {notice && <p className="portal-notice" role="status"><CheckCircle2 size={19}/>{notice}</p>}
       {responsavel&&!podeCheckin&&<p className="portal-notice">O aluno possui celular próprio e faz o próprio check-in. Você acompanha os dados, débitos e comunicados.</p>}
-      {page==='tecnicas'?<TecnicasAluno apiBase={apiBase}/>:page==='ranking'&&!bloqueio ? <RankingPage/> : page==='perfil'&&responsavel ? <FotoPerfilEditor base={apiBase} titulo="Foto do aluno"/> : page==='perfil'&&!responsavel ? <><PerfilAluno onSaved={load}/><GraduacaoAluno apiBase={apiBase}/></> : page === 'avisos' ? <Comunicados base={apiBase}/> : page === 'debitos' ? <DebitosAluno apiBase={apiBase}/> : bloqueio ? <BloqueioFinanceiro bloqueio={bloqueio} loading={loading} onRefresh={() => void load()}/> : !data ? <Empty title={loading ? 'Preparando sua área…' : 'Não foi possível carregar seus dados'} description="Confira sua conexão e tente novamente."/> : <>
+      {page==='tecnicas'?<TecnicasAluno apiBase={apiBase}/>:page==='ranking'&&!bloqueio ? <RankingPage/> : page==='perfil'&&responsavel ? <FotoPerfilEditor base={apiBase} titulo="Foto do aluno"/> : page==='perfil'&&!responsavel ? <><PerfilAluno onSaved={load}/><GraduacaoAluno apiBase={apiBase}/></> : page === 'avisos' ? <div ref={painelComunicados} tabIndex={-1} aria-label="Mensagens da academia"><Comunicados base={apiBase} caixa={caixaComunicados}/></div> : page === 'debitos' ? <DebitosAluno apiBase={apiBase}/> : bloqueio ? <BloqueioFinanceiro bloqueio={bloqueio} loading={loading} onRefresh={() => void load()}/> : !data ? <Empty title={loading ? 'Preparando sua área…' : 'Não foi possível carregar seus dados'} description="Confira sua conexão e tente novamente."/> : <>
         {page === 'agenda' && <><div className="portal-section-heading"><div><h2>Encontre seu próximo treino</h2><p>{pendentes ? `${pendentes} check-in(s) aguardando validação.` : 'Escolha uma aula publicada pela academia.'}</p></div></div><DiasAulas dia={filter} onChange={setFilter} diasComAula={data.aulas.filter(a=>a.situacao!=='cancelada').map(a=>a.dataAula)}/><div className="portal-agenda-actions"><Button variant="ghost" onClick={() => setFilter('')}>Ver próximas aulas</Button></div><p className="helper">O check-in fica disponível no dia da aula. Você pode participar de mais de uma aula no mesmo dia. O professor confirma sua presença depois.</p>
           <div className="portal-aulas">{selected.map(aula => <article className={`card portal-aula ${aula.situacao === 'cancelada' ? 'is-cancelled' : ''}`} key={aula.id}><div className="portal-aula-time"><CalendarDays size={19}/><strong>{dateLabel(aula.dataAula)}</strong><span>{aula.horaInicio} – {aula.horaFim}</span></div><div className="portal-aula-info"><span className="eyebrow">{aula.origem === 'extra' ? 'REGISTRO ANTERIOR' : 'GRADE DA TURMA'}</span><h3>{nomeAulaPorHorario(aula.horaInicio)}</h3>{data.plano.aulasLiberadas.includes(aula.id) && <span className="attendance-status is-present">Aula extra autorizada</span>}<p>{aula.professor} {aula.turmaNome && aula.turmaNome !== aula.titulo ? `· ${aula.turmaNome}` : ''}</p>{aula.situacao === 'cancelada' && <p className="portal-cancelled">Cancelada · {aula.motivoCancelamento}</p>}</div><div className="portal-aula-action">{aula.situacao === 'cancelada' ? <span className="attendance-status is-absent">Aula cancelada</span> : aula.presenca ? <span className={`attendance-status ${aula.presenca.presente ? 'is-present' : 'is-absent'}`}>{aula.presenca.presente ? 'Presença confirmada' : 'Ausência registrada'}</span> : aula.checkin ? <span className="attendance-status unmarked"><Clock3 size={14}/>Aguardando confirmação</span> : adicionalConfirmado(aula.id) && aula.dataAula > dia ? <span className="attendance-status is-present">Adicional confirmado · check-in no dia</span> : data.saldoMensal?.limiteAtingido && !adicionalConfirmado(aula.id) ? <Button disabled={aula.origem!=='grade' || busy || loading || Boolean(error) || data.debitoVencido || data.condicoesAdicionais?.valorAulaAdicionalCentavos == null || aula.dataAula < dia || aula.dataAula.slice(0,7) !== data.saldoMensal.competencia} onClick={()=>{setError('');setAdicional(aula);}}>{aula.origem!=='grade' ? 'Registro anterior' : data.condicoesAdicionais?.valorAulaAdicionalCentavos == null ? 'Limite mensal atingido' : 'Reservar aula adicional'}</Button> : <Button disabled={!podeCheckin || busy || loading || Boolean(error) || data.debitoVencido || Boolean(data.saldoMensal?.limiteAtingido && !adicionalConfirmado(aula.id)) || aula.dataAula !== dia || (data.plano.limiteAtingido && !data.plano.aulasLiberadas.includes(aula.id))} onClick={() => void checkin(aula)}>{!podeCheckin ? 'Check-in pelo aluno' : aula.dataAula === dia ? data.saldoMensal?.limiteAtingido && !adicionalConfirmado(aula.id) ? 'Limite mensal atingido' : data.plano.limiteAtingido && !data.plano.aulasLiberadas.includes(aula.id) ? 'Limite semanal atingido' : 'Fazer check-in' : aula.dataAula > dia ? 'Disponível no dia' : 'Aula encerrada'}</Button>}</div></article>)}</div>
           {!selected.length && <Empty title="Nenhuma aula publicada para este período" description="A academia precisa publicar as aulas na agenda. Consulte os próximos dias ou converse com seu professor."/>}

@@ -150,7 +150,10 @@ describe('Acesso familiar e transferência de responsabilidade',()=>{
     await call(token,'put',path+`/comunicados/${c.body.id}/resposta`).send({resposta:'recusado'}).expect(409);
     const historico=await admin('get',`/api/alunos/${aluno.id}/comunicados`).expect(200);assert.equal(historico.body[0].resposta,'aceito');
     const aviso=await admin('post',`/api/alunos/${aluno.id}/comunicados`).send({destino:'responsavel',tipo:'aviso',titulo:'Recesso',mensagem:'Não haverá aula no feriado.'}).expect(201);
-    await call(token,'put',path+`/comunicados/${aviso.body.id}/resposta`).send({resposta:'ciente'}).expect(200);
+    const ciencia=await call(token,'put',path+`/comunicados/${aviso.body.id}/resposta`).send({resposta:'ciente'}).expect(200);
+    const auditado=(await admin('get',`/api/alunos/${aluno.id}/comunicados`).expect(200)).body.find((c:{id:string})=>c.id===aviso.body.id);
+    assert.equal(auditado.resposta,'ciente');assert.equal(auditado.respondidoEm,ciencia.body.respondidoEm);
+    assert.equal(auditado.destinatario.perfil,'responsavel');assert.ok(auditado.destinatario.nome);
   });
   it('mantém débitos acessíveis mas bloqueia novos check-ins por atraso do dependente',async()=>{
     const aluno=await cadastrar(),token=await pai(aluno),a=await aula();

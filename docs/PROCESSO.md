@@ -1,5 +1,25 @@
 # Processo
 
+## Aprovação do conjunto de comunicados — 22/11/2026
+
+Após a apresentação do histórico, da consulta administrativa e do recolhimento, o usuário respondeu **commite**. Autorizados commit e push desse conjunto. A seleção foi preparada a partir de `81fd7c6`, preservando as demais mudanças locais; vídeos/Pix, bolsistas, agenda e outras pendências ficaram fora. A versão selecionada foi conferida em uma cópia isolada, com seu próprio pacote compartilhado: build/typecheck e 295 testes TypeScript passaram. A primeira tentativa de vincular dependências foi bloqueada pelo ambiente; após corrigir o vínculo local, as verificações foram repetidas e passaram. As conferências de navegador anteriores usaram dados fictícios. Não houve nova validação externa de PostgreSQL nem autorização para publicação por este pedido.
+
+## Histórico compacto na ficha — 22/11/2026
+
+O usuário pediu minimizar o bloco para evitar que quinze recados ocupem a ficha. O modo de consulta agora usa um histórico recolhido por padrão, mantendo o resumo sempre visível, e cada mensagem tem expansão independente de conteúdo/datas. Portal do aluno e regras de confirmação permanecem os mesmos. Alterados componente, estilos e documentação. Build/typecheck e conferência no navegador passaram: iniciar recolhido, expandir um recado sem abrir o outro, consultar os horários, atualizar sem perder expansão e recolher por teclado. Captura fictícia em `screenshots/comunicados-ficha-recolhida.jpg`. Suíte HTTP não repetida neste refinamento visual. Sem commit/push/publicação externa.
+
+## Conferência de leitura na ficha administrativa — 22/11/2026
+
+Pedido: professores/administradores devem consultar no perfil do aluno se cada recado foi confirmado. Codex acrescentou o histórico em modo de consulta à ficha, estados explícitos, datas e conta destinatária (aluno ou responsável). Envios/exclusões continuam no menu específico. O contrato administrativo existente ganhou uma projeção de nome/perfil, sem novos campos persistidos. A tela explica que confirma a ação **Estou ciente** pela conta, sem inferir abertura ou compreensão. Build/typecheck e 22 testes HTTP passaram nesta rodada. Conferência no navegador com aplicação real e SQLite fictício em memória validou a passagem de pendente para confirmado após a ação do aluno e a consulta administrativa do novo horário. Captura em `screenshots/comunicados-leitura-ficha.jpg`. Nenhuma alteração de banco externo, commit, push ou publicação; aguarda validação humana.
+
+## Histórico e confirmação de recados — 22/11/2026
+
+Conferido o pedido de manter mensagens enviadas e lidas por aluno e o contador até **Estou ciente**. A funcionalidade anterior já preservava mensagens e respostas; o componente agora explicita o histórico e mostra datas/horários de envio e confirmação. Build/typecheck executado e aprovado nesta rodada. A conferência no navegador com API fictícia passou, incluindo datas, consulta após confirmação, manutenção do histórico, contador, falhas e acesso familiar. A prévia local foi atualizada. Sem alteração de contrato/banco, commit, push ou publicação externa.
+
+## Comunicados em destaque — 20/11/2026
+
+O usuário pediu recados mais aparentes porque alunos deixam de vê-los. Implementados cartão de pendências no topo de todas as abas do portal, contador no menu, prévia do recado mais recente e lista com pendentes primeiro. Aluno e responsável reutilizam a mesma caixa; somente a confirmação salva retira a pendência. Erros preservam os avisos já carregados. Build/typecheck passou. A conferência no navegador com respostas fictícias passou para leitura, confirmação, erros, histórico e acesso familiar, inclusive bloqueio financeiro. Passaram 17 testes locais de acesso familiar e quatro de comunicados coletivos nesta rodada. Mudanças anteriores da árvore foram preservadas. Sem commit, push, publicação ou alteração de banco; aguardando validação do conjunto.
+
 ## Chamada em lote — 15/11/2026
 
 Na chamada, a gestão pode selecionar os check-ins pendentes, ajustar a seleção e confirmar as presenças de uma vez. Os 297 testes locais e o build passaram. O teste HTTP com SQLite em memória confirmou a gravação de várias presenças, a preservação da falta e o tratamento de check-ins cancelados, de outra aula e reenviados. A prévia local tem uma aula com dados fictícios para validação da tela.

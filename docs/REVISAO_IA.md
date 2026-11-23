@@ -1,5 +1,25 @@
 # Revisão de IA
 
+## Revisão da seleção para commit — 22/11/2026
+
+Separados trechos de arquivos que também continham alterações de bolsa, agenda, convites e graduação. A cópia isolada contém somente HEAD mais os comunicados aprovados; usa seu próprio pacote compartilhado. Build/typecheck e suíte de 295 testes passaram nessa seleção, após corrigir um vínculo de dependências inicialmente negado pelo ambiente. A consulta administrativa continua limitada a nome/perfil do destinatário, com primeira confirmação preservada. Sem migração, segredos, artefatos privados ou publicação. A aprovação do usuário para commit/push foi explícita.
+
+## Recolhimento do histórico — 22/11/2026
+
+Revisado uso de `details`/`summary` nativos somente no modo de consulta da ficha, preservando o fluxo de confirmação do portal. Totais continuam vindos da mesma consulta e o estado de erro permanece acessível. Títulos longos têm quebra; o estado não depende apenas de cor. Build/typecheck aprovado. Navegador confirmou histórico fechado inicialmente, expansão individual, datas preservadas, atualização mantendo expansão e fechamento pelo teclado. Sem mudança na API, banco ou permissões. Não foi alegada nova execução dos 22 testes HTTP da entrega anterior. Captura fictícia registrada; commit/push pendentes de validação.
+
+## Consulta administrativa de leitura — 22/11/2026
+
+Revisados modo de consulta sem ações de envio/exclusão/ciência, chave por aluno, uso do contrato protegido existente e projeção limitada a nome/perfil do destinatário. Nenhum campo sensível de `Usuario` é espalhado na resposta. Primeiro horário de confirmação é conservado; abrir a caixa não grava leitura. Build/typecheck e 22 testes HTTP passaram; teste novo cobre status antes/depois, mesmo horário em repetição, histórico preservado, isolamento por aluno e bloqueios 401/403. Teste familiar ampliado confere a conta responsável no histórico administrativo. No navegador com SQLite em memória, confirmado o fluxo aluno → Estou ciente → ficha administrativa com horário. Captura fictícia registrada. Não houve teste PostgreSQL externo ou publicação nesta entrega. Sem commit/push.
+
+## Histórico por aluno — 22/11/2026
+
+Revisado que a listagem mantém mensagens confirmadas, a API conserva a primeira resposta e o contador considera somente pendências. A data de confirmação usa `respondidoEm`, sem fabricar horário para histórico legado sem esse valor. Datas exibidas em São Paulo. Build/typecheck passou nesta rodada; navegador com dados fictícios confirmou datas, redução de contador somente após salvar, permanência dos recados após nova consulta e tratamento de erros. Não foi repetida a suíte HTTP nem validado banco externo nesta rodada. Sem commit/push.
+
+## Destaque dos comunicados — 20/11/2026
+
+Revisado o compartilhamento de consulta entre banner, contador e lista, sem busca duplicada ao abrir a aba. Pendências são retiradas após resposta da API; falhas mantêm os dados carregados. Confirmar não apaga o histórico. Base de acesso e montagem por dependente preservam o isolamento familiar existente. Build/typecheck passou; navegador com dados fictícios aprovou contador, foco, ordem, falha e sucesso de confirmação, histórico, troca de contexto, bloqueio financeiro e falha de consulta. Passaram 17 testes HTTP de acesso familiar e quatro de comunicados coletivos nesta rodada. Não houve conferência externa em Supabase ou publicação. Sem commit/push antes da validação do usuário.
+
 ## Chamada em lote
 
 A revisão cobriu reenvio da confirmação, check-ins cancelados ou de outra aula e marcações já registradas. A verificação HTTP passou com SQLite em memória. O caminho PostgreSQL foi verificado pelo TypeScript e ainda aguarda execução em ambiente de testes.
