@@ -157,7 +157,7 @@ it('migração 18 preserva tabelas e registros anteriores, sem cobrar ou liberar
   db.exec('PRAGMA foreign_keys=ON');migrateSqlite(db,undefined,sqliteMigrations.slice(0,17));
   const tabelas=db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name!='_tatame_migrations' ORDER BY name").all().map(t=>String(t.name));
   const snapshot=()=>tabelas.map(t=>db.prepare('SELECT * FROM "'+t+'" ORDER BY id').all()),antes=snapshot();
-  assert.deepEqual(migrateSqlite(db).applied,[18,19,20]);assert.deepEqual(snapshot(),antes);
+  assert.deepEqual(migrateSqlite(db).applied,[18,19,20,21]);assert.deepEqual(snapshot(),antes);
   for(const t of ['ConfiguracaoTecnicas','VideoTecnica','AcessoTecnicas'])assert.equal(db.prepare('SELECT count(*) n FROM '+t).get()?.n,0);
   assert.deepEqual(db.prepare('PRAGMA foreign_key_check').all(),[]);assert.deepEqual(migrateSqlite(db).applied,[]);
  }finally{db.close();}

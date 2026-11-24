@@ -1,5 +1,17 @@
 # Turmas e grade fixa — entrega 1A
 
+## Cidade opcional — 24/11/2026
+
+Na grade de **Nova turma/Editar turma**, cada intervalo tem **Cidade (opcional)**. O texto é livre, com até 80 caracteres, e pode ficar em branco. Não há uma lista obrigatória de cidades. O campo em branco não gera etiqueta ou aviso no cartão.
+
+Dias selecionados na mesma combinação compartilham os horários e as cidades informadas. Para usar 12h em São João na segunda e 12h em Aguaí na quarta, marque **Incluir mais horários** e use uma combinação para cada dia/cidade. Reabrir a edição preserva essa distinção. Apagar o campo e salvar remove a cidade daquele horário, sem alterar os demais.
+
+A etiqueta aparece nos cartões, na grade semanal e nos detalhes. Ao publicar a aula, a cidade é copiada para o encontro; editar a grade depois não altera as aulas já publicadas. Não foram atribuídas cidades automaticamente aos horários reais cadastrados.
+
+Implementado e verificado localmente: build/typecheck, 311 testes TypeScript e Prisma aprovados. Navegador com SQLite em memória confirmou edição, salvamento com cidade apagada, preservação da outra cidade e da cidade histórica da aula. O portal foi conferido em tela estreita, sem transbordamento horizontal. Supabase e versão online não foram alterados neste incremento. Aguardando validação antes de commit/envio.
+
+![Campo de cidade opcional em dados fictícios](screenshots/cidade-opcional-formulario.jpg)
+
 ## Horários adicionais opcionais — 26/10/2026
 
 Em **Turmas → Nova turma → Grade fixa**, o checkbox **Incluir mais horários** começa desmarcado. O formulário mostra um intervalo de início/término, que pode valer para vários dias selecionados. Os botões **Adicionar horário** e **Adicionar outra combinação**, assim como os controles de remoção dos extras, ficam ocultos. Ao marcar, os controles e os horários adicionais ficam disponíveis.

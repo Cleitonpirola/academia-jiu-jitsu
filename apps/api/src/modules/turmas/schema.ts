@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { cidadeTreinoSchema } from '../../domain.js';
 
 const time = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Informe um horário válido no formato HH:mm.');
 export const turmaSituacaoSchema = z.object({ situacao: z.enum(['ativo', 'inativo']) }).strict();
@@ -7,7 +8,7 @@ export const turmaSchema = z.object({
   professor: z.string().trim().min(2, 'Informe o professor responsável.').max(120),
   situacao: z.enum(['ativo', 'inativo']),
   horarios: z.array(z.object({
-    diaSemana: z.number().int().min(0).max(6), horaInicio: time, horaFim: time,
+    diaSemana: z.number().int().min(0).max(6), horaInicio: time, horaFim: time, cidade: cidadeTreinoSchema,
   }).strict()).min(1, 'Adicione pelo menos um horário à grade.').max(100),
   alunoIds: z.array(z.string().uuid('Selecione alunos cadastrados.')).max(500),
 }).strict().superRefine((value, context) => {

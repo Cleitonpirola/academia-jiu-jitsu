@@ -32,7 +32,7 @@ export function createAulasService(repo: Repository) {
     if (turma.situacao !== 'ativo') throw new HttpError(400, 'Ative a turma antes de criar uma nova aula vinculada a ela.');
     return turma;
   };
-  const create = async (fields: Pick<Aula, 'titulo' | 'dataAula' | 'horaInicio' | 'horaFim' | 'professor' | 'origem' | 'origemHorarioId'>, turma: Turma, id: string = randomUUID()) => {
+  const create = async (fields: Pick<Aula, 'titulo' | 'dataAula' | 'horaInicio' | 'horaFim' | 'cidade' | 'professor' | 'origem' | 'origemHorarioId'>, turma: Turma, id: string = randomUUID()) => {
     const aula: Aula = { ...fields, id, turmaId: turma.id, turmaNome: turma.nome,
       situacao: 'agendada', motivoCancelamento: null, canceladaEm: null, criadoEm: new Date().toISOString(),
     };
@@ -76,7 +76,7 @@ export function createAulasService(repo: Repository) {
       const turma = await activeTurma(horario.turmaId);
       if (new Date(dataAula + 'T12:00:00Z').getUTCDay() !== horario.diaSemana) throw new HttpError(400, 'A data escolhida não corresponde ao dia da semana deste horário.');
       try {
-        const aula = await create({ titulo: turma.nome, professor: turma.professor, dataAula, horaInicio: horario.horaInicio, horaFim: horario.horaFim, origem: 'grade', origemHorarioId: horarioId }, turma);
+        const aula = await create({ titulo: turma.nome, professor: turma.professor, dataAula, horaInicio: horario.horaInicio, horaFim: horario.horaFim, cidade: horario.cidade ?? null, origem: 'grade', origemHorarioId: horarioId }, turma);
         return { aula, created: true };
       } catch (error) {
         // Duas requisições podem passar pela consulta inicial. A unicidade do banco decide.
@@ -94,7 +94,7 @@ export function createAulasService(repo: Repository) {
         if (!existente) return null;
         if (existente.origem !== 'extra' || existente.turmaId !== turmaId ||
             existente.dataAula !== horario.dataAula || existente.horaInicio !== horario.horaInicio ||
-            existente.horaFim !== horario.horaFim || existente.titulo !== horario.titulo) {
+            existente.horaFim !== horario.horaFim || existente.titulo !== horario.titulo || (existente.cidade ?? null) !== horario.cidade) {
           throw new HttpError(409, 'Este identificador já pertence a outro encontro. Reabra o formulário.');
         }
         return { aula: await detail(id), created: false };

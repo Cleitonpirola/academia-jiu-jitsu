@@ -1,5 +1,19 @@
 # Processo
 
+## Demonstração direta e aprovação da cidade — 24/11/2026
+
+Usuário solicitou mestre como administrador e conta fictícia de aluno em dois celulares, sem entrada pela Vercel. Recriada a fonte já aprovada em Production, mantida a proteção das prévias via Standard Protection e registrado o domínio diário. Segredos existentes tiveram o alvo estendido sem leitura; origem de recuperação configurada separadamente para produção. Sem bypass, troca de senha, seed ou alteração de cadastros. Conferidos 177 hashes de fonte, login de ambos, 401 sem sessão, 403 do aluno na administração, origem estrangeira recusada, cookie seguro, logout e analytics disponível. Navegador em tela estreita confirmou os dois perfis. Primeira publicação direta pronta e testada.
+
+Durante a entrega, o usuário aprovou **pode incluir a opção de cidade tbm**, seguido de **continue**. A aprovação abrange o incremento já apresentado e validado (311 testes, build, Prisma e navegador local), autorizando commit/envio e inclusão no mesmo endereço. Documentação direta acompanha esse conjunto. Portfólio, credenciais e artefatos privados ficam fora da seleção. Migração/publicação da cidade serão registradas após execução; a aprovação não atribui ao usuário testes que ele não relatou.
+
+## Cidade opcional nos horários — 24/11/2026
+
+Estado inicial consultado: branch `codex/evolucao-tatame`, HEAD `21686dd`, sem alterações rastreadas; portfólio não rastreado de outra tarefa preservado. Usuário autorizou implementar cidade opcional, sem exigir preenchimento. Incluídos contratos, schemas, persistência SQLite/Prisma, migrações aditivas, agrupamento da grade, campo nos formulários e etiqueta em turmas/aulas/chamada/portal. Documentação atualizada com uso, modelo, decisões e limites.
+
+Verificações executadas nesta rodada: geração do cliente Prisma, build/typecheck, validação do schema Prisma e suíte final de 311 testes TypeScript, todos aprovados. A primeira execução teve seis falhas em expectativas de snapshots por novas colunas null; expectativas de preservação foram ajustadas para colunas originais e a nova migração tem teste próprio de null, preservação e idempotência. `git diff --check` sem erros. Nenhum teste histórico é contado como execução nova de Python ou serviço externo.
+
+Conferência visual pelo Codex em banco fictício em memória: professor viu as etiquetas e o campo opcional; apagar São João e salvar removeu só aquela etiqueta da grade, mantendo Aguaí. A aula já publicada conservou São João. Aluno viu os três encontros, dois com cidade e um sem, em tela estreita sem transbordamento horizontal. Capturas salvas na documentação. A preparação da prévia isolada exigiu ajustar origem permitida e executar o servidor local fora do isolamento de rede; nenhuma regra de autenticação/CSRF da aplicação foi enfraquecida. Nenhum cadastro real, Supabase ou deployment foi alterado. Nova entrega pronta para validação; sem commit/push/publicação antes da aprovação.
+
 ## Consolidação autorizada para os testes da academia — 24/11/2026
 
 Após ser informado de que a prévia ainda não continha as funcionalidades locais pendentes, o usuário pediu **quero o sistema atualizado e commitadio**. O escopo passa a incluir o conjunto implementado do Tatame, sua documentação e publicação no endereço fixo de testes. O portfólio de outro trabalho, credenciais, bancos locais e dependências permanecem fora da seleção. A aprovação autoriza commit/push e a atualização desta prévia; não autoriza merge, release, mudança de proteção ou novas integrações pagas.

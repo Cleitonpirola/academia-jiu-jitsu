@@ -1,5 +1,13 @@
 # Arquitetura — Academia de Jiu-Jitsu
 
+## Cidade opcional de treino — 24/11/2026
+
+`HorarioTurma.cidade` e `Aula.cidade` são textos anuláveis, limitados a 80 caracteres. O schema compartilhado da API aceita ausência, null e texto; remove espaços nas pontas e normaliza vazio para null. Os contratos TypeScript mantêm a propriedade opcional para compatibilidade com consumidores anteriores. SQLite recebe a migração 21 e PostgreSQL a migração aditiva `202611240001_cidade_treino`, sem backfill; registros existentes recebem null. As listas explícitas de colunas do repositório SQLite incluem cidade. Migração PostgreSQL preparada e schema validado, sem execução externa nesta entrega.
+
+O agrupamento visual de dias considera também a cidade para não misturar programações em locais diferentes. A publicação da grade copia cidade para `Aula`, assim como os demais dados históricos. O reenvio idempotente de aula personalizada compara também a cidade normalizada; requisição com mesmo identificador e outra cidade retorna conflito. Alterar a grade não reescreve aulas existentes. As permissões administrativas e a consulta do portal permanecem as mesmas.
+
+`CidadeTreino` concentra a etiqueta acessível e retorna null quando o campo está vazio. Formulários permitem texto livre sem required; não foi adicionado cadastro de cidades, filtro geográfico ou bloqueio de choque entre locais.
+
 ## Bolsa de mensalidade
 
 `Aluno.bolsista` é um booleano, com padrão falso para cadastros antigos. A migração acrescenta somente essa coluna. SQLite e PostgreSQL leem o estado da bolsa dentro da mesma transação que grava uma mensalidade. A consulta administrativa deriva o estado `pausada` para cobranças não pagas de bolsistas. O mesmo critério mantém as cobranças pausadas fora da previsão, dos atrasos e dos indicadores. O portal e o check-in verificam a bolsa ao aplicar o bloqueio por mensalidade.

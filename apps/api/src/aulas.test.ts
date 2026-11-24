@@ -11,7 +11,7 @@ describe('Aulas por turma e preservação do histórico de avulsas',()=>{
  const turma=async(alunoIds:string[]=[])=> (await request(app).post('/api/turmas').send({...grade,alunoIds}).expect(201)).body;
  const student=()=>repo.insert('Aluno',{id:randomUUID(),nome:'Aluno preservado',email:randomUUID()+'@teste.invalid',telefone:'11999991234',faixa:'Branca',situacao:'ativo',dataNascimento:'2000-01-01',dataMatricula:'2026-01-01',criadoEm:new Date().toISOString()});
  const publicar=async(id:string,dataAula='2026-10-19',code=201)=>(await request(app).post('/api/aulas/da-grade').send({horarioId:id,dataAula}).expect(code)).body;
- const legado=async():Promise<Aula>=>{const a:Aula={id:randomUUID(),titulo:'Avulsa histórica',professor:'Professor antigo',dataAula:'2026-10-19',horaInicio:'15:00',horaFim:'16:00',origem:'extra',origemHorarioId:null,turmaId:null,turmaNome:null,situacao:'agendada',motivoCancelamento:null,canceladaEm:null,criadoEm:new Date().toISOString()};await repo.createAula(a,[]);return a;};
+ const legado=async():Promise<Aula>=>{const a:Aula={id:randomUUID(),cidade:null,titulo:'Avulsa histórica',professor:'Professor antigo',dataAula:'2026-10-19',horaInicio:'15:00',horaFim:'16:00',origem:'extra',origemHorarioId:null,turmaId:null,turmaNome:null,situacao:'agendada',motivoCancelamento:null,canceladaEm:null,criadoEm:new Date().toISOString()};await repo.createAula(a,[]);return a;};
  it('renomeia somente o encontro escolhido e preserva turma, grade e chamada',async()=>{
   const aluno=await student(),t=await turma([aluno.id]),a=await publicar(t.horarios[0].id),outra=await publicar(t.horarios[1].id);
   await request(app).put(`/api/aulas/${a.id}/chamada/${aluno.id}`).send({presente:true}).expect(201);

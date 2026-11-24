@@ -1,5 +1,9 @@
 # Tatame na Vercel — preparação de homologação
 
+## Acesso direto autorizado — 24/11/2026
+
+O usuário pediu demonstração em dois celulares: mestre como administrador e outro aparelho como aluno fictício. O endereço diário agora é domínio de produção com entrada direta pelo Tatame. Vercel Authentication permanece ativa em Standard Protection, preservando prévias e URLs geradas. Sem bypass ou link temporário. Os dois logins e bloqueios foram testados por HTTP e navegador; o usuário aprovou incluir a cidade opcional em seguida. [Estado, configuração e roteiro](ACESSO_DEMONSTRACAO.md). Registros anteriores de proteção all no endereço diário são históricos.
+
 ## Publicação atualizada — 24/11/2026
 
 O endereço **https://tatame-test-diario.vercel.app/** aponta agora para `dpl_J3B3eYEWneShxyrTyceMSMYXJkpK`, READY/Preview/gru1, código `9ba3873`. As 177 fontes do pacote final foram comparadas com a árvore remota e correspondem ao commit enviado ao GitHub; nenhuma credencial, fixture ou arquivo privado foi publicado. A migração aditiva de bolsistas já está no banco brasileiro, sem alterar os registros existentes. O candidato intermediário cancelado não recebeu o alias diário.

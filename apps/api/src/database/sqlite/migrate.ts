@@ -27,6 +27,7 @@ export const sqliteMigrations: readonly SqliteMigration[] = [
   { version: 18, name: '018_tecnicas', sql: readFileSync(new URL('./migrations/018_tecnicas.sql', import.meta.url), 'utf8') },
   { version: 19, name: '019_recuperacao_senha', sql: readFileSync(new URL('./migrations/019_recuperacao_senha.sql', import.meta.url), 'utf8') },
   { version: 20, name: '020_bolsistas', sql: readFileSync(new URL('./migrations/020_bolsistas.sql', import.meta.url), 'utf8') },
+  { version: 21, name: '021_cidade_treino', sql: readFileSync(new URL('./migrations/021_cidade_treino.sql', import.meta.url), 'utf8') },
 ];
 
 const checksum = (sql: string) => createHash('sha256').update(sql.replace(/\r\n/g, '\n').trim()).digest('hex');

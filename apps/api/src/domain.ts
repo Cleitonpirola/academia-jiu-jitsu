@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { FAIXAS, type Mensalidade, type Status, type Dashboard, type Aluno } from '@tatame/shared';
 import { HttpError } from './http-error.js';
+export const cidadeTreinoSchema = z.string().trim().max(80, 'Use até 80 caracteres na cidade.').nullable().optional().transform(value => value || null);
 export const today = () => new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Sao_Paulo' }).format(new Date());
 export const currentMonth = () => today().slice(0, 7);
 export const monthAt = (offset: number, month = currentMonth()) => { const [y,m] = month.split('-').map(Number); return new Date(Date.UTC(y, m - 1 + offset, 1)).toISOString().slice(0,7); };

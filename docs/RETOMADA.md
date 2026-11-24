@@ -1,5 +1,17 @@
 # Ponto de retomada do Tatame
 
+## Acesso direto liberado; cidade aprovada para inclusão — 24/11/2026
+
+O endereço diário abre diretamente o login do Tatame, com prévias protegidas por Standard Protection. Professor/admin e aluno fictício passaram em HTTP e navegador estreito; sem troca de senha. Primeira publicação direta `dpl_2UTdP7uckSRwiecsvN3iNKZKpwur`, fonte `9ba3873`, READY/Production/gru1. [Roteiro](ACESSO_DEMONSTRACAO.md).
+
+Usuário aprovou incluir a cidade opcional com **pode incluir a opção de cidade tbm** e **continue**. Prosseguir com commit/push do conjunto apresentado, migração aditiva no projeto brasileiro correto e nova publicação/verificação externa. Não aguardar outra autorização para essas mesmas ações. Nenhuma cidade foi atribuída à grade real. Notas anteriores de pendência de aprovação são históricas; portfólio permanece fora do conjunto.
+
+## Cidade opcional — pronta localmente para validação, 24/11/2026
+
+Novo incremento após a publicação abaixo: Cidade (opcional) por intervalo da grade e horário extra, etiqueta somente quando preenchida e cidade histórica por aula. Qualquer cidade pode ser digitada; vazio é aceito. Código, documentação, migrações e capturas locais preparados. Build/typecheck, 311 testes TypeScript e Prisma aprovados; navegador em base fictícia confirmou edição sem cidade, snapshot e portal estreito.
+
+Pendente: validação do usuário e aprovação para commit/envio deste conjunto. Migração PostgreSQL `202611240001_cidade_treino` ainda não aplicada; versão online ainda é a anterior. Publicação exige autorização correspondente, aplicação controlada da migração e nova verificação externa. Nenhuma cidade foi atribuída aos nove horários reais. Portfólio não rastreado permanece fora do escopo; não incluir fixtures, credenciais ou bancos locais no Git.
+
 ## Atualização completa para a apresentação — 24/11/2026
 
 Conjunto do Tatame enviado ao GitHub em `9ba3873f282e28161f3661c74ab7019c79d25628`, branch `codex/evolucao-tatame`, incluindo o registro anterior `98dc575`. Build/typecheck, 306 testes TypeScript, 15 Python, cinco de configuração/conexão e validação Prisma passaram nesta data. Migração aditiva `202611150001_bolsistas` aplicada no banco brasileiro com checksum do arquivo commitado; RLS e contagens dos registros preservados.

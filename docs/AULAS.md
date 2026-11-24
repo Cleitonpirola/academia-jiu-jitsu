@@ -1,5 +1,13 @@
 # Aulas datadas — entrega 1B
 
+## Cidade da aula — 24/11/2026
+
+Uma aula publicada da grade copia a cidade opcional daquele horário. **Adicionar horário extra** também aceita **Cidade (opcional)**, livre e com até 80 caracteres. Deixar em branco permite publicar normalmente e não exibe etiqueta vazia. A cidade preenchida aparece na agenda administrativa, detalhes, seleção de chamada e no portal do aluno, incluindo histórico e confirmação de cancelamento do check-in.
+
+A cidade pertence ao registro da aula: mudar ou apagar a cidade na grade afeta somente novas publicações. Aulas antigas permanecem sem cidade até que exista um fluxo explícito de alteração; não há preenchimento retroativo automático. Implementação local, migrações ainda não aplicadas no Supabase e sem publicação deste incremento.
+
+![Agenda do aluno com duas cidades e um encontro sem cidade, em dados fictícios](screenshots/cidade-opcional-aluno-celular.jpg)
+
 ## Treino em data específica
 
 Em **Aulas → Adicionar horário extra**, escolha uma turma ativa, informe o nome e selecione data, início e término. Para treinar apenas na quarta quinta-feira do mês, selecione a data daquela quinta. A publicação cria um encontro e usa os alunos habituais da turma como previstos. A lista de horários semanais continua igual.

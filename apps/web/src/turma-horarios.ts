@@ -3,7 +3,7 @@ import type { TurmaInput } from '@tatame/shared';
 type Horario = TurmaInput['horarios'][number];
 export interface HorarioAgrupado {
   diasSemana: number[];
-  intervalos: Pick<Horario, 'horaInicio' | 'horaFim'>[];
+  intervalos: Pick<Horario, 'horaInicio' | 'horaFim' | 'cidade'>[];
 }
 export const ORDEM_SEMANA: readonly number[] = [1, 2, 3, 4, 5, 6, 0];
 
@@ -19,9 +19,9 @@ export function nomeAutomaticoDaTurma(grupos: readonly HorarioAgrupado[]): strin
 /** Agrupa só o formulário. A grade persistida continua com uma linha por dia/intervalo. */
 export function agruparHorarios(horarios: readonly Horario[]): HorarioAgrupado[] {
   const porDia = new Map<number, HorarioAgrupado['intervalos']>();
-  for (const { diaSemana, horaInicio, horaFim } of horarios) {
+  for (const { diaSemana, horaInicio, horaFim, cidade } of horarios) {
     const intervalos = porDia.get(diaSemana) ?? [];
-    intervalos.push({ horaInicio, horaFim });
+    intervalos.push({ horaInicio, horaFim, ...(cidade ? { cidade } : {}) });
     porDia.set(diaSemana, intervalos);
   }
   const grupos = new Map<string, HorarioAgrupado>();
@@ -50,7 +50,7 @@ export function expandirHorarios(grupos: readonly HorarioAgrupado[]): Horario[] 
     if (grupo.diasSemana.some(dia => !Number.isInteger(dia) || dia < 0 || dia > 6) || new Set(grupo.diasSemana).size !== grupo.diasSemana.length) {
       throw new Error(`Confira os dias selecionados na combinação ${index + 1}.`);
     }
-    return ORDEM_SEMANA.filter(dia => grupo.diasSemana.includes(dia)).flatMap(diaSemana => grupo.intervalos.map(({ horaInicio, horaFim }) => ({ diaSemana, horaInicio, horaFim })));
+    return ORDEM_SEMANA.filter(dia => grupo.diasSemana.includes(dia)).flatMap(diaSemana => grupo.intervalos.map(({ horaInicio, horaFim, cidade }) => ({ diaSemana, horaInicio, horaFim, ...(cidade?.trim() ? { cidade: cidade.trim() } : {}) })));
   });
   if (horarios.length > 100) throw new Error('A grade aceita até 100 horários semanais. Reduza os dias ou remova um horário.');
   return horarios;

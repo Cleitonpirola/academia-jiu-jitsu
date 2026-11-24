@@ -1,5 +1,17 @@
 # Revisão de IA
 
+## Acesso direto de demonstração — 24/11/2026
+
+Publicação com a mesma fonte aprovada, 177 hashes conferidos e sem novo código na primeira liberação direta. Revisados alvo de variáveis, origem HTTPS, proteção Standard em vez de desativação global, permanência de login/roles e ausência de bypass. Testes HTTP reais passaram para página pública, dados 401, aluno 403, professor 200, origem estrangeira 403, configuração inicial remota bloqueada e logout. Cookie Secure/HttpOnly/SameSite=Strict conferido. Ambas as URLs geradas redirecionam à Vercel sem sessão. Navegador estreito confirmou professor e aluno. Limite por processo continua uma limitação conhecida; não afirmar auditoria completa nem prontidão para dados reais. A inclusão da cidade já apresentada foi aprovada em seguida.
+
+## Cidade opcional — 24/11/2026
+
+Revisados normalização de vazio/null, limite de 80 caracteres na API e interface, preservação de IDs dos horários, cidade no agrupamento de dias, snapshot de aula e conflito em reenvio de personalizada com outra cidade. Migração aditiva não reescreve os dados anteriores. O componente de etiqueta é compartilhado, tem rótulo acessível e não renderiza vazio; campos têm rótulos e não exigem preenchimento. Checklist React da Vercel aplicado: sem novos efeitos, consultas ou estado derivado redundante.
+
+Execuções novas: build/typecheck, 311 testes TypeScript (zero falhas) e validação Prisma aprovados. A primeira suíte encontrou seis expectativas de snapshots antigos incompatíveis com as novas colunas null; corrigidas para comparar as colunas originais, com teste novo verificando explicitamente cidade null e migração idempotente. Quatro testes novos de API/migração cobrem persistência, limites, extras, snapshot, consulta autenticada do aluno e bloqueio de escrita por aluno; um teste novo do helper cobre cidades diferentes e remoção independente.
+
+Navegador real com SQLite em memória: grade com São João, Aguaí e campo vazio; edição apagando uma cidade salvou com sucesso e manteve a outra; aula publicada manteve a cidade anterior. Portal do aluno exibiu duas etiquetas e nenhuma na aula sem cidade; tela estreita com clientWidth/scrollWidth iguais a 417 px. Capturas em screenshots/cidade-opcional-*.jpg; viewport restaurado. Não foi teste em aparelho físico. Python, Drive, mensagens, Supabase e versão online não foram retestados neste incremento.
+
 ## Revisão do conjunto atualizado — 24/11/2026
 
 Revisado o conjunto pendente do sistema após autorização explícita para atualização, commit e publicação de teste. Testes executados nesta rodada: 306 TypeScript, 15 Python, cinco de configuração/conexão, build/typecheck e schema Prisma, todos aprovados. A revisão considera controles de sessão e papéis, cotas na data da aula, cancelamento por ID para não apagar nova reserva, transações de bolsa/cobrança e snapshots de graduação. Arquivos privados e portfólio excluídos da seleção. A disponibilidade do Drive real e a entrega de mensagens não são comprovadas por testes simulados. A conferência externa desta versão ainda será registrada após a publicação.

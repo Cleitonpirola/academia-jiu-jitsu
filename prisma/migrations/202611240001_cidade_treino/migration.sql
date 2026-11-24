@@ -1,0 +1,2 @@
+ALTER TABLE "HorarioTurma" ADD COLUMN "cidade" VARCHAR(80);
+ALTER TABLE "Aula" ADD COLUMN "cidade" VARCHAR(80);

@@ -42,7 +42,7 @@ it('a migração de bolsistas mantém alunos pagantes por padrão e preserva as 
     db.prepare('INSERT INTO Mensalidade(id,alunoId,competencia,valorCentavos,dataVencimento,dataPagamento,criadoEm) VALUES(?,?,?,?,?,?,?)')
       .run(randomUUID(), originalStudent[0], '2026-01', 12000, '2026-01-10', null, '2026-01-01T12:00:00Z');
     const anterior = db.prepare('SELECT * FROM Mensalidade').all();
-    assert.deepEqual(migrateSqlite(db).applied, [20]);
+    assert.deepEqual(migrateSqlite(db).applied, [20,21]);
     assert.equal(db.prepare('SELECT bolsista FROM Aluno').get()?.bolsista, 0);
     assert.deepEqual(db.prepare('SELECT * FROM Mensalidade').all(), anterior);
     assert.throws(() => db.exec('UPDATE Aluno SET bolsista = 2'), /CHECK constraint/);
@@ -52,10 +52,10 @@ it('a migração de bolsistas mantém alunos pagantes por padrão e preserva as 
 it('registra a versão inicial de um banco novo e não reaplica a migração', async () => {
   const repo = new SqliteRepository(':memory:');
   try {
-    assert.deepEqual(repo.migration.applied, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20]);
+    assert.deepEqual(repo.migration.applied, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20,21]);
     assert.equal(repo.migration.backupPath, null);
     assert.deepEqual(migrateSqlite(repo.db).applied, []);
-    assert.equal(repo.db.prepare('SELECT COUNT(*) AS total FROM _tatame_migrations').get()?.total, 20);
+    assert.equal(repo.db.prepare('SELECT COUNT(*) AS total FROM _tatame_migrations').get()?.total, 21);
   } finally { await repo.close(); }
 });
 
@@ -175,11 +175,11 @@ it('evolui versão 1 para turmas, preserva as quatro tabelas e persiste grade e 
     old.prepare('INSERT INTO Mensalidade VALUES (?, ?, ?, ?, ?, ?, ?)').run(randomUUID(), originalStudent[0], '2026-10', 20000, '2026-10-10', null, originalStudent[8]);
     old.prepare('INSERT INTO Presenca VALUES (?, ?, ?, ?, ?)').run(randomUUID(), originalStudent[0], '2026-10-01', 'Com kimono', 1);
     old.prepare('INSERT INTO Analise VALUES (?, ?, ?, ?, ?, ?, ?)').run(randomUUID(), 'Pergunta preservada', 'Resposta preservada', 'modelo-de-teste', 'Teste', '{}', originalStudent[8]);
-    const before = originalTables.map(table => old.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all());
+    const before = originalTables.map(table => old.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : table === 'HorarioTurma' ? 'id,turmaId,diaSemana,horaInicio,horaFim' : table === 'Aula' ? 'id,titulo,dataAula,horaInicio,horaFim,professor,origem,origemHorarioId,turmaId,turmaNome,situacao,motivoCancelamento,canceladaEm,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all());
     old.close();
     repo = new SqliteRepository(temp.file);
-    assert.deepEqual(repo.migration.applied, [2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20]); assert.equal(repo.migration.version, 20);
-    assert.deepEqual(originalTables.map(table => repo!.db.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()), before);
+    assert.deepEqual(repo.migration.applied, [2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20,21]); assert.equal(repo.migration.version, 21);
+    assert.deepEqual(originalTables.map(table => repo!.db.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : table === 'HorarioTurma' ? 'id,turmaId,diaSemana,horaInicio,horaFim' : table === 'Aula' ? 'id,titulo,dataAula,horaInicio,horaFim,professor,origem,origemHorarioId,turmaId,turmaNome,situacao,motivoCancelamento,canceladaEm,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()), before);
     assert.ok(repo.migration.backupPath);
     const backup = new DatabaseSync(repo.migration.backupPath, { readOnly: true });
     try {
@@ -193,8 +193,8 @@ it('evolui versão 1 para turmas, preserva as quatro tabelas e persiste grade e 
     await repo.close(); repo = new SqliteRepository(temp.file);
     assert.deepEqual(repo.migration.applied, []);
     assert.deepEqual(await repo.get('Turma', turma.id), turma);
-    assert.deepEqual(await repo.list('HorarioTurma'), [horario]); assert.deepEqual(await repo.list('AlunoTurma'), [vinculo]);
-    assert.deepEqual(originalTables.map(table => repo!.db.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()), before);
+    assert.deepEqual(await repo.list('HorarioTurma'), [{ ...horario, cidade: null }]); assert.deepEqual(await repo.list('AlunoTurma'), [vinculo]);
+    assert.deepEqual(originalTables.map(table => repo!.db.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : table === 'HorarioTurma' ? 'id,turmaId,diaSemana,horaInicio,horaFim' : table === 'Aula' ? 'id,titulo,dataAula,horaInicio,horaFim,professor,origem,origemHorarioId,turmaId,turmaNome,situacao,motivoCancelamento,canceladaEm,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()), before);
     assert.deepEqual(repo.db.prepare('PRAGMA foreign_key_check').all(), []);
   } finally { if (repo) await repo.close(); temp.cleanup(); }
 });
@@ -213,10 +213,10 @@ it('evolui v2 para aulas/chamada sem alterar as sete tabelas, cria backup v2 e p
     old.prepare('INSERT INTO Turma VALUES (?, ?, ?, ?, ?, ?)').run(turmaId, 'Grupo original', 'Mestre', 'ativo', originalStudent[8], originalStudent[8]);
     old.prepare('INSERT INTO HorarioTurma VALUES (?, ?, ?, ?, ?)').run(horarioId, turmaId, 1, '12:00', '13:00');
     old.prepare('INSERT INTO AlunoTurma VALUES (?, ?, ?, ?)').run(randomUUID(), turmaId, originalStudent[0], originalStudent[8]);
-    const before = tables.map(table => old.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()); old.close();
+    const before = tables.map(table => old.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : table === 'HorarioTurma' ? 'id,turmaId,diaSemana,horaInicio,horaFim' : table === 'Aula' ? 'id,titulo,dataAula,horaInicio,horaFim,professor,origem,origemHorarioId,turmaId,turmaNome,situacao,motivoCancelamento,canceladaEm,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()); old.close();
     repo = new SqliteRepository(temp.file);
-    assert.deepEqual(repo.migration.applied, [3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20]); assert.ok(repo.migration.backupPath);
-    assert.deepEqual(tables.map(table => repo!.db.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()), before);
+    assert.deepEqual(repo.migration.applied, [3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20,21]); assert.ok(repo.migration.backupPath);
+    assert.deepEqual(tables.map(table => repo!.db.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : table === 'HorarioTurma' ? 'id,turmaId,diaSemana,horaInicio,horaFim' : table === 'Aula' ? 'id,titulo,dataAula,horaInicio,horaFim,professor,origem,origemHorarioId,turmaId,turmaNome,situacao,motivoCancelamento,canceladaEm,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()), before);
     const backup = new DatabaseSync(repo.migration.backupPath, { readOnly: true });
     try { assert.equal(backup.prepare('SELECT MAX(version) AS version FROM _tatame_migrations').get()?.version, 2); assert.equal(backup.prepare("SELECT name FROM sqlite_master WHERE name='Aula'").get(), undefined); }
     finally { backup.close(); }
@@ -225,9 +225,9 @@ it('evolui v2 para aulas/chamada sem alterar as sete tabelas, cria backup v2 e p
     await repo.createAula(aula, [expected]); await repo.cancelAula(aula.id, 'Motivo histórico', '2026-10-19T10:00:00Z');
     await repo.close(); repo = new SqliteRepository(temp.file);
     assert.deepEqual(repo.migration.applied, []);
-    assert.deepEqual(await repo.get('Aula', aula.id), { ...aula, situacao: 'cancelada', motivoCancelamento: 'Motivo histórico', canceladaEm: '2026-10-19T10:00:00Z' });
+    assert.deepEqual(await repo.get('Aula', aula.id), { ...aula, cidade: null, situacao: 'cancelada', motivoCancelamento: 'Motivo histórico', canceladaEm: '2026-10-19T10:00:00Z' });
     assert.deepEqual(await repo.list('AulaAlunoPrevisto'), [expected]);
-    assert.deepEqual(tables.map(table => repo!.db.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()), before);
+    assert.deepEqual(tables.map(table => repo!.db.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : table === 'HorarioTurma' ? 'id,turmaId,diaSemana,horaInicio,horaFim' : table === 'Aula' ? 'id,titulo,dataAula,horaInicio,horaFim,professor,origem,origemHorarioId,turmaId,turmaNome,situacao,motivoCancelamento,canceladaEm,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()), before);
     assert.deepEqual(repo.db.prepare('PRAGMA foreign_key_check').all(), []);
   } finally { if (repo) await repo.close(); temp.cleanup(); }
 });
@@ -244,22 +244,22 @@ it('evolui v3 para chamada preservando nove tabelas, backup e registros por moda
     const aulaId = randomUUID();
     old.prepare('INSERT INTO Aula VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').run(aulaId, 'Treino preservado', '2026-10-19', '15:00', '16:00', 'Mestre', 'extra', null, null, null, 'agendada', null, null, originalStudent[8]);
     old.prepare('INSERT INTO AulaAlunoPrevisto VALUES (?, ?, ?, ?)').run(randomUUID(), aulaId, originalStudent[0], originalStudent[1]);
-    const before = tables.map(table => old.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()); old.close();
+    const before = tables.map(table => old.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : table === 'HorarioTurma' ? 'id,turmaId,diaSemana,horaInicio,horaFim' : table === 'Aula' ? 'id,titulo,dataAula,horaInicio,horaFim,professor,origem,origemHorarioId,turmaId,turmaNome,situacao,motivoCancelamento,canceladaEm,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()); old.close();
     repo = new SqliteRepository(temp.file);
-    assert.deepEqual(repo.migration.applied, [4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20]); assert.equal(repo.migration.version, 20); assert.ok(repo.migration.backupPath);
-    assert.deepEqual(tables.map(table => repo!.db.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()), before);
+    assert.deepEqual(repo.migration.applied, [4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20,21]); assert.equal(repo.migration.version, 21); assert.ok(repo.migration.backupPath);
+    assert.deepEqual(tables.map(table => repo!.db.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : table === 'HorarioTurma' ? 'id,turmaId,diaSemana,horaInicio,horaFim' : table === 'Aula' ? 'id,titulo,dataAula,horaInicio,horaFim,professor,origem,origemHorarioId,turmaId,turmaNome,situacao,motivoCancelamento,canceladaEm,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()), before);
     assert.deepEqual(await repo.list('PresencaAula'), []);
     const backup = new DatabaseSync(repo.migration.backupPath, { readOnly: true });
     try {
       assert.equal(backup.prepare('SELECT MAX(version) AS version FROM _tatame_migrations').get()?.version, 3);
       assert.equal(backup.prepare("SELECT name FROM sqlite_master WHERE name='PresencaAula'").get(), undefined);
-      assert.deepEqual(tables.map(table => backup.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()), before);
+      assert.deepEqual(tables.map(table => backup.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : table === 'HorarioTurma' ? 'id,turmaId,diaSemana,horaInicio,horaFim' : table === 'Aula' ? 'id,titulo,dataAula,horaInicio,horaFim,professor,origem,origemHorarioId,turmaId,turmaNome,situacao,motivoCancelamento,canceladaEm,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()), before);
     } finally { backup.close(); }
     const marked = await repo.savePresencaAula(aulaId, originalStudent[0], true, '2026-10-21T12:00:00Z');
     await repo.close(); repo = new SqliteRepository(temp.file);
     assert.deepEqual(repo.migration.applied, []); assert.equal(repo.migration.backupPath, null);
     assert.deepEqual(await repo.list('PresencaAula'), [marked.registro]);
-    assert.deepEqual(tables.map(table => repo!.db.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()), before);
+    assert.deepEqual(tables.map(table => repo!.db.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : table === 'HorarioTurma' ? 'id,turmaId,diaSemana,horaInicio,horaFim' : table === 'Aula' ? 'id,titulo,dataAula,horaInicio,horaFim,professor,origem,origemHorarioId,turmaId,turmaNome,situacao,motivoCancelamento,canceladaEm,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()), before);
     assert.deepEqual(repo.db.prepare('PRAGMA foreign_key_check').all(), []);
   } finally { if (repo) await repo.close(); temp.cleanup(); }
 });

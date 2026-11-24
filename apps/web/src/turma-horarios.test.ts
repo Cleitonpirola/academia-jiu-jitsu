@@ -4,6 +4,15 @@ import assert from 'node:assert/strict';
 import { agruparHorarios, expandirHorarios } from './turma-horarios';
 const noon = { horaInicio: '12:00', horaFim: '13:00' };
 const evening = { horaInicio: '18:00', horaFim: '19:00' };
+it('preserva cidades diferentes no mesmo horário em dias distintos sem agrupar os locais', () => {
+  const original = [{ diaSemana: 1, ...noon, cidade: 'São João' }, { diaSemana: 3, ...noon, cidade: 'Aguaí' }, { diaSemana: 5, ...noon }];
+  const groups = agruparHorarios(original);
+  assert.deepEqual(groups.map(group => group.diasSemana), [[1], [3], [5]]);
+  assert.deepEqual(expandirHorarios(groups), original);
+  groups[0].intervalos[0].cidade = '';
+  assert.equal(expandirHorarios(groups)[0].cidade, undefined);
+  assert.equal(expandirHorarios(groups)[1].cidade, 'Aguaí');
+});
 const ordered = <T extends { diaSemana: number; horaInicio: string }>(rows: T[]) => [...rows].sort((a, b) => a.diaSemana - b.diaSemana || a.horaInicio.localeCompare(b.horaInicio));
 
 it('combina três dias com dois horários e gera seis itens no contrato existente', () => {

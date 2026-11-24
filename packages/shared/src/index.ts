@@ -53,17 +53,19 @@ export interface Turma {
 }
 export interface HorarioTurma {
   id: string; turmaId: string; diaSemana: number; horaInicio: string; horaFim: string;
+  cidade?: string | null;
 }
 export interface AlunoTurma { id: string; turmaId: string; alunoId: string; criadoEm: string }
 export interface TurmaInput {
   nome: string; professor: string; situacao: Situacao;
-  horarios: Pick<HorarioTurma, 'diaSemana' | 'horaInicio' | 'horaFim'>[];
+  horarios: Pick<HorarioTurma, 'diaSemana' | 'horaInicio' | 'horaFim' | 'cidade'>[];
   alunoIds: string[];
 }
 export interface TurmaView extends Turma { horarios: HorarioTurma[]; alunoIds: string[] }
 export type SituacaoAula = 'agendada' | 'cancelada';
 export interface Aula {
   id: string; titulo: string; dataAula: string; horaInicio: string; horaFim: string;
+  cidade?: string | null;
   professor: string; origem: 'grade' | 'extra'; origemHorarioId: string | null;
   turmaId: string | null; turmaNome: string | null; situacao: SituacaoAula;
   motivoCancelamento: string | null; canceladaEm: string | null; criadoEm: string;

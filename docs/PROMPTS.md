@@ -1,5 +1,13 @@
 # Registro de prompts
 
+## Mestre administrador e aluno em dois celulares — 24/11/2026
+
+Usuário pediu entrada direta no Tatame para o professor usar como administrador no celular, enquanto ele demonstra a conta fictícia de aluno em outro aparelho. Publicada a fonte já aprovada em domínio de produção, mantendo prévias protegidas e login próprio. Depois pediu **pode incluir a opção de cidade tbm** e **continue**: aprovação explícita do incremento opcional já apresentado para commit/envio e publicação no mesmo endereço. Não autoriza atribuir cidades aos horários reais nem remover autenticação do Tatame.
+
+## Cidade como opção, sem obrigatoriedade — 24/11/2026
+
+Após mencionar treinos em São João e Aguaí e perguntar se a cidade caberia no cartão de horários, o usuário pediu: **deixe como opções colocar esses dados e não uma regra, se eu quiser colocar eu posso, se não eu não preciso colocar, beleza? implemente**. Implementado campo Cidade (opcional), livre por intervalo da grade e por horário extra, com etiqueta apenas quando preenchido e cópia histórica ao publicar a aula. As cidades citadas são exemplos, não opções fechadas nem atribuições aos nove horários reais. Pedido autoriza implementação; commit/envio e publicação desta nova mudança aguardam validação conforme AGENTS.md.
+
 ## Sistema atualizado e commitado — 24/11/2026
 
 O usuário pediu **quero o sistema atualizado e commitadio** após receber a explicação de que havia funcionalidades implementadas ainda fora da prévia. Codex interpreta o pedido como aprovação para consolidar e enviar o conjunto do sistema já solicitado e publicar a versão revisada no link fixo para a apresentação ao mestre. Preservar separadamente o portfólio de outro trabalho; não incluir segredos, não abrir acesso público e não tratar a autorização como pedido de implementar integrações ainda planejadas.

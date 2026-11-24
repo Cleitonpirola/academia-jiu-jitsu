@@ -118,6 +118,7 @@ model HorarioTurma {
   diaSemana  Int
   horaInicio String @db.VarChar(5)
   horaFim    String @db.VarChar(5)
+  cidade     String? @db.VarChar(80)
   @@unique([turmaId, diaSemana, horaInicio])
 }
 model AlunoTurma {
@@ -136,6 +137,7 @@ model Aula {
   dataAula           String
   horaInicio         String @db.VarChar(5)
   horaFim            String @db.VarChar(5)
+  cidade             String? @db.VarChar(80)
   professor          String
   origem             String
   origemHorarioId    String? @db.Uuid

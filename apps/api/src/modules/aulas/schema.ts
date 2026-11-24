@@ -1,12 +1,12 @@
 import { z } from 'zod';
-import { isDate } from '../../domain.js';
+import { cidadeTreinoSchema, isDate } from '../../domain.js';
 
 const date = z.string().refine(isDate, 'Informe uma data válida a partir de 1900.');
 export const aulaGradeSchema = z.object({ horarioId: z.string().uuid('Horário inválido.'), dataAula: date }).strict();
 export const nomeAulaSchema = z.object({ titulo: z.string().trim().min(2, 'Informe um nome com pelo menos 2 caracteres.').max(120, 'Use até 120 caracteres no nome da aula.') }).strict();
 const hora = z.string().regex(/^(?:[01]\d|2[0-3]):[0-5]\d$/, 'Informe um horário válido.');
 export const aulaPersonalizadaSchema = nomeAulaSchema.extend({
-  id: z.string().uuid(), turmaId: z.string().uuid(), dataAula: date, horaInicio: hora, horaFim: hora,
+  id: z.string().uuid(), turmaId: z.string().uuid(), dataAula: date, horaInicio: hora, horaFim: hora, cidade: cidadeTreinoSchema,
 }).refine(aula => aula.horaFim > aula.horaInicio, 'O horário de término deve ser posterior ao início.');
 export const professoresAulaSchema = z.object({ professores: z.array(z.string().trim().min(2, 'Informe o nome do professor.').max(120))
   .min(1, 'Mantenha pelo menos um professor na aula.').max(8, 'Use até 8 professores por aula.')
