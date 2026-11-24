@@ -1,5 +1,11 @@
 # Tatame na Vercel — preparação de homologação
 
+## Publicação atualizada — 24/11/2026
+
+O endereço **https://tatame-test-diario.vercel.app/** aponta agora para `dpl_J3B3eYEWneShxyrTyceMSMYXJkpK`, READY/Preview/gru1, código `9ba3873`. As 177 fontes do pacote final foram comparadas com a árvore remota e correspondem ao commit enviado ao GitHub; nenhuma credencial, fixture ou arquivo privado foi publicado. A migração aditiva de bolsistas já está no banco brasileiro, sem alterar os registros existentes. O candidato intermediário cancelado não recebeu o alias diário.
+
+Os dois acessos foram conferidos na versão atualizada. SSO da Vercel e login/permissões do Tatame continuam ativos; use o mesmo endereço e as mesmas senhas privadas. O notebook pode ficar desligado, com internet no dispositivo de acesso. O código de instalação web não oferece uso offline. As seções datadas anteriores são históricas. [Resultado e limites da conferência](TESTES_EXTERNOS.md#versão-atualizada-para-a-academia--24112026).
+
 ## Acesso diário protegido — 23/11/2026
 
 Endereço fixo: **https://tatame-test-diario.vercel.app/**. Deployment `dpl_6iFkciQ7Si2BbFSuf7GHPhJwJhcj`, READY, projeto `tatame-test`, ambiente Preview/staging, região `gru1`. Fontes extraídas exclusivamente do commit aprovado `18ce58e25ce681b1fd0b367975364de1b731dc8a`: 167 arquivos de código/configuração conferidos com a árvore remota por SHA-1, sem diferenças ou arquivos ausentes. As outras alterações locais não foram publicadas. Nenhum `.env`, banco local, credencial, fixture ou documento privado foi enviado.

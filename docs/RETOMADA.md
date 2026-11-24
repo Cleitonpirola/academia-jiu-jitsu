@@ -2,7 +2,11 @@
 
 ## Atualização completa para a apresentação — 24/11/2026
 
-Usuário pediu o sistema atualizado e commitado, incluindo as melhorias antes locais. A seleção do Tatame foi revisada e passou em build/typecheck, 306 testes TypeScript, 15 Python, cinco de configuração/conexão e validação Prisma nesta data. Concluir commit/push, aplicar somente a migração aditiva de bolsa no banco brasileiro, publicar em Preview e conferir os dois acessos antes de atualizar o alias fixo. Manter SSO e não criar bypass para os testes. Conta/pasta do Drive, Pix e WhatsApp não estão configurados por esse pedido; portfólio separado fica fora.
+Conjunto do Tatame enviado ao GitHub em `9ba3873f282e28161f3661c74ab7019c79d25628`, branch `codex/evolucao-tatame`, incluindo o registro anterior `98dc575`. Build/typecheck, 306 testes TypeScript, 15 Python, cinco de configuração/conexão e validação Prisma passaram nesta data. Migração aditiva `202611150001_bolsistas` aplicada no banco brasileiro com checksum do arquivo commitado; RLS e contagens dos registros preservados.
+
+Publicação final `dpl_J3B3eYEWneShxyrTyceMSMYXJkpK`, READY/Preview/gru1, 177 fontes conferidas por SHA-1. O alias **https://tatame-test-diario.vercel.app/** já aponta para ela. Dois logins conferidos no navegador, sessão após refresh, bloqueios de aluno/sem sessão, indicador de bolsa, formulário de horário extra, conta ativada sem redefinição administrativa e seleção semanal mantendo quinta-feira ao passar de novembro para dezembro. Não foram criados treinos, presenças, cobranças ou mensagens nesses testes externos. [Escopo detalhado](TESTES_EXTERNOS.md#versão-atualizada-para-a-academia--24112026).
+
+SSO permanece global; nenhum bypass foi criado nesta atualização. Mesmos acessos privados já testados, sem trocar senhas. Conta/pasta do Drive, Pix e WhatsApp continuam pendentes. Portfólio de outro trabalho preservado fora do Git. As notas anteriores abaixo registram estados históricos, superados por esta publicação quando indicavam melhorias somente locais.
 
 ## Acessos diários testados (23/11/2026)
 

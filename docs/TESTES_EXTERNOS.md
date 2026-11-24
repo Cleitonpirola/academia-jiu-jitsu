@@ -1,5 +1,15 @@
 # Testes externos do Tatame
 
+## Versão atualizada para a academia — 24/11/2026
+
+[Endereço diário atualizado](https://tatame-test-diario.vercel.app/). Deployment `dpl_J3B3eYEWneShxyrTyceMSMYXJkpK`, READY, Preview/staging, `gru1`; código do commit `9ba3873f282e28161f3661c74ab7019c79d25628`, já enviado ao GitHub. Conferidas as 177 fontes por SHA-1, sem divergências; pacote sem fixtures/auxiliares de teste, documentos privados ou credenciais. Alias confirmado apontando para esse deployment. Proteção SSO para todos os deployments preservada, sem criar bypass nesta rodada.
+
+No Supabase brasileiro, aplicada a coluna booleana `Aluno.bolsista` com padrão falso e histórico Prisma `202611150001_bolsistas`, checksum `dfb0549d5052214d3c208a538c029a92b8932df171b9e92974474fdc5a7cf4f6`. RLS continua ativo. Antes/depois: 4 alunos, 0 mensalidades, 2 aulas, 2 check-ins e 2 presenças. Nenhum aluno existente foi marcado como bolsista automaticamente.
+
+No navegador autenticado normalmente pela Vercel: professor carregou os dados e o novo indicador de bolsistas; abriu o formulário de horário extra sem publicar; a ficha do aluno mostrou **Acesso já ativado**, sem botão de redefinição. Aluno entrou com a senha existente, carregou a agenda atualizada e manteve a sessão após atualizar. Selecionar quinta-feira 26/11 manteve a coluna; avançar a semana selecionou quinta-feira 03/12. `/api/alunos` mostrou bloqueio ao aluno e exigiu login após sair. Novo login do professor voltou ao painel com os dados. Capturas: [professor](screenshots/atualizacao-online-professor-20261124.jpg) e [aluno](screenshots/atualizacao-online-aluno-20261124.jpg).
+
+Verificações locais novas desta data: build/typecheck, 306 testes TypeScript, 15 Python, três testes de configuração, dois de conexão e schema Prisma, todos aprovados. Build remoto também concluiu; consulta de runtime não retornou logs error/fatal nos dez minutos consultados. Não criados treinos, check-ins, presenças, cobranças ou mensagens nos testes online. Portanto check-in antecipado/cancelamento, bolsa financeira e snapshots foram testados com dados locais fictícios nesta rodada, sem alegar exercício externo desses fluxos. Drive real, Pix, WhatsApp e instalação em aparelho físico continuam sem nova validação. Notas anteriores abaixo preservam o estado de cada entrega na sua data.
+
 ## Acesso diário — conferência em 23/11/2026
 
 Nova publicação protegida em **https://tatame-test-diario.vercel.app/**, deployment `dpl_6iFkciQ7Si2BbFSuf7GHPhJwJhcj`, baseada no commit `18ce58e`. READY confirmado e 167 fontes remotas iguais ao pacote aprovado. Banco brasileiro retomado e dois usuários de avaliação ativos encontrados. Proteção SSO global `all`, zero bypasses de automação ativos após revogação da credencial criada pelo teste da CLI. Visita sem autenticação redireciona para o login Vercel.
