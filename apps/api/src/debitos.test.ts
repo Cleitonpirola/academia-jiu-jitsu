@@ -84,8 +84,24 @@ it('aula adicional dispensa cotas daquela aula sem consumir outro crédito e man
     const p=await f.get().expect(200);assert.equal(p.body.saldoMensal.utilizadas,1);assert.equal(p.body.saldoMensal.adicionaisUtilizadas,1);assert.equal(p.body.saldoMensal.restantes,0);assert.equal(p.body.plano.utilizadas,1);assert.equal(p.body.plano.extrasUtilizadas,1);assert.equal((await f.repo.list('PresencaAula')).length,0);assert.equal((await f.repo.list('DebitoAula')).length,1);
   }finally{await f.repo.close();}
 });
-it('reserva futura mantém data escolhida mas não libera check-in antes do dia',async()=>{
-  const f=await fixture();try{const r=await f.post(2).expect(201);assert.equal(r.body.dataAula,f.aulas[2].dataAula);if(f.aulas[2].dataAula>today())await f.check(2).expect(400);assert.equal((await f.repo.list('CheckinAula')).length,1);}finally{await f.repo.close();}
+it('reserva adicional futura permite check-in antecipado sem duplicar cobrança',async()=>{
+  const f=await fixture(true,false);
+  try {
+    const amanha=addDays(1);
+    for(const index of [0,2]) await f.repo.update('Aula',f.aulas[index].id,{dataAula:amanha});
+    await f.check(0).expect(200);
+    const {body:debito}=await f.post(2).expect(201);
+    assert.equal(debito.dataAula,amanha);
+    assert.equal((await f.repo.list('CheckinAula')).length,1);
+    const {body:checkin}=await f.check(2).expect(200);
+    assert.equal((await f.repo.list('CheckinAula')).length,2);
+    assert.equal((await f.repo.list('DebitoAula')).length,1);
+    assert.equal((await f.repo.list('PresencaAula')).length,0);
+    await supertest(f.app).delete(`/api/portal/aulas/${f.aulas[2].id}/checkin/${checkin.id}`)
+      .set('Cookie',`${COOKIE}=${f.token}`).set('X-Tatame-Request','1').expect(204);
+    assert.equal((await f.repo.list('CheckinAula')).length,1);
+    assert.deepEqual(await f.repo.get('DebitoAula',debito.id),debito);
+  }finally{await f.repo.close();}
 });
 it('preço e prazo mudados exigem novo aceite e não alteram um débito já confirmado',async()=>{
   const f=await fixture();try{

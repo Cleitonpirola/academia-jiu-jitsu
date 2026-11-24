@@ -35,3 +35,11 @@ SQLite principal e QA persistida foram atualizados para v15 com backup e hashes 
 Na UI: ativar/desativar e recarregar manteve preferência; ficha limitada mostrou controles quando ativa; ficha ilimitada mostrou apenas entrada opcional; desativada ocultou ambos os formulários e coluna de saldo. Portal ilimitado ficou sem cartões de cota, mostrou 30 aulas realizadas e manteve Débitos. Portal limitado manteve 1/3 utilizadas e 11/12 mensais mesmo com controles administrativos ocultos. Valores são fixtures de teste, não configurações impostas à academia real.
 
 Python não foi alterado/retestado. Nenhuma chamada ou migração externa Supabase nesta entrega; ele aguarda autorização expressa. Nenhum WhatsApp/e-mail externo enviado.
+
+![Configuração opcional](screenshots/configuracoes-planos-opcionais.png)
+
+![Portal sem blocos ilimitados](screenshots/portal-sem-blocos-ilimitados.png)
+
+![Aulas efetivamente realizadas](screenshots/portal-aulas-realizadas.png)
+
+![Portal limitado preserva suas cotas](screenshots/portal-plano-limitado.png)

@@ -19,6 +19,14 @@ export function aulasRouter(repo: Repository) {
     const result = await service.createFromGrade(req.body);
     res.status(result.created ? 201 : 200).json(result.aula);
   });
+  router.post('/personalizadas', async (req, res) => {
+    const result = await service.createPersonalizada(req.body);
+    res.status(result.created ? 201 : 200).json(result.aula);
+  });
+  router.delete('/personalizadas/:id', async (req, res) => {
+    await service.deletePersonalizada(req.params.id);
+    res.sendStatus(204);
+  });
   router.patch('/:id/cancelamento', async (req, res) => res.json(await service.cancel(req.params.id, req.body)));
   router.post('/:id/chamada', async (req, res) => res.json(await chamada.confirmarEmLote(req.params.id, req.body)));
   router.put('/:id/chamada/:alunoId', async (req, res) => {

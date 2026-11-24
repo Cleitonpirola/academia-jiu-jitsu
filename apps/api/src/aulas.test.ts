@@ -33,6 +33,31 @@ describe('Aulas por turma e preservação do histórico de avulsas',()=>{
  });
  it('turma coringa publica 12h, 15h e 18h sem fabricar cobranças ou presenças',async()=>{const t=await turma(),antes=await repo.list('HorarioTurma');for(const h of t.horarios)await publicar(h.id);const r=await request(app).get('/api/aulas').expect(200);assert.deepEqual(r.body.map((a:Aula)=>a.horaInicio),['12:00','15:00','18:00']);assert.ok(r.body.every((a:Aula)=>a.origem==='grade'&&a.turmaId===t.id));assert.deepEqual(await repo.list('HorarioTurma'),antes);assert.deepEqual(await repo.list('Mensalidade'),[]);assert.deepEqual(await repo.list('PresencaAula'),[]);});
  it('recusa criação e exclusão de avulsas sem perder a leitura do histórico',async()=>{const a=await legado();await request(app).post('/api/aulas/extras').send({titulo:'Nova avulsa'}).expect(404);await request(app).delete('/api/aulas/'+a.id).expect(404);assert.equal((await request(app).get('/api/aulas/'+a.id).expect(200)).body.origem,'extra');assert.equal((await repo.list('Aula')).length,1);});
+ it('publica e exclui um treino na quarta quinta sem modificar a grade nem repetir a publicação', async () => {
+  const aluno = await student(), t = await turma([aluno.id]), regular = await publicar(t.horarios[0].id);
+  const horarios = await repo.list('HorarioTurma');
+  const input = { id: randomUUID(), turmaId: t.id, titulo: 'Treino da quarta quinta', dataAula: '2026-10-22', horaInicio: '19:30', horaFim: '20:45' };
+  await request(app).post('/api/aulas/personalizadas').send({ ...input, horaFim: '19:15' }).expect(400);
+  const respostas = await Promise.all([1, 2].map(() => request(app).post('/api/aulas/personalizadas').send(input)));
+  assert.deepEqual(respostas.map(r => r.status).sort(), [200, 201]);
+  assert.equal(respostas[0].body.alunosPrevistos[0].alunoId, aluno.id);
+  assert.equal(respostas[0].body.origemHorarioId, null);
+  assert.deepEqual((await request(app).get('/api/aulas?dataInicio=2026-10-23').expect(200)).body, []);
+  await request(app).post('/api/aulas/personalizadas').send({ ...input, horaFim: '21:00' }).expect(409);
+  await request(app).delete('/api/aulas/personalizadas/' + regular.id).expect(409);
+  await request(app).delete('/api/aulas/personalizadas/' + input.id).expect(204);
+  assert.deepEqual(await repo.list('HorarioTurma'), horarios);
+  assert.deepEqual((await repo.list('Aula')).map(a => a.id), [regular.id]);
+  assert.ok(!(await repo.list('AulaAlunoPrevisto')).some(registro => registro.aulaId === input.id));
+ });
+ it('protege o treino por data com registro de participação', async () => {
+  const aluno = await student(), t = await turma();
+  const input = { id: randomUUID(), turmaId: t.id, titulo: 'Treino avulso', dataAula: '2026-10-22', horaInicio: '19:00', horaFim: '20:00' };
+  await request(app).post('/api/aulas/personalizadas').send(input).expect(201);
+  await request(app).put(`/api/aulas/${input.id}/chamada/${aluno.id}`).send({ presente: true }).expect(201);
+  await request(app).delete('/api/aulas/personalizadas/' + input.id).expect(409);
+  assert.equal((await repo.list('PresencaAula'))[0].aulaId, input.id);
+ });
  it('histórico avulso ainda permite chamada e cancelamento sem excluir dados',async()=>{const aluno=await student(),a=await legado();await request(app).put(`/api/aulas/${a.id}/chamada/${aluno.id}`).send({presente:true}).expect(201);await request(app).patch(`/api/aulas/${a.id}/cancelamento`).send({motivo:'Teste de proteção'}).expect(409);await request(app).delete(`/api/aulas/${a.id}/chamada/${aluno.id}`).expect(204);await request(app).patch(`/api/aulas/${a.id}/cancelamento`).send({motivo:'Encontro cancelado'}).expect(200);assert.equal((await repo.get('Aula',a.id))!.situacao,'cancelada');});
  it('publicação concorrente mantém uma aula por horário e data',async()=>{const t=await turma(),id=t.horarios[0].id;const results=await Promise.all(Array.from({length:4},()=>request(app).post('/api/aulas/da-grade').send({horarioId:id,dataAula:'2026-10-19'})));assert.deepEqual(results.map(r=>r.status).sort(),[200,200,200,201]);assert.equal(new Set(results.map(r=>r.body.id)).size,1);await publicar(id,'2026-10-26');assert.equal((await repo.list('Aula')).length,2);});
  it('exige turma ativa, horário existente e dia da semana correspondente',async()=>{const t=await turma();await request(app).post('/api/aulas/da-grade').send({horarioId:t.horarios[0].id,dataAula:'2026-10-20'}).expect(400);await request(app).post('/api/aulas/da-grade').send({horarioId:randomUUID(),dataAula:'2026-10-19'}).expect(404);await request(app).patch('/api/turmas/'+t.id+'/situacao').send({situacao:'inativo'}).expect(200);await request(app).post('/api/aulas/da-grade').send({horarioId:t.horarios[0].id,dataAula:'2026-10-19'}).expect(400);});

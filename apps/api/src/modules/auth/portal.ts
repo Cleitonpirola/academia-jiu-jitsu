@@ -4,10 +4,10 @@ import { Router } from 'express';
 import { z } from 'zod';
 import type { Repository } from '../../repository.js';
 import { HttpError } from '../../http-error.js';
-import { statusOf } from '../../domain.js';
+import { mensalidadePausada, statusOf, today } from '../../domain.js';
 import { usuarioAtual } from './routes.js';
 import { bloqueioFinanceiro } from './financial-access.js';
-import { usoPlano } from '../planos/rules.js';
+import { semana, usoPlano } from '../planos/rules.js';
 import { saldoMensal } from '../planos/saldo-mensal.js';
 import { condicoesPadrao, debitoVencido } from '../planos/debitos.js';
 import { assertAcessoPortal } from './familia.js';
@@ -77,17 +77,37 @@ export function portalRouter(repo: Repository, responsavel=false) {
     const aluno = await repo.get('Aluno', id);
     if (!aluno || aluno.situacao !== 'ativo') throw new HttpError(403, 'Cadastro indisponível.');
     const mensalidades = await repo.list('Mensalidade');
-    const bloqueio = bloqueioFinanceiro(mensalidades, id);
+    const bloqueio = aluno.bolsista ? null : bloqueioFinanceiro(mensalidades, id);
     if (bloqueio) { res.json(bloqueio); return; }
     const [aulas, checkins, chamada, antigas, planos, liberacoes, todosDebitos, config] = await Promise.all([repo.list('Aula'), repo.list('CheckinAula'), repo.list('PresencaAula'), repo.list('Presenca'), repo.list('PlanoAluno'), repo.list('LiberacaoAula'),repo.list('DebitoAula'),repo.get('ConfiguracaoAcademia','principal')]);
     const debitos=todosDebitos.filter(item=>item.alunoId===id), condicoes=config ?? condicoesPadrao;
     const meusCheckins = new Map(checkins.filter(item => item.alunoId === id).map(item => [item.aulaId, item]));
     const minhasPresencas = new Map(chamada.filter(item => item.alunoId === id).map(item => [item.aulaId, item]));
-    res.json({ bloqueado: false, aluno, aulas: aulas.filter(aula => aula.dataAula >= aluno.dataMatricula).map(aula => ({ ...aula, checkin: meusCheckins.get(aula.id) ?? null, presenca: minhasPresencas.get(aula.id) ?? null })).sort((a, b) => (a.dataAula + a.horaInicio).localeCompare(b.dataAula + b.horaInicio)),
-      mensalidades: mensalidades.filter(item => item.alunoId === id).map(item => ({ ...item, status: statusOf(item) })).sort((a, b) => b.dataVencimento.localeCompare(a.dataVencimento)),
+    const hoje = today();
+    const contexto = { plano: planos.find(item => item.alunoId === id) ?? null, aulas, checkins, chamada, antigas, liberacoes, debitos };
+    const plano = usoPlano(contexto, id, hoje);
+    const saldo = saldoMensal(aluno, aulas, checkins, hoje, debitos);
+    const porSemana = new Map([[plano.inicioSemana, plano]]);
+    const porMes = new Map([[saldo.competencia, saldo]]);
+    const agenda = aulas.filter(aula => aula.dataAula >= aluno.dataMatricula).map(aula => {
+      let limiteMensalAtingido = false, limiteSemanalAtingido = false, liberacaoSemanal = false;
+      if (aula.dataAula >= hoje && aula.situacao === 'agendada') {
+        const { inicioSemana } = semana(aula.dataAula);
+        const competencia = aula.dataAula.slice(0, 7);
+        const uso = porSemana.get(inicioSemana) ?? usoPlano(contexto, id, aula.dataAula);
+        const saldoDaAula = porMes.get(competencia) ?? saldoMensal(aluno, aulas, checkins, aula.dataAula, debitos);
+        porSemana.set(inicioSemana, uso);
+        porMes.set(competencia, saldoDaAula);
+        limiteMensalAtingido = saldoDaAula.limiteAtingido;
+        limiteSemanalAtingido = uso.limiteAtingido;
+        liberacaoSemanal = uso.aulasLiberadas.includes(aula.id);
+      }
+      return { ...aula, checkin: meusCheckins.get(aula.id) ?? null, presenca: minhasPresencas.get(aula.id) ?? null, limiteMensalAtingido, limiteSemanalAtingido, liberacaoSemanal };
+    }).sort((a, b) => (a.dataAula + a.horaInicio).localeCompare(b.dataAula + b.horaInicio));
+    res.json({ bloqueado: false, aluno, aulas: agenda,
+      mensalidades: mensalidades.filter(item => item.alunoId === id && !mensalidadePausada(item, aluno)).map(item => ({ ...item, status: statusOf(item) })).sort((a, b) => b.dataVencimento.localeCompare(a.dataVencimento)),
       historicoAntigo: antigas.filter(item => item.alunoId === id).sort((a, b) => b.dataTreino.localeCompare(a.dataTreino)),
-      plano: usoPlano({ plano: planos.find(item => item.alunoId === id) ?? null, aulas, checkins, chamada, antigas, liberacoes, debitos }, id),
-      saldoMensal: saldoMensal(aluno, aulas, checkins,undefined,debitos), debitos, debitoVencido:debitos.some(item=>debitoVencido(item)),
+      plano, saldoMensal: saldo, debitos, debitoVencido:debitos.some(item=>debitoVencido(item)),
       condicoesAdicionais:{valorAulaAdicionalCentavos:condicoes.valorAulaAdicionalCentavos,prazoPagamentoDias:condicoes.prazoPagamentoDias},
     });
   });
@@ -95,6 +115,11 @@ export function portalRouter(repo: Repository, responsavel=false) {
     z.object({}).strict().parse(req.body ?? {});
     const id = z.string().uuid().parse(req.params.id);
     res.json(await repo.saveCheckin(id, alunoId(res), new Date().toISOString(),usuarioAtual(res)));
+  });
+  router.delete('/aulas/:id/checkin/:checkinId', async (req, res) => {
+    const { id, checkinId } = z.object({ id: z.string().uuid(), checkinId: z.string().uuid() }).parse(req.params);
+    await repo.cancelCheckin(id, alunoId(res), checkinId, usuarioAtual(res));
+    res.sendStatus(204);
   });
   return router;
 }

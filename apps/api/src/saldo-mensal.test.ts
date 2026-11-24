@@ -144,8 +144,8 @@ it('migração 7 preserva colunas anteriores e backup; saldo persiste após reab
   try {
     old = new DatabaseSync(file); migrateSqlite(old, file, sqliteMigrations.slice(0,6));
     old.prepare('INSERT INTO Aluno VALUES (?,?,?,?,?,?,?,?,?)').run(aluno.id, aluno.nome, aluno.telefone, aluno.email, aluno.dataNascimento, aluno.faixa, aluno.dataMatricula, aluno.situacao, aluno.criadoEm);old.close();old=undefined;
-    repo = new SqliteRepository(file); assert.deepEqual(repo.migration.applied,[7,8,9,10,11,12,13,14,15,16,17,18,19]); assert.ok(repo.migration.backupPath);
-    assert.deepEqual(await repo.get('Aluno',aluno.id),{...aluno,faixaId:'00000000-0000-4000-8100-000000000001'});
+    repo = new SqliteRepository(file); assert.deepEqual(repo.migration.applied,[7,8,9,10,11,12,13,14,15,16,17,18,19,20]); assert.ok(repo.migration.backupPath);
+    assert.deepEqual(await repo.get('Aluno',aluno.id),{...aluno,faixaId:'00000000-0000-4000-8100-000000000001',bolsista:false});
     const fields = repo.db.prepare('SELECT limiteAulasMensal,aulasRestantesMes,mesSaldoAulas FROM Aluno WHERE id=?').get(aluno.id);
     assert.deepEqual({...fields},{limiteAulasMensal:null,aulasRestantesMes:null,mesSaldoAulas:null});
     const backup = new DatabaseSync(repo.migration.backupPath!,{readOnly:true});try{assert.equal(backup.prepare('SELECT MAX(version) v FROM _tatame_migrations').get()!.v,6);assert.equal(backup.prepare('PRAGMA table_info(Aluno)').all().length,9);}finally{backup.close();}

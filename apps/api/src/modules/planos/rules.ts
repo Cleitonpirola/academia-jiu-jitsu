@@ -30,9 +30,9 @@ export function usoPlano(ctx: ContextoPlano, alunoId: string, referencia = today
   };
 }
 
-export function assertCotaCheckin(ctx: ContextoPlano, alunoId: string, aulaId: string) {
-  const uso = usoPlano(ctx, alunoId);
-  if (uso.limiteAtingido && !uso.aulasLiberadas.includes(aulaId)) throw new HttpError(403, 'Seu limite semanal de aulas foi atingido. Converse com a academia para autorizar uma aula extra.');
+export function assertCotaCheckin(ctx: ContextoPlano, alunoId: string, aula: Aula) {
+  const uso = usoPlano(ctx, alunoId, aula.dataAula);
+  if (uso.limiteAtingido && !uso.aulasLiberadas.includes(aula.id)) throw new HttpError(403, 'Seu limite semanal de aulas foi atingido. Converse com a academia para autorizar uma aula extra.');
 }
 
 export function assertPodeLiberar(ctx: ContextoPlano, alunoId: string, aulaId: string) {

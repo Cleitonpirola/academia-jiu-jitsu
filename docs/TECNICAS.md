@@ -1,5 +1,18 @@
 # Técnicas da semana
 
+## Próxima etapa adiada — comunicado de vídeo novo e Pix (22/11/2026)
+
+O usuário pediu **para depois**: quando houver um vídeo novo publicado, o aluno recebe um comunicado no Tatame. Abaixo do nome da técnica, aparece a contratação por Pix, e o acesso é liberado automaticamente após confirmação real do pagamento pelo provedor no servidor. Reutilizar o contador e a confirmação **Estou ciente** dos comunicados. Integração de pagamentos, modelo de cobrança, preço/validade e vínculo da liberação serão definidos na retomada. A mensalidade demonstrativa da captura não aprova cobrança avulsa nem recorrência. **Planejado, não implementado.** [Requisitos futuros](PLANO_FUNCIONAL.md#vídeo-novo-com-comunicado-e-pix--planejado-para-depois-22112026).
+
+## Player do Tatame com Google Drive privado
+
+1. Na conta Google exclusiva do Tatame, crie uma pasta para os vídeos. Mantenha **Acesso geral → Restrito** na pasta e em cada arquivo. Compartilhe a pasta apenas com quem administra o conteúdo e com a conta de serviço do Tatame como **Leitor**. [Permissões no Google Drive](https://support.google.com/drive/answer/7166529?hl=pt-BR).
+2. No Google Cloud, habilite a Drive API e crie uma conta de serviço para a leitura. Configure `GOOGLE_DRIVE_FOLDER_ID` e `GOOGLE_DRIVE_SERVICE_ACCOUNT_JSON` somente na API, em variáveis privadas. A conta de serviço usa OAuth de leitura. [Conta de serviço](https://docs.cloud.google.com/iam/docs/service-accounts-create) · [Chave JSON](https://docs.cloud.google.com/iam/docs/keys-create-delete).
+3. Coloque um MP4 diretamente na pasta e, em **Técnicas da semana → Novo vídeo**, cole o link desse arquivo e publique na data desejada. Libere o acesso ao aluno após confirmar o pagamento. A liberação continua sendo registrada pela gestão.
+4. Na área do aluno, **Assistir técnica** abre o player na própria página. Cada pedido de vídeo verifica a sessão e a validade da liberação. O endereço do Drive e a credencial ficam no servidor. O endereço do player copiado sozinho exige uma sessão com acesso válido. Gravação de tela e cópia por quem consegue assistir continuam tecnicamente possíveis.
+
+A implementação local foi testada com respostas simuladas do Drive. A reprodução real aguarda a configuração da pasta e da conta de serviço. O vídeo permanece no Drive. A API envia trechos autenticados de até 4 MiB para requisições por intervalo. [Download parcial no Drive](https://developers.google.com/workspace/drive/api/guides/manage-downloads) · [Limites de resposta na Vercel](https://vercel.com/docs/functions/limitations).
+
 ## Direção proposta — envio ao YouTube pelo Tatame (01/11/2026)
 
 Usuário prefere manter vídeos no YouTube e quer evitar o trabalho de abrir o YouTube Studio, enviar e copiar links manualmente. Consulta confirmou viabilidade com **YouTube Data API v3**, `videos.insert`, OAuth2 e biblioteca oficial Google para Node.js (`googleapis`). **Estado: proposta documentada; integração, conexão de canal e envio real não implementados.** A opção de link já existente continua funcionando. O upload privado em Supabase permanece adiado; não remover o código preparado nem ativá-lo por este planejamento.
@@ -76,6 +89,10 @@ Após os índices/RLS finais, os sete testes específicos de biblioteca/migraç�
 Navegador com banco fictício em memória: configuração salva, vídeo cadastrado/publicado, aluno sem acesso recebeu botão bloqueado, professor liberou a validade e aluno recebeu o link após **Assistir técnica**. O primeiro salvamento da QA falhou por origem não permitida na porta de teste; corrigido somente o `APP_ORIGIN` do script de QA, sem enfraquecer a proteção da aplicação.
 
 Prévia administrativa `http://127.0.0.1:3352/`, aluno `http://127.0.0.1:3353/`. Dados dessa prévia são fictícios e somem quando o processo é encerrado. Banco principal permanece v17 nesta entrega; migração18 testada somente em bases de teste. Reiniciar o servidor habitual com o código novo aplicará a migração SQLite pelo mecanismo existente, com backup. Supabase permanece com dez migrações concluídas; 11–18 pendentes. Sem commit/push/deploy nesta entrega.
+
+![Gestão da biblioteca](screenshots/tecnicas-gestao.png)
+
+![Biblioteca do aluno liberada](screenshots/tecnicas-aluno-liberado.png)
 
 ## Para a defesa oral
 

@@ -24,6 +24,7 @@ model Aluno {
   aulasRestantesMes Int?
   mesSaldoAulas String? @db.VarChar(7)
   possuiCelular Boolean @default(true)
+  bolsista Boolean @default(false)
   acessoPrincipal String @default("aluno")
   responsabilidadeTransferidaEm String?
   responsaveis ResponsavelAluno[]

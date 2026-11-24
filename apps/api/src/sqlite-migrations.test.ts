@@ -33,13 +33,29 @@ const originalStudent = [
   'preservado@example.com', '2000-01-01', 'Azul', '2026-01-01', 'ativo', '2026-01-01T12:00:00Z',
 ];
 
+it('a migração de bolsistas mantém alunos pagantes por padrão e preserva as mensalidades existentes', () => {
+  const db = new DatabaseSync(':memory:');
+  try {
+    db.exec('PRAGMA foreign_keys = ON');
+    migrateSqlite(db, undefined, sqliteMigrations.slice(0, 19));
+    db.prepare('INSERT INTO Aluno(id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm) VALUES(?,?,?,?,?,?,?,?,?)').run(...originalStudent);
+    db.prepare('INSERT INTO Mensalidade(id,alunoId,competencia,valorCentavos,dataVencimento,dataPagamento,criadoEm) VALUES(?,?,?,?,?,?,?)')
+      .run(randomUUID(), originalStudent[0], '2026-01', 12000, '2026-01-10', null, '2026-01-01T12:00:00Z');
+    const anterior = db.prepare('SELECT * FROM Mensalidade').all();
+    assert.deepEqual(migrateSqlite(db).applied, [20]);
+    assert.equal(db.prepare('SELECT bolsista FROM Aluno').get()?.bolsista, 0);
+    assert.deepEqual(db.prepare('SELECT * FROM Mensalidade').all(), anterior);
+    assert.throws(() => db.exec('UPDATE Aluno SET bolsista = 2'), /CHECK constraint/);
+  } finally { db.close(); }
+});
+
 it('registra a versão inicial de um banco novo e não reaplica a migração', async () => {
   const repo = new SqliteRepository(':memory:');
   try {
-    assert.deepEqual(repo.migration.applied, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19]);
+    assert.deepEqual(repo.migration.applied, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20]);
     assert.equal(repo.migration.backupPath, null);
     assert.deepEqual(migrateSqlite(repo.db).applied, []);
-    assert.equal(repo.db.prepare('SELECT COUNT(*) AS total FROM _tatame_migrations').get()?.total, 19);
+    assert.equal(repo.db.prepare('SELECT COUNT(*) AS total FROM _tatame_migrations').get()?.total, 20);
   } finally { await repo.close(); }
 });
 
@@ -162,7 +178,7 @@ it('evolui versão 1 para turmas, preserva as quatro tabelas e persiste grade e 
     const before = originalTables.map(table => old.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all());
     old.close();
     repo = new SqliteRepository(temp.file);
-    assert.deepEqual(repo.migration.applied, [2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19]); assert.equal(repo.migration.version, 19);
+    assert.deepEqual(repo.migration.applied, [2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20]); assert.equal(repo.migration.version, 20);
     assert.deepEqual(originalTables.map(table => repo!.db.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()), before);
     assert.ok(repo.migration.backupPath);
     const backup = new DatabaseSync(repo.migration.backupPath, { readOnly: true });
@@ -199,7 +215,7 @@ it('evolui v2 para aulas/chamada sem alterar as sete tabelas, cria backup v2 e p
     old.prepare('INSERT INTO AlunoTurma VALUES (?, ?, ?, ?)').run(randomUUID(), turmaId, originalStudent[0], originalStudent[8]);
     const before = tables.map(table => old.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()); old.close();
     repo = new SqliteRepository(temp.file);
-    assert.deepEqual(repo.migration.applied, [3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19]); assert.ok(repo.migration.backupPath);
+    assert.deepEqual(repo.migration.applied, [3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20]); assert.ok(repo.migration.backupPath);
     assert.deepEqual(tables.map(table => repo!.db.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()), before);
     const backup = new DatabaseSync(repo.migration.backupPath, { readOnly: true });
     try { assert.equal(backup.prepare('SELECT MAX(version) AS version FROM _tatame_migrations').get()?.version, 2); assert.equal(backup.prepare("SELECT name FROM sqlite_master WHERE name='Aula'").get(), undefined); }
@@ -230,7 +246,7 @@ it('evolui v3 para chamada preservando nove tabelas, backup e registros por moda
     old.prepare('INSERT INTO AulaAlunoPrevisto VALUES (?, ?, ?, ?)').run(randomUUID(), aulaId, originalStudent[0], originalStudent[1]);
     const before = tables.map(table => old.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()); old.close();
     repo = new SqliteRepository(temp.file);
-    assert.deepEqual(repo.migration.applied, [4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19]); assert.equal(repo.migration.version, 19); assert.ok(repo.migration.backupPath);
+    assert.deepEqual(repo.migration.applied, [4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20]); assert.equal(repo.migration.version, 20); assert.ok(repo.migration.backupPath);
     assert.deepEqual(tables.map(table => repo!.db.prepare(`SELECT ${table === 'Aluno' ? 'id,nome,telefone,email,dataNascimento,faixa,dataMatricula,situacao,criadoEm' : '*'} FROM "${table}" ORDER BY id`).all()), before);
     assert.deepEqual(await repo.list('PresencaAula'), []);
     const backup = new DatabaseSync(repo.migration.backupPath, { readOnly: true });

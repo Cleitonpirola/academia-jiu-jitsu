@@ -18,7 +18,8 @@ import { dirname, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { PrismaClient, Prisma } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
-import type { Aluno, Mensalidade, Presenca, Analise, Turma, HorarioTurma, AlunoTurma, Aula, AulaAlunoPrevisto, PresencaAula, CheckinAula, PlanoAluno, LiberacaoAula } from '@tatame/shared';
+import type { Aluno, Mensalidade, MensalidadeInput, Presenca, Analise, Turma, HorarioTurma, AlunoTurma, Aula, AulaAlunoPrevisto, PresencaAula, CheckinAula, PlanoAluno, LiberacaoAula } from '@tatame/shared';
+import { validarMensalidade } from './domain.js';
 import type { Usuario, Sessao } from './modules/auth/models.js';
 import { validateCheckin } from './modules/auth/checkin-rules.js';
 import { assertFinanceiroRegular } from './modules/auth/financial-access.js';
@@ -32,6 +33,9 @@ import { adicionalAtivo, assertDebitosEmDia, condicoesPadrao, novoDebito, valida
 
 export type Tables = { ConfiguracaoTecnicas:ConfiguracaoTecnicas; VideoTecnica:VideoTecnica; AcessoTecnicas:AcessoTecnicas; FotoPerfil:FotoPerfil; LoteComunicado:LoteComunicado; EntregaComunicado:EntregaComunicado; PreferenciasAcademia:PreferenciasAcademia; RegraGraduacao:RegraGraduacao; EstadoGraduacao:EstadoGraduacao; EventoGraduacao:EventoGraduacao; AulaProfessor:AulaProfessor; FaixaGraduacao:FaixaGraduacao; GrauFaixa:GrauFaixa; ResponsavelAluno: ResponsavelAluno; EventoAcessoAluno: EventoAcessoAluno; ComunicadoAluno: ComunicadoAluno; ConfiguracaoAcademia: ConfiguracaoAcademia; DebitoAula: DebitoAula; Aluno: Aluno; Mensalidade: Mensalidade; Presenca: Presenca; Analise: Analise; Turma: Turma; HorarioTurma: HorarioTurma; AlunoTurma: AlunoTurma; Aula: Aula; AulaAlunoPrevisto: AulaAlunoPrevisto; PresencaAula: PresencaAula; Usuario: Usuario; Sessao: Sessao; CheckinAula: CheckinAula; PlanoAluno: PlanoAluno; LiberacaoAula: LiberacaoAula };
 export type Table = keyof Tables;
+type AlteracaoMensalidade = { tipo: 'criar'; registro: Mensalidade }
+  | { tipo: 'editar'; id: string; dados: MensalidadeInput }
+  | { tipo: 'pagar'; id: string; dados: { dataPagamento: string } };
 export interface Repository {
   reservarRecuperacao(email: string, hash: string, agora: string): Promise<boolean>;
   validarRecuperacao(hash: string, agora: string): Promise<boolean>;
@@ -47,6 +51,7 @@ export interface Repository {
   saveRegraGraduacao(faixaId:string,body:unknown,timestamp:string):Promise<RegraGraduacao>;
   saveEvolucaoGraduacao(alunoId:string,autorId:string,input:EntradaEvolucao,timestamp:string):Promise<void>;
   saveCadastroAluno(aluno: Aluno, create: boolean): Promise<Aluno>;
+  salvarMensalidade(alteracao: AlteracaoMensalidade): Promise<Mensalidade>;
   savePerfilAluno(usuarioId: string, sessaoId: string, input: PerfilBasicoAluno, senhaHashVerificada?: string): Promise<Aluno>;
   responderComunicado(id: string, usuarioId: string, resposta: NonNullable<ComunicadoAluno['resposta']>, timestamp: string): Promise<ComunicadoAluno>;
   saveFamilia(acao: AcaoFamiliar): Promise<{aluno: Aluno; usuarioId: string}>;
@@ -58,6 +63,7 @@ export interface Repository {
   saveTurma(turma: Turma, horarios: HorarioTurma[], alunos: AlunoTurma[], create: boolean): Promise<void>;
   removeTurma(id: string): Promise<void>;
   createAula(aula: Aula, alunos: AulaAlunoPrevisto[]): Promise<void>;
+  deleteAulaPersonalizada(id: string): Promise<void>;
   saveProfessoresAula(aulaId: string, nomes: string[]): Promise<void>;
   cancelAula(id: string, motivo: string, timestamp: string): Promise<void>;
   savePresencaAula(aulaId: string, alunoId: string, presente: boolean, timestamp: string): Promise<{ registro: PresencaAula; created: boolean }>;
@@ -65,6 +71,7 @@ export interface Repository {
   removePresencaAula(aulaId: string, alunoId: string): Promise<void>;
   activateUsuario(id: string, conviteHash: string, senhaHash: string, timestamp: string): Promise<boolean>;
   saveCheckin(aulaId: string, alunoId: string, timestamp: string, ator?: Pick<UsuarioView, 'id'|'perfil'>): Promise<CheckinAula>;
+  cancelCheckin(aulaId: string, alunoId: string, checkinId: string, ator: Pick<UsuarioView, 'id'|'perfil'>): Promise<void>;
   removeCheckin(aulaId: string, alunoId: string, timestamp: string): Promise<void>;
   saveSaldoMensalAluno(alunoId: string, limiteMensal: number | null): Promise<ReturnType<typeof saldoMensal>>;
   savePreferenciasAcademia(exibirControlePlanos:boolean,usuarioId:string,timestamp:string):Promise<PreferenciasAcademia>;
@@ -93,7 +100,7 @@ const columns: Record<Table, string[]> = {
   ResponsavelAluno: ['id','alunoId','usuarioId','telefone','parentesco','tipoVinculo','criadoEm','atualizadoEm'],
   EventoAcessoAluno: ['id','alunoId','usuarioId','tipo','detalhes','criadoEm'],
   ComunicadoAluno: ['id','alunoId','destinatarioId','autorId','tipo','titulo','mensagem','resposta','respondidoEm','criadoEm'],
-  Aluno: ['id','nome','telefone','email','dataNascimento','faixa','dataMatricula','situacao','criadoEm','limiteAulasMensal','aulasRestantesMes','mesSaldoAulas','possuiCelular','acessoPrincipal','responsabilidadeTransferidaEm','faixaId','grauId'],
+  Aluno: ['id','nome','telefone','email','dataNascimento','faixa','dataMatricula','situacao','criadoEm','limiteAulasMensal','aulasRestantesMes','mesSaldoAulas','possuiCelular','acessoPrincipal','responsabilidadeTransferidaEm','faixaId','grauId','bolsista'],
   Mensalidade: ['id','alunoId','competencia','valorCentavos','dataVencimento','dataPagamento','criadoEm'],
   Presenca: ['id','alunoId','dataTreino','tipoTreino','presente'],
   Analise: ['id','pergunta','resposta','modelo','usuario','metricas','criadoEm'],
@@ -196,7 +203,7 @@ export class SqliteRepository implements Repository {
   }
   private decode<K extends Table>(table: K, row: unknown): Tables[K] {
     const record = row as Record<string, unknown>;
-    return limparSaldoNulo({ ...record, ...(table==='ConfiguracaoTecnicas'?{ativa:Boolean(record.ativa)}:{}), ...(table==='VideoTecnica'?{publicado:Boolean(record.publicado)}:{}), ...(table==='PreferenciasAcademia'?{exibirControlePlanos:Boolean(record.exibirControlePlanos)}:{}), ...(table === 'Aluno' ? {possuiCelular:Boolean(record.possuiCelular)} : {}), ...(['Presenca', 'PresencaAula'].includes(table) ? { presente: Boolean(record.presente) } : {}) }) as unknown as Tables[K];
+    return limparSaldoNulo({ ...record, ...(table==='ConfiguracaoTecnicas'?{ativa:Boolean(record.ativa)}:{}), ...(table==='VideoTecnica'?{publicado:Boolean(record.publicado)}:{}), ...(table==='PreferenciasAcademia'?{exibirControlePlanos:Boolean(record.exibirControlePlanos)}:{}), ...(table === 'Aluno' ? {possuiCelular:Boolean(record.possuiCelular),bolsista:Boolean(record.bolsista)} : {}), ...(['Presenca', 'PresencaAula'].includes(table) ? { presente: Boolean(record.presente) } : {}) }) as unknown as Tables[K];
   }
   async list<K extends Table>(table: K) { return this.db.prepare(`SELECT * FROM "${table}"`).all().map(row => this.decode(table, row)); }
   async get<K extends Table>(table: K, id: string) { const row = this.db.prepare(`SELECT * FROM "${table}" WHERE id=?`).get(id); return row ? this.decode(table, row) : null; }
@@ -211,15 +218,34 @@ export class SqliteRepository implements Repository {
     return row;
   }
   async insert<K extends Table>(table: K, row: Tables[K]) { return this.insertRow(table, row); }
-  async update<K extends Table>(table: K, id: string, row: Partial<Tables[K]>) {
+  private updateRow<K extends Table>(table: K, id: string, row: Partial<Tables[K]>) {
     const fields = columns[table].filter(key => key !== 'id' && key in row);
     if (fields.length) {
       const values = fields.map(key => { const v = (row as Record<string, unknown>)[key]; return typeof v === 'boolean' ? Number(v) : v as string | number | null; });
       this.db.prepare(`UPDATE "${table}" SET ${fields.map(f=>`"${f}"=?`).join(',')} WHERE id=?`).run(...values, id);
     }
+  }
+  async update<K extends Table>(table: K, id: string, row: Partial<Tables[K]>) {
+    this.updateRow(table, id, row);
     const updated = await this.get(table, id);
     if (!updated) throw new Error('Registro inexistente.');
     return updated;
+  }
+  async salvarMensalidade(alteracao: AlteracaoMensalidade) {
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      const id = alteracao.tipo === 'criar' ? alteracao.registro.id : alteracao.id;
+      const atual = alteracao.tipo === 'criar' ? undefined : this.db.prepare('SELECT * FROM Mensalidade WHERE id=?').get(id) as unknown as Mensalidade | undefined;
+      if (alteracao.tipo !== 'criar' && !atual) throw new HttpError(404, 'Registro não encontrado.');
+      const dados = alteracao.tipo === 'criar' ? alteracao.registro : alteracao.dados;
+      const alunoId = 'alunoId' in dados ? dados.alunoId : atual!.alunoId;
+      const aluno = this.db.prepare('SELECT bolsista, dataMatricula FROM Aluno WHERE id=?').get(alunoId) as unknown as Aluno | undefined;
+      validarMensalidade(aluno, 'competencia' in dados ? dados.competencia : undefined);
+      const salvo = alteracao.tipo === 'criar' ? this.insertRow('Mensalidade', alteracao.registro) : { ...atual!, ...alteracao.dados };
+      if (alteracao.tipo !== 'criar') this.updateRow('Mensalidade', id, alteracao.dados);
+      this.db.exec('COMMIT');
+      return salvo;
+    } catch (error) { this.db.exec('ROLLBACK'); throw error; }
   }
   async remove(table: Table, id: string) { this.db.prepare(`DELETE FROM "${table}" WHERE id=?`).run(id); }
   async saveTurma(turma: Turma, horarios: HorarioTurma[], alunos: AlunoTurma[], create: boolean) {
@@ -251,6 +277,21 @@ export class SqliteRepository implements Repository {
       this.insertRow('Aula', aula);
       this.insertRow('AulaProfessor', { id: randomUUID(), aulaId: aula.id, nome: aula.professor, ordem: 0 });
       for (const aluno of alunos) this.insertRow('AulaAlunoPrevisto', aluno);
+      this.db.exec('COMMIT');
+    } catch (error) { this.db.exec('ROLLBACK'); throw error; }
+  }
+  async deleteAulaPersonalizada(id: string) {
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      const aula = this.db.prepare('SELECT origem FROM Aula WHERE id=?').get(id);
+      if (!aula) throw new HttpError(404, 'Aula não encontrada.');
+      if (aula.origem !== 'extra') throw new HttpError(409, 'Aulas da grade devem ser canceladas na agenda.');
+      const atividade = this.db.prepare(`SELECT
+        EXISTS(SELECT 1 FROM PresencaAula WHERE aulaId=?) OR EXISTS(SELECT 1 FROM CheckinAula WHERE aulaId=?) OR
+        EXISTS(SELECT 1 FROM LiberacaoAula WHERE aulaId=?) OR EXISTS(SELECT 1 FROM DebitoAula WHERE aulaId=?) AS registrada`).get(id, id, id, id);
+      if (atividade?.registrada) throw new HttpError(409, 'Esta aula já tem registros de participação ou cobrança. Use o cancelamento quando estiver disponível.');
+      this.db.prepare('DELETE FROM AulaAlunoPrevisto WHERE aulaId=?').run(id);
+      this.db.prepare('DELETE FROM Aula WHERE id=?').run(id);
       this.db.exec('COMMIT');
     } catch (error) { this.db.exec('ROLLBACK'); throw error; }
   }
@@ -328,7 +369,7 @@ export class SqliteRepository implements Repository {
     try {
       const usuario=this.db.prepare('SELECT * FROM Usuario WHERE id=?').get(id) as unknown as Usuario | undefined;
       if(!usuario || !usuarioHabilitado(usuario,this.db.prepare('SELECT * FROM Aluno').all() as unknown as Aluno[],this.db.prepare('SELECT * FROM ResponsavelAluno').all() as unknown as ResponsavelAluno[])){this.db.exec('COMMIT');return false;}
-      const result = this.db.prepare('UPDATE Usuario SET senhaHash=?, conviteHash=NULL, conviteExpiraEm=NULL WHERE id=? AND conviteHash=? AND conviteExpiraEm>?').run(senhaHash, id, conviteHash, timestamp);
+      const result = this.db.prepare('UPDATE Usuario SET senhaHash=?, conviteHash=NULL, conviteExpiraEm=NULL WHERE id=? AND senhaHash IS NULL AND conviteHash=? AND conviteExpiraEm>?').run(senhaHash, id, conviteHash, timestamp);
       if (result.changes) this.db.prepare('DELETE FROM Sessao WHERE usuarioId=?').run(id);
       this.db.exec('COMMIT'); return result.changes === 1;
     } catch (error) { this.db.exec('ROLLBACK'); throw error; }
@@ -383,19 +424,41 @@ export class SqliteRepository implements Repository {
       validateCheckin(aula, aluno);
       assertAcessoPortal(aluno!, this.db.prepare('SELECT * FROM ResponsavelAluno WHERE alunoId=?').all(alunoId) as unknown as ResponsavelAluno[], ator, true);
       const mensalidades = this.db.prepare('SELECT * FROM Mensalidade WHERE alunoId=?').all(alunoId) as unknown as Mensalidade[];
-      assertFinanceiroRegular(mensalidades, alunoId);
+      if (!aluno!.bolsista) assertFinanceiroRegular(mensalidades, alunoId);
       let row = this.db.prepare('SELECT * FROM CheckinAula WHERE aulaId=? AND alunoId=?').get(aulaId, alunoId) as unknown as CheckinAula | undefined;
       if (!row) {
         if (this.db.prepare('SELECT id FROM PresencaAula WHERE aulaId=? AND alunoId=?').get(aulaId, alunoId)) throw new HttpError(409, 'Esta aula já foi avaliada pelo responsável.');
         const contexto = this.contextoPlano(alunoId);
         assertDebitosEmDia(contexto.debitos ?? [], alunoId);
         const adicional = contexto.debitos?.some(item => item.aulaId === aulaId && adicionalAtivo(item));
-        if (!adicional) { assertSaldoMensal(saldoMensal(aluno!, contexto.aulas, contexto.checkins, undefined, contexto.debitos)); assertCotaCheckin(contexto, alunoId, aulaId); }
+        if (!adicional) {
+          assertSaldoMensal(saldoMensal(aluno!, contexto.aulas, contexto.checkins, aula.dataAula, contexto.debitos));
+          assertCotaCheckin(contexto, alunoId, aula);
+        }
         row = { id: randomUUID(), aulaId, alunoId, nome: aluno!.nome, criadoEm: timestamp };
         this.insertRow('CheckinAula', row);
         this.sincronizarSaldoMensal(alunoId);
       }
       this.db.exec('COMMIT'); return row;
+    } catch (error) { this.db.exec('ROLLBACK'); throw error; }
+  }
+  async cancelCheckin(aulaId: string, alunoId: string, checkinId: string, ator: Pick<UsuarioView, 'id'|'perfil'>) {
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      const aula = this.db.prepare('SELECT * FROM Aula WHERE id=?').get(aulaId) as unknown as Aula | undefined;
+      const aluno = this.db.prepare('SELECT * FROM Aluno WHERE id=?').get(alunoId) as unknown as Aluno | undefined;
+      validateCheckin(aula, aluno);
+      const vinculos = this.db.prepare('SELECT * FROM ResponsavelAluno WHERE alunoId=?').all(alunoId) as unknown as ResponsavelAluno[];
+      assertAcessoPortal(aluno!, vinculos, ator, true);
+      const checkin = this.db.prepare('SELECT id FROM CheckinAula WHERE id=? AND aulaId=? AND alunoId=?').get(checkinId, aulaId, alunoId);
+      if (checkin) {
+        if (this.db.prepare('SELECT id FROM PresencaAula WHERE aulaId=? AND alunoId=?').get(aulaId, alunoId)) {
+          throw new HttpError(409, 'O professor já marcou a chamada desta aula.');
+        }
+        this.db.prepare('DELETE FROM CheckinAula WHERE id=?').run(checkinId);
+        this.sincronizarSaldoMensal(alunoId);
+      }
+      this.db.exec('COMMIT');
     } catch (error) { this.db.exec('ROLLBACK'); throw error; }
   }
   async removeCheckin(aulaId: string, alunoId: string, timestamp: string) {
@@ -458,7 +521,7 @@ export class SqliteRepository implements Repository {
       assertAcessoPortal(aluno, this.db.prepare('SELECT * FROM ResponsavelAluno WHERE alunoId=?').all(alunoId) as unknown as ResponsavelAluno[], ator);
       const existing = this.db.prepare('SELECT * FROM DebitoAula WHERE alunoId=? AND aulaId=?').get(alunoId,aulaId) as unknown as DebitoAula | undefined;
       if (existing) { if (!adicionalAtivo(existing)) throw new HttpError(409, 'A reserva desta aula foi cancelada.'); this.db.exec('COMMIT'); return existing; }
-      assertFinanceiroRegular(this.db.prepare('SELECT * FROM Mensalidade WHERE alunoId=?').all(alunoId) as unknown as Mensalidade[],alunoId);
+      if (!aluno.bolsista) assertFinanceiroRegular(this.db.prepare('SELECT * FROM Mensalidade WHERE alunoId=?').all(alunoId) as unknown as Mensalidade[],alunoId);
       if (this.db.prepare('SELECT id FROM PresencaAula WHERE alunoId=? AND aulaId=?').get(alunoId,aulaId)) throw new HttpError(409,'Esta aula já foi avaliada pelo responsável.');
       const contexto = this.contextoPlano(alunoId), aula = this.db.prepare('SELECT * FROM Aula WHERE id=?').get(aulaId) as unknown as Aula | undefined;
       const config = this.db.prepare("SELECT * FROM ConfiguracaoAcademia WHERE id='principal'").get() as unknown as ConfiguracaoAcademia | undefined;
@@ -483,7 +546,7 @@ export class SqliteRepository implements Repository {
     try {
       const aula = this.db.prepare('SELECT * FROM Aula WHERE id=?').get(aulaId) as unknown as Aula | undefined;
       const aluno = this.db.prepare('SELECT * FROM Aluno WHERE id=?').get(alunoId) as unknown as Aluno | undefined;
-      validateCheckin(aula, aluno);
+      validateCheckin(aula, aluno, { somenteNoDia: true });
       const old = this.db.prepare('SELECT * FROM LiberacaoAula WHERE aulaId=? AND alunoId=?').get(aulaId, alunoId) as unknown as LiberacaoAula | undefined;
       if (old) { this.db.exec('COMMIT'); return old; }
       assertPodeLiberar(this.contextoPlano(alunoId), alunoId, aulaId);
@@ -587,7 +650,7 @@ export class SqliteRepository implements Repository {
     try {
       const old=this.db.prepare('SELECT * FROM Aluno WHERE id=?').get(aluno.id) as unknown as Aluno | undefined;
       if(!create&&!old)throw new HttpError(404,'Aluno não encontrado.');
-      const dados=create?aluno:{...aluno,faixa:old!.faixa,faixaId:old!.faixaId,grauId:old!.grauId};
+      const dados=create?aluno:{...aluno,bolsista:aluno.bolsista??Boolean(old!.bolsista),faixa:old!.faixa,faixaId:old!.faixaId,grauId:old!.grauId};
       const row={...dados,...graduacaoValida(dados,this.db.prepare('SELECT * FROM FaixaGraduacao').all() as unknown as FaixaGraduacao[],this.db.prepare('SELECT * FROM GrauFaixa').all() as unknown as GrauFaixa[],old)};
       if(create)this.insertRow('Aluno',row);
       else {const keys=columns.Aluno.filter(k=>k!=='id'&&k in row),data=row as unknown as Record<string,unknown>;this.db.prepare('UPDATE Aluno SET '+keys.map(k=>'"'+k+'"=?').join(',')+' WHERE id=?').run(...keys.map(k=>typeof data[k]==='boolean'?Number(data[k]):data[k]) as (string|number|null)[],row.id);}
@@ -663,6 +726,18 @@ export class PrismaRepository implements Repository {
   async get<K extends Table>(table: K, id: string) { return limparSaldoNulo(await this.delegate(table).findUnique({ where: { id } }) as Tables[K] | null); }
   async insert<K extends Table>(table: K, row: Tables[K]) { return limparSaldoNulo(await this.delegate(table).create({ data: row }) as Tables[K]); }
   async update<K extends Table>(table: K, id: string, row: Partial<Tables[K]>) { return limparSaldoNulo(await this.delegate(table).update({ where: { id }, data: row }) as Tables[K]); }
+  async salvarMensalidade(alteracao: AlteracaoMensalidade) {
+    return this.client.$transaction(async client => {
+      const atual = alteracao.tipo === 'criar' ? undefined : (await client.$queryRaw<Mensalidade[]>`SELECT * FROM "Mensalidade" WHERE id=${alteracao.id}::uuid FOR UPDATE`)[0];
+      if (alteracao.tipo !== 'criar' && !atual) throw new HttpError(404, 'Registro não encontrado.');
+      const dados = alteracao.tipo === 'criar' ? alteracao.registro : alteracao.dados;
+      const alunoId = 'alunoId' in dados ? dados.alunoId : atual!.alunoId;
+      const [aluno] = await client.$queryRaw<Aluno[]>`SELECT bolsista, "dataMatricula" FROM "Aluno" WHERE id=${alunoId}::uuid FOR UPDATE`;
+      validarMensalidade(aluno, 'competencia' in dados ? dados.competencia : undefined);
+      return alteracao.tipo === 'criar' ? client.mensalidade.create({ data: alteracao.registro })
+        : client.mensalidade.update({ where: { id: alteracao.id }, data: alteracao.dados });
+    });
+  }
   async remove(table: Table, id: string) {
     if (table === 'Sessao') { await this.client.sessao.deleteMany({ where: { id } }); return; }
     await this.delegate(table).delete({ where: { id } });
@@ -689,6 +764,19 @@ export class PrismaRepository implements Repository {
       await client.aula.create({ data: aula });
       await client.aulaProfessor.create({ data: { id: randomUUID(), aulaId: aula.id, nome: aula.professor, ordem: 0 } });
       if (alunos.length) await client.aulaAlunoPrevisto.createMany({ data: alunos });
+    });
+  }
+  async deleteAulaPersonalizada(id: string) {
+    await this.client.$transaction(async client => {
+      await client.$queryRaw`SELECT id FROM "Aula" WHERE id=${id}::uuid FOR UPDATE`;
+      const aula = await client.aula.findUnique({ where: { id }, select: {
+        origem: true, _count: { select: { chamada: true, checkins: true, liberacoes: true, debitos: true } },
+      } });
+      if (!aula) throw new HttpError(404, 'Aula não encontrada.');
+      if (aula.origem !== 'extra') throw new HttpError(409, 'Aulas da grade devem ser canceladas na agenda.');
+      if (Object.values(aula._count).some(Boolean)) throw new HttpError(409, 'Esta aula já tem registros de participação ou cobrança. Use o cancelamento quando estiver disponível.');
+      await client.aulaAlunoPrevisto.deleteMany({ where: { aulaId: id } });
+      await client.aula.delete({ where: { id } });
     });
   }
   async saveProfessoresAula(aulaId: string, nomes: string[]) {
@@ -758,7 +846,7 @@ export class PrismaRepository implements Repository {
     return this.client.$transaction(async client => {
       const usuario=await client.usuario.findUnique({where:{id}});
       if(!usuario||!usuarioHabilitado(usuario as Usuario,await client.aluno.findMany() as Aluno[],await client.responsavelAluno.findMany() as ResponsavelAluno[]))return false;
-      const result = await client.usuario.updateMany({ where: { id, conviteHash, conviteExpiraEm: { gt: timestamp } }, data: { senhaHash, conviteHash: null, conviteExpiraEm: null } });
+      const result = await client.usuario.updateMany({ where: { id, senhaHash: null, conviteHash, conviteExpiraEm: { gt: timestamp } }, data: { senhaHash, conviteHash: null, conviteExpiraEm: null } });
       if (result.count) await client.sessao.deleteMany({ where: { usuarioId: id } });
       return result.count === 1;
     });
@@ -800,17 +888,34 @@ export class PrismaRepository implements Repository {
       const [aluno] = await client.$queryRaw<Aluno[]>`SELECT * FROM "Aluno" WHERE id=${alunoId}::uuid FOR UPDATE`;
       validateCheckin(aula, aluno);
       assertAcessoPortal(aluno, await client.responsavelAluno.findMany({where:{alunoId}}) as ResponsavelAluno[], ator, true);
-      assertFinanceiroRegular(await client.mensalidade.findMany({ where: { alunoId } }), alunoId);
+      if (!aluno!.bolsista) assertFinanceiroRegular(await client.mensalidade.findMany({ where: { alunoId } }), alunoId);
       const existing = await client.checkinAula.findUnique({ where: { aulaId_alunoId: { aulaId, alunoId } } });
       if (existing) return existing;
       if (await client.presencaAula.findUnique({ where: { aulaId_alunoId: { aulaId, alunoId } } })) throw new HttpError(409, 'Esta aula já foi avaliada pelo responsável.');
       const contexto = await contextoPlanoPrisma(client, alunoId);
       assertDebitosEmDia(contexto.debitos ?? [],alunoId);
       const adicional = contexto.debitos?.some(item => item.aulaId === aulaId && adicionalAtivo(item));
-      if (!adicional) { assertSaldoMensal(saldoMensal(aluno, contexto.aulas, contexto.checkins, undefined, contexto.debitos)); assertCotaCheckin(contexto, alunoId, aulaId); }
+      if (!adicional) {
+        assertSaldoMensal(saldoMensal(aluno, contexto.aulas, contexto.checkins, aula.dataAula, contexto.debitos));
+        assertCotaCheckin(contexto, alunoId, aula);
+      }
       const checkin = await client.checkinAula.create({ data: { id: randomUUID(), aulaId, alunoId, nome: aluno.nome, criadoEm: timestamp } });
       await sincronizarSaldoPrisma(client, alunoId);
       return checkin;
+    });
+  }
+  async cancelCheckin(aulaId: string, alunoId: string, checkinId: string, ator: Pick<UsuarioView, 'id'|'perfil'>) {
+    await this.client.$transaction(async client => {
+      const [aula] = await client.$queryRaw<Aula[]>`SELECT * FROM "Aula" WHERE id=${aulaId}::uuid FOR UPDATE`;
+      const [aluno] = await client.$queryRaw<Aluno[]>`SELECT * FROM "Aluno" WHERE id=${alunoId}::uuid FOR UPDATE`;
+      validateCheckin(aula, aluno);
+      assertAcessoPortal(aluno, await client.responsavelAluno.findMany({ where: { alunoId } }) as ResponsavelAluno[], ator, true);
+      if (!await client.checkinAula.findUnique({ where: { id: checkinId, aulaId, alunoId } })) return;
+      if (await client.presencaAula.findUnique({ where: { aulaId_alunoId: { aulaId, alunoId } } })) {
+        throw new HttpError(409, 'O professor já marcou a chamada desta aula.');
+      }
+      await client.checkinAula.delete({ where: { id: checkinId } });
+      await sincronizarSaldoPrisma(client, alunoId);
     });
   }
   async removeCheckin(aulaId: string, alunoId: string, timestamp: string) {
@@ -853,7 +958,7 @@ export class PrismaRepository implements Repository {
       assertAcessoPortal(aluno, await client.responsavelAluno.findMany({where:{alunoId}}) as ResponsavelAluno[], ator);
       const existing = await client.debitoAula.findUnique({where:{alunoId_aulaId:{alunoId,aulaId}}});
       if (existing) {if(!adicionalAtivo(existing as DebitoAula))throw new HttpError(409,'A reserva desta aula foi cancelada.');return existing as DebitoAula;}
-      assertFinanceiroRegular(await client.mensalidade.findMany({where:{alunoId}}),alunoId);
+      if (!aluno.bolsista) assertFinanceiroRegular(await client.mensalidade.findMany({where:{alunoId}}),alunoId);
       if(await client.presencaAula.findUnique({where:{aulaId_alunoId:{aulaId,alunoId}}}))throw new HttpError(409,'Esta aula já foi avaliada pelo responsável.');
       const contexto = await contextoPlanoPrisma(client,alunoId), config = await client.configuracaoAcademia.findUnique({where:{id:'principal'}});
       const debito = novoDebito(aluno,aula,contexto.aulas,contexto.checkins,contexto.debitos ?? [],config ?? condicoesPadrao,aceite,timestamp);
@@ -874,7 +979,7 @@ export class PrismaRepository implements Repository {
     return this.client.$transaction(async client => {
       const [aula] = await client.$queryRaw<Aula[]>`SELECT * FROM "Aula" WHERE id=${aulaId}::uuid FOR UPDATE`;
       const [aluno] = await client.$queryRaw<Aluno[]>`SELECT * FROM "Aluno" WHERE id=${alunoId}::uuid FOR UPDATE`;
-      validateCheckin(aula, aluno);
+      validateCheckin(aula, aluno, { somenteNoDia: true });
       const old = await client.liberacaoAula.findUnique({ where: { aulaId_alunoId: { aulaId, alunoId } } });
       if (old) return old;
       assertPodeLiberar(await contextoPlanoPrisma(client, alunoId), alunoId, aulaId);
@@ -967,7 +1072,7 @@ export class PrismaRepository implements Repository {
       const [old]=await client.$queryRaw<Aluno[]>`SELECT * FROM "Aluno" WHERE id=${aluno.id}::uuid FOR UPDATE`;
       if(!create&&!old)throw new HttpError(404,'Aluno não encontrado.');
       const [faixas,graus]=await Promise.all([client.faixaGraduacao.findMany(),client.grauFaixa.findMany()]);
-      const dados=create?aluno:{...aluno,faixa:old!.faixa,faixaId:old!.faixaId,grauId:old!.grauId};const row={...dados,...graduacaoValida(dados,faixas as FaixaGraduacao[],graus as GrauFaixa[],old)};
+      const dados=create?aluno:{...aluno,bolsista:aluno.bolsista??old!.bolsista,faixa:old!.faixa,faixaId:old!.faixaId,grauId:old!.grauId};const row={...dados,...graduacaoValida(dados,faixas as FaixaGraduacao[],graus as GrauFaixa[],old)};
       return limparSaldoNulo(await (create?client.aluno.create({data:row}):client.aluno.update({where:{id:row.id},data:row})) as Aluno);
     });
   }

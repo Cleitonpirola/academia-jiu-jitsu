@@ -73,8 +73,11 @@ it('30 presenças por grau levam a 4 graus em 120 aulas e exigem confirmação d
     }
     const p=await f.get();assert.equal(p.aulasTotal,120);assert.equal(p.metaGrau,null);assert.equal(p.proximoGrau,null);await f.promover('grau',409);assert.equal(p.metaFaixa!.apto,true);assert.equal((await f.repo.get('Aluno',f.aluno.id))!.faixa,'Branca');
     const r=await f.promover('faixa');assert.equal(r.body.faixa,'Azul');assert.equal(r.body.aulasTotal,0);assert.equal(r.body.historico.filter((e:{tipo:string})=>e.tipo==='grau').length,4);
+    const [periodo] = r.body.historicoFaixas;
+    assert.equal(periodo.faixa,'Branca');assert.equal(periodo.aulasTotal,120);
     const antiga=(await f.repo.list('PresencaAula'))[0];await f.repo.removePresencaAula(antiga.aulaId,f.aluno.id);await f.repo.savePresencaAula(antiga.aulaId,f.aluno.id,true,f.now);assert.equal((await f.get()).aulasTotal,0,'recriar marcação antiga não reutiliza a aula na nova faixa');
     await f.marcar(1);assert.equal((await f.get()).aulasTotal,1,'presença nova do mesmo dia conta sem recontar as 120 usadas');
+    assert.deepEqual((await f.get()).historicoFaixas[0],periodo);
   }finally{await f.repo.close();}
 });
 it('check-in, ausência, aula cancelada e registros anteriores ao início não contam como presença de graduação',async()=>{
@@ -151,6 +154,25 @@ it('ajuste valida data real e preserva motivos antigos quando informados; cadast
     assert.equal((await f.get()).aulasTotal,30);assert.equal((await f.get()).historico.length,2);
     await request(f.app).delete('/api/alunos/'+f.aluno.id).expect(409);
   }finally{await f.repo.close();}
+});
+it('preserva a data, o grau e as aulas anteriores ao corrigir a mesma faixa', async () => {
+  const f = await fixture();
+  try {
+    await f.setup(1, { aulasAnteriores: 12 }).expect(200);
+    await f.marcar(1);
+    const antes = await f.get();
+    await f.setup(2, { dataInicioFaixa: today(), aulasAnteriores: 0 }).expect(200);
+    const depois = await f.get();
+    const registro = depois.historicoFaixas.find(item => item.aulasTotal === 13)!;
+    assert.ok(registro);
+    assert.equal(registro.grau, antes.grauAtual);
+    assert.equal(registro.dataInicio, antes.estado!.dataInicioFaixa);
+    assert.equal(registro.aulasAnteriores, 12);
+    assert.equal(registro.aulasConfirmadas, 1);
+    assert.equal(depois.aulasAnteriores, 0);
+  } finally {
+    await f.repo.close();
+  }
 });
 it('grau não informado não é tratado como confirmação de zero graus para liberar promoção',async()=>{
   const f=await fixture({aulasPorGrau:1});try{

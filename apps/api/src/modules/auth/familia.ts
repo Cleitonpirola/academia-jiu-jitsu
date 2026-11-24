@@ -76,6 +76,7 @@ export function planejarFamilia(estado: EstadoFamilia, acao: AcaoFamiliar): Plan
     const vinculo=meusVinculos.find(v=>v.tipoVinculo==='responsavel');
     const usuario=estado.usuarios.find(u=>u.id===vinculo?.usuarioId&&u.perfil==='responsavel');
     if(!usuario)throw new HttpError(400,'Cadastre o responsável primeiro.');
+    if(usuario.senhaHash)throw new HttpError(409,'O acesso já está ativo. Use Esqueci minha senha na tela de login.');
     gravar('Usuario',{...usuario,conviteHash:acao.conviteHash,conviteExpiraEm:acao.expiraEm},true);
     plano.usuarioId=usuario.id; evento('convite_responsavel',{responsavelId:usuario.id});
   } else {
@@ -84,9 +85,17 @@ export function planejarFamilia(estado: EstadoFamilia, acao: AcaoFamiliar): Plan
     if(!input.maioridade&&!menorDeIdade(aluno))throw new HttpError(409,'Use a transferência por maioridade para este aluno.');
     if(aluno.situacao!=='ativo')throw new HttpError(409,'Ative o cadastro antes de preparar o acesso próprio.');
     if(estado.usuarios.some(u=>u.email===input.email&&u.id!==proprio?.id)||estado.alunos.some(a=>a.email===input.email&&a.id!==aluno.id))throw new HttpError(409,'Este e-mail já pertence a outro cadastro.');
+    const manterContaAtiva = original.acessoPrincipal !== 'responsavel' && Boolean(proprio?.senhaHash);
+    if (manterContaAtiva && (input.email !== proprio!.email || input.telefone !== original.telefone)) {
+      throw new HttpError(409, 'O acesso próprio já está ativo. O aluno pode editar seus dados em Meu perfil.');
+    }
     aluno.email=input.email;aluno.telefone=input.telefone;aluno.possuiCelular=true;aluno.acessoPrincipal='aluno';
-    const usuario={...(proprio??novoUsuario(aluno.nome,input.email,'aluno')),nome:aluno.nome,email:input.email,senhaHash:null,conviteHash:acao.conviteHash,conviteExpiraEm:acao.expiraEm};
-    gravar('Usuario',usuario,Boolean(proprio));plano.revogarSessoes.push(usuario.id);plano.usuarioId=usuario.id;
+    if (manterContaAtiva) {
+      plano.usuarioId = proprio!.id;
+    } else {
+      const usuario={...(proprio??novoUsuario(aluno.nome,input.email,'aluno')),nome:aluno.nome,email:input.email,senhaHash:null,conviteHash:acao.conviteHash,conviteExpiraEm:acao.expiraEm};
+      gravar('Usuario',usuario,Boolean(proprio));plano.revogarSessoes.push(usuario.id);plano.usuarioId=usuario.id;
+    }
     if(input.maioridade)aluno.responsabilidadeTransferidaEm=acao.timestamp;
     for(const v of meusVinculos)if(v.tipoVinculo!=='arquivado')gravar('ResponsavelAluno',{...v,tipoVinculo:input.manterContato?'contato':'arquivado',atualizadoEm:acao.timestamp},true);
     evento(input.maioridade?'transferencia_maioridade':'acesso_proprio_ativado',{manterContato:input.manterContato});

@@ -124,7 +124,7 @@ describe('Turmas, grade fixa e vínculos', () => {
     assert.deepEqual(remaining.body, second.body);
     await request(app).delete('/api/turmas/' + second.body.id).expect(204);
     assert.equal((await repo.list('Turma')).length, 0); assert.equal((await repo.list('HorarioTurma')).length, 0); assert.equal((await repo.list('AlunoTurma')).length, 0);
-    assert.deepEqual(await repo.get('Aluno', aluno.id), aluno); assert.deepEqual(await repo.get('Mensalidade', bill.id), bill); assert.deepEqual(await repo.get('Presenca', attendance.id), attendance);
+    assert.deepEqual(await repo.get('Aluno', aluno.id), { ...aluno, bolsista: false }); assert.deepEqual(await repo.get('Mensalidade', bill.id), bill); assert.deepEqual(await repo.get('Presenca', attendance.id), attendance);
     const recreated = await request(app).post('/api/turmas').send(input).expect(201);
     assert.notEqual(recreated.body.id, first.body.id); assert.deepEqual(recreated.body.alunoIds, []);
   });

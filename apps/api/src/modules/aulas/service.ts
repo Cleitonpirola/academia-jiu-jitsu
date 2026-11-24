@@ -3,7 +3,11 @@ import { z } from 'zod';
 import type { Aula, AulaAlunoPrevisto, AulaView, PresencaAula, Turma, CheckinAula, AulaProfessor } from '@tatame/shared';
 import type { Repository } from '../../repository.js';
 import { HttpError } from '../../http-error.js';
-import { aulaGradeSchema, cancelarAulaSchema, filtroAulasSchema, nomeAulaSchema, professoresAulaSchema } from './schema.js';
+import { aulaGradeSchema, aulaPersonalizadaSchema, cancelarAulaSchema, filtroAulasSchema, nomeAulaSchema, professoresAulaSchema } from './schema.js';
+
+function conflitoUnicidade(error: unknown) {
+  return (error as { code?: string })?.code === 'P2002' || /UNIQUE constraint failed/.test(String(error));
+}
 
 export function createAulasService(repo: Repository) {
   const find = async (id: string) => {
@@ -28,12 +32,12 @@ export function createAulasService(repo: Repository) {
     if (turma.situacao !== 'ativo') throw new HttpError(400, 'Ative a turma antes de criar uma nova aula vinculada a ela.');
     return turma;
   };
-  const create = async (fields: Pick<Aula, 'titulo' | 'dataAula' | 'horaInicio' | 'horaFim' | 'professor' | 'origem' | 'origemHorarioId'>, turma: Turma | null) => {
-    const aula: Aula = { ...fields, id: randomUUID(), turmaId: turma?.id ?? null, turmaNome: turma?.nome ?? null,
+  const create = async (fields: Pick<Aula, 'titulo' | 'dataAula' | 'horaInicio' | 'horaFim' | 'professor' | 'origem' | 'origemHorarioId'>, turma: Turma, id: string = randomUUID()) => {
+    const aula: Aula = { ...fields, id, turmaId: turma.id, turmaNome: turma.nome,
       situacao: 'agendada', motivoCancelamento: null, canceladaEm: null, criadoEm: new Date().toISOString(),
     };
-    const [students, links] = turma ? await Promise.all([repo.list('Aluno'), repo.list('AlunoTurma')]) : [[], []];
-    const expectedIds = new Set(links.filter(link => link.turmaId === turma?.id).map(link => link.alunoId));
+    const [students, links] = await Promise.all([repo.list('Aluno'), repo.list('AlunoTurma')]);
+    const expectedIds = new Set(links.filter(link => link.turmaId === turma.id).map(link => link.alunoId));
     const alunos = students.filter(student => student.situacao === 'ativo' && expectedIds.has(student.id))
       .map(student => ({ id: randomUUID(), aulaId: aula.id, alunoId: student.id, nome: student.nome }));
     await repo.createAula(aula, alunos);
@@ -76,12 +80,42 @@ export function createAulasService(repo: Repository) {
         return { aula, created: true };
       } catch (error) {
         // Duas requisições podem passar pela consulta inicial. A unicidade do banco decide.
-        if (String((error as { code?: string }).code) === 'P2002' || /UNIQUE constraint failed/.test(String((error as Error).message))) {
+        if (conflitoUnicidade(error)) {
           const concurrent = await fromSlot(horarioId, dataAula);
           if (concurrent) return { aula: await detail(concurrent.id), created: false };
         }
         throw error;
       }
+    },
+    async createPersonalizada(body: unknown) {
+      const { id, turmaId, ...horario } = aulaPersonalizadaSchema.parse(body);
+      const consultarExistente = async () => {
+        const existente = await repo.get('Aula', id);
+        if (!existente) return null;
+        if (existente.origem !== 'extra' || existente.turmaId !== turmaId ||
+            existente.dataAula !== horario.dataAula || existente.horaInicio !== horario.horaInicio ||
+            existente.horaFim !== horario.horaFim || existente.titulo !== horario.titulo) {
+          throw new HttpError(409, 'Este identificador já pertence a outro encontro. Reabra o formulário.');
+        }
+        return { aula: await detail(id), created: false };
+      };
+      const existente = await consultarExistente();
+      if (existente) return existente;
+      const turma = await activeTurma(turmaId);
+      try {
+        const aula = await create({ ...horario, professor: turma.professor, origem: 'extra', origemHorarioId: null }, turma, id);
+        return { aula, created: true };
+      } catch (error) {
+        if (conflitoUnicidade(error)) {
+          const concorrente = await consultarExistente();
+          if (concorrente) return concorrente;
+        }
+        throw error;
+      }
+    },
+    async deletePersonalizada(id: string) {
+      if (!z.string().uuid().safeParse(id).success) throw new HttpError(404, 'Aula não encontrada.');
+      await repo.deleteAulaPersonalizada(id);
     },
     async cancel(id: string, body: unknown) {
       const { motivo } = cancelarAulaSchema.parse(body);

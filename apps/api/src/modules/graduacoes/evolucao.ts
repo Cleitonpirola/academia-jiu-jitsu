@@ -1,7 +1,7 @@
 import { limiteGrausPadrao, limiteGrausRegistro } from '@tatame/shared';
 import { randomUUID, createHash } from 'node:crypto';
 import { z } from 'zod';
-import type { Aluno, Aula, PresencaAula, FaixaGraduacao, GrauFaixa, RegraGraduacao, EstadoGraduacao, EventoGraduacao, ProgressoGraduacao, MetaGraduacao, ResponsavelAluno } from '@tatame/shared';
+import type { Aluno, Aula, PresencaAula, FaixaGraduacao, GrauFaixa, RegraGraduacao, EstadoGraduacao, EventoGraduacao, ProgressoGraduacao, MetaGraduacao, RegistroHistoricoFaixa, ResponsavelAluno } from '@tatame/shared';
 import type { Usuario } from '../auth/models.js';
 import type { Repository } from '../../repository.js';
 import { isDate, today } from '../../domain.js';
@@ -22,6 +22,46 @@ export async function contextoEvolucao(repo:Pick<Repository,'list'>):Promise<Con
   return {alunos,faixas,graus,regras,estados,eventos,aulas,chamada,usuarios,vinculos};
 }
 export const assinaturaRegra=(regra:RegraGraduacao|null)=>regra?createHash('sha256').update(JSON.stringify(['aulas-graus4-v1',regra.faixaId,regra.aulasPorGrau,regra.grausParaFaixa,regra.proximaFaixaId,regra.atualizadoEm])).digest('hex'):null;
+
+const snapshotHistorico = z.object({
+  estadoAnterior: z.object({
+    dataInicio: z.string().refine(isDate),
+    aulasConfirmadas: z.number().int().nonnegative(),
+    aulasAnteriores: z.number().int().nonnegative(),
+  }),
+});
+
+function lerEstadoAnterior(snapshot: string | null) {
+  if (!snapshot) return null;
+  try {
+    const resultado = snapshotHistorico.safeParse(JSON.parse(snapshot));
+    return resultado.success ? resultado.data.estadoAnterior : null;
+  } catch {
+    return null;
+  }
+}
+
+function projetarHistoricoFaixas(eventos: EventoGraduacao[]): RegistroHistoricoFaixa[] {
+  const historico: RegistroHistoricoFaixa[] = [];
+  for (const evento of eventos) {
+    if (evento.tipo !== 'faixa' && evento.tipo !== 'ajuste') continue;
+    const anterior = lerEstadoAnterior(evento.regraSnapshot);
+    if (!anterior && evento.tipo === 'ajuste' && evento.aulasConsideradas === 0) continue;
+    historico.push({
+      eventoId: evento.id,
+      tipo: evento.tipo,
+      faixa: evento.faixaAnterior,
+      grau: evento.grauAnterior,
+      registradoEm: evento.criadoEm,
+      aulasTotal: evento.aulasConsideradas,
+      dataInicio: anterior?.dataInicio ?? null,
+      aulasConfirmadas: anterior?.aulasConfirmadas ?? null,
+      aulasAnteriores: anterior?.aulasAnteriores ?? null,
+    });
+  }
+  return historico;
+}
+
 export function progressoGraduacao(ctx:ContextoEvolucao,alunoId:string,referencia=today()):ProgressoGraduacao {
   const aluno=ctx.alunos.find(a=>a.id===alunoId);if(!aluno)throw new HttpError(404,'Aluno não encontrado.');
   const faixa=ctx.faixas.find(f=>f.id===aluno.faixaId||!aluno.faixaId&&f.nome===aluno.faixa);
@@ -45,7 +85,7 @@ export function progressoGraduacao(ctx:ContextoEvolucao,alunoId:string,referenci
   const destino=ctx.faixas.find(f=>f.id===regra?.proximaFaixaId&&f.situacao==='ativo'),metaFaixa=destino&&regra?meta(regra.grausParaFaixa):null;
   if(metaFaixa&&((grauAtual??0)<regra!.grausParaFaixa||grauAtual===null&&regra!.grausParaFaixa>0))metaFaixa.apto=false;
   const historico=ctx.eventos.filter(e=>e.alunoId===alunoId).sort((a,b)=>b.criadoEm.localeCompare(a.criadoEm)||b.id.localeCompare(a.id));
-  return {alunoId,nome:aluno.nome,faixa:aluno.faixa,grauAtual,estado,regra,regraAssinatura:assinaturaRegra(regra),aulasConfirmadas,aulasAnteriores,aulasTotal,proximoGrau,metaGrau,proximaFaixa:destino?.nome??null,metaFaixa,solicitacaoPendente:historico.some(e=>e.tipo==='solicitacao'&&e.versaoEstado===estado?.versao),historico};
+  return {alunoId,nome:aluno.nome,faixa:aluno.faixa,grauAtual,estado,regra,regraAssinatura:assinaturaRegra(regra),aulasConfirmadas,aulasAnteriores,aulasTotal,proximoGrau,metaGrau,proximaFaixa:destino?.nome??null,metaFaixa,solicitacaoPendente:historico.some(e=>e.tipo==='solicitacao'&&e.versaoEstado===estado?.versao),historico,historicoFaixas:projetarHistoricoFaixas(historico)};
 }
 export function planejarRegra(ctx:ContextoEvolucao,faixaId:string,body:unknown,timestamp:string) {
   const input=regraEvolucaoSchema.parse(body),faixa=ctx.faixas.find(f=>f.id===faixaId);
@@ -103,6 +143,9 @@ export function planejarEvolucao(ctx:ContextoEvolucao,alunoId:string,autorId:str
       estado={...old,faixaId:destino.id,dataInicioFaixa:today(),aulasAnteriores:0,marcoAulas:JSON.stringify(ctx.chamada.filter(p=>p.alunoId===alunoId&&Boolean(p.presente)).map(p=>p.aulaId)),versao:old.versao+1,atualizadoEm:timestamp};motivo='Nova faixa confirmada pelo mestre após cumprir os critérios.';
     }
   }
-  const evento:EventoGraduacao={id:randomUUID(),alunoId,tipo:input.tipo,faixaAnterior:aluno.faixa,faixaNova:novo.faixa,grauAnterior:antes.grauAtual,grauNovo:novoGrau?.numero??ctx.graus.find(g=>g.id===novo.grauId)?.numero??null,aulasConsideradas:antes.aulasTotal,motivo,autorId,versaoEstado:input.tipo==='solicitacao'?old!.versao:estado!.versao,regraSnapshot:antes.regra?JSON.stringify(antes.regra):null,criadoEm:timestamp};
+  const snapshot = old && (input.tipo === 'ajuste' || input.tipo === 'faixa')
+    ? { ...antes.regra, estadoAnterior: { dataInicio: old.dataInicioFaixa, aulasConfirmadas: antes.aulasConfirmadas, aulasAnteriores: old.aulasAnteriores } }
+    : antes.regra;
+  const evento:EventoGraduacao={id:randomUUID(),alunoId,tipo:input.tipo,faixaAnterior:aluno.faixa,faixaNova:novo.faixa,grauAnterior:antes.grauAtual,grauNovo:novoGrau?.numero??ctx.graus.find(g=>g.id===novo.grauId)?.numero??null,aulasConsideradas:antes.aulasTotal,motivo,autorId,versaoEstado:input.tipo==='solicitacao'?old!.versao:estado!.versao,regraSnapshot:snapshot?JSON.stringify(snapshot):null,criadoEm:timestamp};
   return {aluno:input.tipo==='solicitacao'?null:novo,estado:input.tipo==='solicitacao'?null:estado,evento,novoGrau};
 }

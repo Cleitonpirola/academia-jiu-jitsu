@@ -1,5 +1,6 @@
 import {equipeRouter,fotoPropriaRouter} from './modules/equipe/routes.js';
 import {tecnicasAdminRouter} from './modules/tecnicas/routes.js';
+import { configurarVideosDrive, type VideosDrive } from './modules/tecnicas/drive.js';
 import {comunicadosEquipeRouter} from './modules/comunicados/routes.js';
 import { ordemFaixa } from '@tatame/shared';
 import { graduacoesRouter } from './modules/graduacoes/routes.js';
@@ -16,7 +17,7 @@ import { existsSync } from 'node:fs';
 import { z, ZodError } from 'zod';
 import OpenAI from 'openai';
 import type { Repository, Table } from './repository.js';
-import { alunoSchema, mensalidadeSchema, paymentSchema, presencaSchema, monthSchema, statusOf, dashboard, currentMonth } from './domain.js';
+import { alunoSchema, mensalidadeSchema, mensalidadePausada, paymentSchema, presencaSchema, monthSchema, statusOf, dashboard, currentMonth } from './domain.js';
 import { HttpError } from './http-error.js';
 import {configurarArquivos,type Arquivos} from './modules/arquivos/storage.js';
 import {arquivosRouter} from './modules/arquivos/routes.js';
@@ -29,10 +30,11 @@ import { portalRouter } from './modules/auth/portal.js';
 import { planosRouter } from './modules/planos/routes.js';
 import { debitosRouter } from './modules/planos/debitos-routes.js';
 const fold = (text: string) => text.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-export function createApp(repo: Repository, options: { apiKey?: string; analyticsUrl?: string; localAdmin?: boolean; serveFrontend?:boolean;arquivos?:Arquivos; emailRecuperacao?:EmailRecuperacao } = {}) {
+export function createApp(repo: Repository, options: { apiKey?: string; analyticsUrl?: string; localAdmin?: boolean; serveFrontend?:boolean;arquivos?:Arquivos; emailRecuperacao?:EmailRecuperacao; videosDrive?:VideosDrive } = {}) {
   const app = express();
   const arquivos=options.arquivos??configurarArquivos(process.env);
   app.locals.arquivos=arquivos;
+  app.locals.videosDrive = options.videosDrive ?? configurarVideosDrive(process.env);
   app.disable('x-powered-by'); app.use(helmet());
   const jsonNormal=express.json({limit:'32kb'}),jsonFoto=express.json({limit:'200kb'});
   app.use((req,res,next)=>(/^\/api\/(perfil\/foto|portal\/foto|responsavel\/[^/]+\/portal\/foto)$/.test(req.path)?jsonFoto:jsonNormal)(req,res,next));
@@ -95,7 +97,7 @@ export function createApp(repo: Repository, options: { apiKey?: string; analytic
     if(input.possuiCelular!==(aluno.possuiCelular??true))throw new HttpError(409,'Altere o acesso pela seção Responsável e acesso.');
     // Mudanças de identidade de uma conta existente passam pela transferência auditada.
     if(input.email!==aluno.email&&(await repo.list('Usuario')).some(u=>u.alunoId===aluno.id))throw new HttpError(409,'Para trocar o e-mail de acesso, use Ativar acesso próprio na ficha.');
-    res.json(await repo.saveCadastroAluno({...aluno,...input,email:input.email||aluno.email},false));
+    res.json(await repo.saveCadastroAluno({...aluno,...input,bolsista:input.bolsista,email:input.email||aluno.email},false));
   });
   app.delete('/api/alunos/:id',async(req,res)=>{
     await find('Aluno',req.params.id);
@@ -112,15 +114,14 @@ export function createApp(repo: Repository, options: { apiKey?: string; analytic
   });
   app.get('/api/mensalidades',async(req,res)=>{
     const [rows,alunos]=await Promise.all([repo.list('Mensalidade'),repo.list('Aluno')]); const byId=new Map(alunos.map(a=>[a.id,a]));
-    let result=rows.map(m=>({...m,alunoNome:byId.get(m.alunoId)?.nome || 'Aluno',faixa:byId.get(m.alunoId)?.faixa || 'Branca',status:statusOf(m)}));
+    let result=rows.map(m=>({...m,alunoNome:byId.get(m.alunoId)?.nome || 'Aluno',faixa:byId.get(m.alunoId)?.faixa || 'Branca',status:mensalidadePausada(m,byId.get(m.alunoId))?'pausada':statusOf(m)}));
     if(typeof req.query.alunoId==='string') result=result.filter(m=>m.alunoId===req.query.alunoId);
     if(typeof req.query.status==='string') result=result.filter(m=>m.status===req.query.status);
     res.json(result.sort((a,b)=>b.dataVencimento.localeCompare(a.dataVencimento)));
   });
-  const validBilling = async (body: unknown) => { const row=mensalidadeSchema.parse(body); const aluno=await repo.get('Aluno',row.alunoId); if(!aluno) throw new HttpError(400,'Selecione um aluno cadastrado.'); if(row.competencia<aluno.dataMatricula.slice(0,7)) throw new HttpError(400,'A competência deve ser posterior ou igual ao mês da matrícula.'); return row; };
-  app.post('/api/mensalidades',async(req,res)=>res.status(201).json(await repo.insert('Mensalidade',{...await validBilling(req.body),id:randomUUID(),criadoEm:new Date().toISOString()})));
-  app.put('/api/mensalidades/:id',async(req,res)=>{ await find('Mensalidade',req.params.id); res.json(await repo.update('Mensalidade',req.params.id,await validBilling(req.body))); });
-  app.patch('/api/mensalidades/:id/pagamento',async(req,res)=>{ await find('Mensalidade',req.params.id); res.json(await repo.update('Mensalidade',req.params.id,paymentSchema.parse(req.body))); });
+  app.post('/api/mensalidades',async(req,res)=>res.status(201).json(await repo.salvarMensalidade({ tipo:'criar', registro:{...mensalidadeSchema.parse(req.body),id:randomUUID(),criadoEm:new Date().toISOString()} })));
+  app.put('/api/mensalidades/:id',async(req,res)=>{ await find('Mensalidade',req.params.id); res.json(await repo.salvarMensalidade({ tipo:'editar', id:req.params.id, dados:mensalidadeSchema.parse(req.body) })); });
+  app.patch('/api/mensalidades/:id/pagamento',async(req,res)=>{ await find('Mensalidade',req.params.id); res.json(await repo.salvarMensalidade({ tipo:'pagar', id:req.params.id, dados:paymentSchema.parse(req.body) })); });
   app.get('/api/dashboard',async(req,res)=>{ const mes=monthSchema.parse(req.query.mes || currentMonth()); const [a,m]=await Promise.all([repo.list('Aluno'),repo.list('Mensalidade')]); res.json(dashboard(a,m,mes)); });
   app.get('/api/presencas',async(req,res)=>{
     const [p,a]=await Promise.all([repo.list('Presenca'),repo.list('Aluno')]);const byId=new Map(a.map(v=>[v.id,v.nome]));

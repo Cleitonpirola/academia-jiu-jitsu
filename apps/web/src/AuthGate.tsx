@@ -108,7 +108,7 @@ export default function AuthGate() {
       </form>}
       {state && !setup && !token && !recuperando && (state.recuperacaoDisponivel
         ? <><Button variant="ghost" disabled={busy} onClick={solicitarLink}>Esqueci minha senha</Button><p className="auth-help">Primeiro acesso? Peça à academia um link de acesso.</p></>
-        : <p className="auth-help">Primeiro acesso ou esqueceu a senha? Peça à academia um link de acesso.</p>)}
+        : <p className="auth-help">Primeiro acesso? Peça à academia um convite.</p>)}
       {(token || recuperando) && <Button variant="ghost" disabled={busy} onClick={voltar}>Voltar para o login</Button>}
       <div className="auth-trust"><ShieldCheck size={16}/>Cada pessoa acessa apenas sua área.</div>
     </section></main></div>;

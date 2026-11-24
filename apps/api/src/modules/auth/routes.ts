@@ -103,7 +103,7 @@ export function authModule(repo: Repository, options: { localAdmin?: boolean; em
     const hash = tokenHash(token);
     const user = (await repo.list('Usuario')).find(item => item.conviteHash === hash);
     const now = new Date().toISOString();
-    if (!user || !user.conviteExpiraEm || user.conviteExpiraEm <= now) throw new HttpError(400, 'Link inválido ou expirado. Solicite outro à academia.');
+    if (!user || user.senhaHash || !user.conviteExpiraEm || user.conviteExpiraEm <= now) throw new HttpError(400, 'Link inválido ou expirado. Para uma conta já ativa, use Esqueci minha senha.');
     const password = await hashPassword(senha);
     if (!await repo.activateUsuario(user.id, hash, password, new Date().toISOString())) throw new HttpError(400, 'Link inválido ou cadastro inativo. Solicite ajuda à academia.');
     res.json(await createSession(req, res, { ...user, senhaHash: password }));
@@ -145,17 +145,27 @@ export function authModule(repo: Repository, options: { localAdmin?: boolean; em
     if (res.locals.sessao) await repo.remove('Sessao', res.locals.sessao.id);
     res.clearCookie(COOKIE, cookieOptions); res.status(204).end();
   });
-  router.post('/alunos/:id/convite', requireLogin, requireAdmin, async (req, res) => {
-    const id = z.string().uuid().parse(req.params.id);
+  const obterAcessoAluno = async (param: unknown) => {
+    const id = z.string().uuid().parse(param);
     const aluno = await repo.get('Aluno', id);
-    if (!aluno || aluno.situacao !== 'ativo') throw new HttpError(400, 'Selecione um aluno ativo e cadastrado.');
+    if (!aluno) throw new HttpError(400, 'Selecione um aluno ativo e cadastrado.');
+    const usuario = (await repo.list('Usuario')).find(item => item.alunoId === id);
+    return { aluno, usuario };
+  };
+  router.get('/alunos/:id/convite', requireLogin, requireAdmin, async (req, res) => {
+    const { usuario } = await obterAcessoAluno(req.params.id);
+    res.json({ acessoAtivado: Boolean(usuario?.senhaHash) });
+  });
+  router.post('/alunos/:id/convite', requireLogin, requireAdmin, async (req, res) => {
+    const { aluno, usuario: existing } = await obterAcessoAluno(req.params.id);
+    if (aluno.situacao !== 'ativo') throw new HttpError(400, 'Selecione um aluno ativo e cadastrado.');
     if(aluno.acessoPrincipal==='responsavel'||!emailProprio(aluno.email))throw new HttpError(409,'O acesso está com o responsável. Use a seção Responsável e acesso na ficha do aluno.');
+    if (existing?.senhaHash) throw new HttpError(409, 'O acesso já está ativo. Use Esqueci minha senha na tela de login.');
     const token = newToken();
     const conviteExpiraEm = new Date(Date.now() + 24 * 3600_000).toISOString();
-    const existing = (await repo.list('Usuario')).find(item => item.alunoId === id);
     const fields = { conviteHash: tokenHash(token), conviteExpiraEm };
     if (existing) await repo.update('Usuario', existing.id, fields);
-    else await repo.insert('Usuario', { id: randomUUID(), alunoId: id, nome: aluno.nome, email: aluno.email, perfil: 'aluno', senhaHash: null, ...fields, criadoEm: new Date().toISOString() });
+    else await repo.insert('Usuario', { id: randomUUID(), alunoId: aluno.id, nome: aluno.nome, email: aluno.email, perfil: 'aluno', senhaHash: null, ...fields, criadoEm: new Date().toISOString() });
     res.status(201).json({ token, expiraEm: conviteExpiraEm, email: existing?.email ?? aluno.email });
   });
   return { router, identify, requireLogin, requireAdmin };

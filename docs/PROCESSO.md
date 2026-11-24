@@ -1,5 +1,11 @@
 # Processo
 
+## Consolidação autorizada para os testes da academia — 24/11/2026
+
+Após ser informado de que a prévia ainda não continha as funcionalidades locais pendentes, o usuário pediu **quero o sistema atualizado e commitadio**. O escopo passa a incluir o conjunto implementado do Tatame, sua documentação e publicação no endereço fixo de testes. O portfólio de outro trabalho, credenciais, bancos locais e dependências permanecem fora da seleção. A aprovação autoriza commit/push e a atualização desta prévia; não autoriza merge, release, mudança de proteção ou novas integrações pagas.
+
+Executados nesta rodada: build/typecheck, 306 testes TypeScript, 15 testes Python, três testes de configuração de homologação, dois testes de conexão Vercel e validação do schema Prisma, todos aprovados. Revisados agenda/cotas pela data da aula, cancelamento próprio, transações de cobrança e bolsa, preservação de graduação, primeiro acesso, instalação web e autorização do player. A migração aditiva de bolsa é necessária no banco brasileiro antes de encaminhar tráfego para a nova versão. Drive real ainda depende da conta/pasta; não houve nova implementação de Pix ou WhatsApp. A publicação e os testes externos serão registrados separadamente após a execução.
+
 ## Publicação protegida para acesso diário — 23/11/2026
 
 Usuário autorizou publicação para acessar diariamente com dois logins. Preparado pacote por allowlist do commit aprovado `18ce58e`, sem alterações pendentes; enviados 167 arquivos de código/configuração. Vercel criou deployment READY em Preview/gru1, com alias fixo e APP_ORIGIN. Conferidos os 167 hashes remotos. Banco brasileiro pausado foi retomado, com 20 migrações e dois usuários de avaliação ativos; credenciais anteriores preservadas. Sem migração, importação ou nova conta.
@@ -13,6 +19,14 @@ Após a apresentação do resultado e das pendências de Git, o usuário respond
 ## Aprovação do conjunto de comunicados — 22/11/2026
 
 Após a apresentação do histórico, da consulta administrativa e do recolhimento, o usuário respondeu **commite**. Autorizados commit e push desse conjunto. A seleção foi preparada a partir de `81fd7c6`, preservando as demais mudanças locais; vídeos/Pix, bolsistas, agenda e outras pendências ficaram fora. A versão selecionada foi conferida em uma cópia isolada, com seu próprio pacote compartilhado: build/typecheck e 295 testes TypeScript passaram. A primeira tentativa de vincular dependências foi bloqueada pelo ambiente; após corrigir o vínculo local, as verificações foram repetidas e passaram. As conferências de navegador anteriores usaram dados fictícios. Não houve nova validação externa de PostgreSQL nem autorização para publicação por este pedido.
+
+## Correção de terminologia do planejamento — 22/11/2026
+
+Por orientação do usuário, o aviso futuro de vídeo novo pertence a **Comunicados**. Corrigidos guia de técnicas, plano funcional e ponto de retomada, incluindo as âncoras internas. Somente documentação; diff conferido, sem build/testes ou commit/push.
+
+## Planejamento adiado de vídeos com Pix — 22/11/2026
+
+Usuário disse **para depois** ao pedir recado de vídeo novo, Pix abaixo da técnica e liberação automática. Codex registrou o fluxo e as decisões pendentes nos guias de planejamento/técnicas/retomada. Nenhuma funcionalidade, credencial, cobrança ou serviço externo foi alterado. Verificação desta rodada limitada ao diff da documentação; sem execução de testes ou build. Sem commit/push.
 
 ## Histórico compacto na ficha — 22/11/2026
 
@@ -30,9 +44,53 @@ Conferido o pedido de manter mensagens enviadas e lidas por aluno e o contador a
 
 O usuário pediu recados mais aparentes porque alunos deixam de vê-los. Implementados cartão de pendências no topo de todas as abas do portal, contador no menu, prévia do recado mais recente e lista com pendentes primeiro. Aluno e responsável reutilizam a mesma caixa; somente a confirmação salva retira a pendência. Erros preservam os avisos já carregados. Build/typecheck passou. A conferência no navegador com respostas fictícias passou para leitura, confirmação, erros, histórico e acesso familiar, inclusive bloqueio financeiro. Passaram 17 testes locais de acesso familiar e quatro de comunicados coletivos nesta rodada. Mudanças anteriores da árvore foram preservadas. Sem commit, push, publicação ou alteração de banco; aguardando validação do conjunto.
 
+## Bolsa de mensalidade
+
+A gestão pode marcar **Aluno bolsista** no cadastro. Mensalidades em aberto ficam pausadas enquanto durar a bolsa. A lista **Não pagantes** e o indicador de bolsistas ativos oferecem a contagem separada. Foram conferidos a migração SQLite, a API, o check-in de bolsista e as telas com dados fictícios. O build, a validação do Prisma e 305 testes passaram. A migração do Supabase aguarda a publicação aprovada.
+
+## Horário extra com check-in
+
+A agenda administrativa chama a publicação por data de **Adicionar horário extra**. Na área do aluno, o cartão e o histórico usam o nome do treino. O build e os 303 testes passaram, e o Chrome confirmou o botão de check-in no dia, o botão antecipado e o nome no histórico com dados fictícios.
+
+## Treinos por data e Google Drive privado
+
+Em **Aulas**, a gestão escolhe data e horário de um encontro sem editar a grade. A exclusão protege presenças, check-ins, liberações e débitos. Na biblioteca, o player só recebe conteúdo do Drive quando a sessão tem liberação vigente. O build e 302 testes passaram. Os componentes de agenda, confirmação de exclusão e player foram verificados no Chrome com respostas fictícias. A configuração real do Drive ainda aguarda os dados da conta exclusiva.
+
+## Recuperação de senha e histórico de graduação
+
+Retiramos a redefinição assistida de contas ativas. A ficha oferece convite somente para o primeiro acesso. O histórico por faixa conserva os valores anteriores ao ajuste ou promoção. O build e a suíte local de 298 testes passaram. No Chrome, os componentes foram conferidos com contas e histórico fictícios. O WhatsApp segue pendente de integração.
+
+## Atalho para link de teste — 15/11/2026
+
+O atalho no Windows seleciona a prévia mais recente do projeto Tatame Test, solicita um link de até uma hora e só o copia se o login responder. Quatro cenários simulados passaram no PowerShell do Windows. Depois do primeiro login na CLI do proprietário, o arquivo `.cmd` gerou um link na prévia atual, confirmou a resposta do login e copiou o endereço.
+
+Após o relato de conflito numa segunda execução, o atalho passou a guardar o último link gerado em um arquivo local criptografado. Foram simuladas a primeira emissão, a cópia repetida, a renovação após vencer e a preservação de um vínculo criado fora do atalho.
+
+## Seleção de dia na agenda — 15/11/2026
+
+A agenda do aluno e a tela **Presenças** usam uma faixa de segunda a domingo. A seleção fica na coluna clicada e as setas mantêm o dia da semana. O build e os 297 testes locais passaram. O componente foi verificado no Chrome em duas larguras, incluindo a virada de mês e ano. A alteração está local para validação.
+
 ## Chamada em lote — 15/11/2026
 
 Na chamada, a gestão pode selecionar os check-ins pendentes, ajustar a seleção e confirmar as presenças de uma vez. Os 297 testes locais e o build passaram. O teste HTTP com SQLite em memória confirmou a gravação de várias presenças, a preservação da falta e o tratamento de check-ins cancelados, de outra aula e reenviados. A prévia local tem uma aula com dados fictícios para validação da tela.
+
+## Tatame instalável pelo navegador — 07/11/2026
+
+O app web ganhou manifesto e ícones para instalação a partir do navegador. A instalação abre o Tatame em uma janela própria. O build passou. Na prévia local, a página aponta para o manifesto, os quatro ícones são servidos com as dimensões declaradas e o portal exige login. A instalação em Android e iPhone aguarda validação em um endereço HTTPS acessível.
+
+## Cancelamento de check-in pelo aluno — 07/11/2026
+
+O aluno e o responsável autorizado podem retirar o check-in pendente de uma aula de hoje ou futura pelo cartão da agenda. O cancelamento libera a cota regular e retira o aviso da lista do professor. Uma marcação da chamada bloqueia o cancelamento. Os 296 testes locais e o build passaram. Os testes HTTP verificaram isolamento por aluno, reenvio após refazer o check-in e preservação de cobrança adicional. [Como testar](ACESSO_ALUNO.md#check-in-antecipado).
+
+## Check-in antecipado — 07/11/2026
+
+O aluno pode fazer check-in para uma aula futura publicada e o professor pode consultar os nomes antes da aula. O build e os 294 testes TypeScript passaram. A verificação HTTP com SQLite em memória cobriu o pedido antecipado, repetição sem duplicidade, lista da gestão, bloqueio de presença antes da data, virada de semana e mês, cancelamento e aula adicional. A entrega está local para validação. [Como testar](ACESSO_ALUNO.md#check-in-antecipado).
+
+## Prévia protegida do commit a8c3989 — 07/11/2026
+
+Conferimos as 20 migrações Prisma registradas no Supabase de São Paulo pelo nome, estado de conclusão e SHA-256. Todas correspondem aos arquivos do projeto. Nenhuma migração foi reaplicada.
+
+A tentativa de publicação por referência Git retornou `git_info_fail`. O build da prévia seguinte foi concluído na região `gru1` a partir dos arquivos de execução extraídos do commit aprovado. Os hashes dos 168 arquivos enviados conferem com a cópia local. O acesso anônimo recebeu um redirecionamento e a proteção da Vercel continua ativa. O teste autenticado e a entrega de e-mail nesta prévia ficaram pendentes. [Abrir Tatame Test](https://tatame-test-f5kaebbmu-cleiton-pirola.vercel.app/).
 
 ## Verificação do conjunto de migrações e recuperação — 07/11/2026
 

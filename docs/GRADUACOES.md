@@ -22,6 +22,8 @@ Configurar apenas aulas e Salvar continua sendo o fluxo. Branca infantil pode us
 
 252 testes TypeScript e build/typecheck passaram. Local e QA persistida migrados para v14, com backup e preservação das outras 25 tabelas e de todas as 20 faixas anteriores, FKs válidas. UI conferiu categorias até preta, metas infantil 20/adulta 30 independentes e seletor da ficha. PostgreSQL preparado, sem execução no Supabase (aguarda autorização).
 
+![Categorias juvenil e adulta até preta](screenshots/faixas-categorias-juvenil-adulto.png)
+
 Estado local de 27/10/2026, aguardando validação humana antes de commit/push. O Supabase continua aguardando autorização; nenhum acesso ou migração externa nesta entrega.
 
 ## Como usar agora
@@ -70,6 +72,8 @@ Operações internas antigas do repositório permanecem por compatibilidade e te
 - SQLite local na versão **13**, com backup, dados das outras **25 tabelas preservados**, identidade das nove faixas anteriores mantida e chaves estrangeiras válidas. Nenhum aluno real foi graduado para demonstrar.
 - Scripts PostgreSQL preparados, **sem execução externa**. Python não foi alterado nem retestado neste incremento. Testes anteriores de Prisma pertencem à evolução da graduação, conforme registro de processo.
 
+![Faixas kids com cores e sequência fixas](screenshots/faixas-padrao-kids.png)
+
 Guia da trajetória, regras e defesa oral: [EVOLUCAO_GRADUACAO.md](EVOLUCAO_GRADUACAO.md).
 
 ## Para explicar na avaliação
@@ -83,6 +87,10 @@ Guia da trajetória, regras e defesa oral: [EVOLUCAO_GRADUACAO.md](EVOLUCAO_GRAD
 **Check-in dá grau?** Não. O professor confirma a presença; o sistema calcula as metas, e o mestre confirma a graduação.
 
 ## Tela atual da configuração
+
+![Somente aulas por grau e Salvar](screenshots/graduacao-configurar-aulas.png)
+
+![Adicionar próximo grau fica na ficha do aluno](screenshots/graduacao-proximo-grau-perfil.png)
 
 ## Apresentação atual da ficha
 

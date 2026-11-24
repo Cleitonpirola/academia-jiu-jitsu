@@ -1,5 +1,13 @@
 # Evolução funcional do Tatame
 
+## Vídeo novo com comunicado e Pix — planejado para depois (22/11/2026)
+
+Pedido do usuário, explicitamente adiado: ao publicar uma técnica com vídeo novo disponível aos alunos, criar um aviso em **Comunicados**, aproveitando o contador de pendências e o botão **Estou ciente**. Abaixo do nome da técnica, oferecer pagamento por **Pix** (QR Code e código copia e cola) para contratar o acesso. Após o provedor confirmar o pagamento no servidor, liberar automaticamente o acesso correspondente, sem intervenção do professor.
+
+Critérios da etapa futura: não avisar sobre rascunhos ou vídeos ainda indisponíveis; não duplicar comunicados ao editar/repetir a publicação; vincular cobrança e liberação ao aluno correto; validar a confirmação do provedor no servidor e tratar notificações repetidas sem duplicar cobranças ou liberações. Mostrar claramente pagamento pendente ou acesso liberado. Abrir o Pix ou clicar que pagou não deve conceder acesso.
+
+Falta definir, quando essa etapa for retomada, o provedor de pagamento e se a cobrança dá acesso ao vídeo individual, pacote ou biblioteca por período, além do valor/validade. A imagem da mensalidade opcional é uma referência da tela atual, sem aprovar preço nem modelo de cobrança. **Somente registrado: nenhuma integração, cobrança, envio automático ou liberação automática foi implementada nesta rodada.** [Contexto dos vídeos](TECNICAS.md).
+
 ## Envio direto ao YouTube — proposta futura (01/11/2026)
 
 Usuário manifestou preferência por hospedar os vídeos no YouTube e perguntou sobre enviar diretamente pelo Tatame. Viável pela API oficial com OAuth e confirmação do professor; arquivo permanece no YouTube e o aplicativo registra o ID/link. Integração não implementada, nenhum canal conectado e nenhum vídeo enviado. Detalhes e dependências em [TECNICAS.md](TECNICAS.md). Upload em Supabase continua adiado. A intenção anterior de cobrar por assistir exige rever a solução: política da API proíbe cobrança pelo conteúdo em player incorporado e não listado não impede compartilhamento. Não presumir que essa consulta aprovou um modelo comercial ou contratação.
@@ -98,6 +106,7 @@ Escopo proposto para a entrega futura:
 - Gerar uma mensagem personalizada com o primeiro nome, sem incluir dados financeiros ou informações desnecessárias.
 - Registrar processamento por aluno, aniversário/ano e tipo de mensagem, impedindo reenvio duplicado após reinício ou nova tentativa do job.
 - Guardar resultado/erro e permitir revisão pelo administrador; tentativas de falha não podem virar confirmação falsa de entrega. Sucesso de uma API e leitura pelo destinatário devem ser apresentados conforme o que o provedor realmente informar.
+- Nas falhas transitórias confirmadas, tentar novamente até cinco vezes com intervalo crescente. Se a entrega estiver incerta, consultar o estado no provedor antes de reenviar. Registrar data, número da tentativa e código ou motivo informado pelo serviço. Ao esgotar as retentativas, avisar uma única vez na gestão. Falhas definitivas aparecem na gestão imediatamente, sem retentativa. A integração e essas regras ainda aguardam configuração do serviço de mensagens.
 - Decidir entre job do backend e n8n conforme a hospedagem disponível; manter credenciais no servidor, fora do Git. Verificar requisitos do serviço escolhido antes de conectar.
 
 Critérios de aceite futuros: testes com datas/fuso, aluno inativo, telefone ausente/inválido, preferência desativada, prevenção de duplicação, indisponibilidade/repetição e mensagem personalizada. Primeiro validar em destino de teste autorizado; depois conferir uma execução real com evidência do provedor. Nenhum envio, conexão de conta, agendamento ou validação de WhatsApp foi executado por este registro. Implementação futura será apresentada para validação antes de commit/envio.

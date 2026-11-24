@@ -1,12 +1,30 @@
 # Tatame — Academia de Jiu-Jitsu
 
+**Atualização para os testes da academia — 24/11/2026.** Conjunto revisado com bolsistas, horários extras, check-in antecipado/cancelamento, seleção semanal, histórico por faixa, convites somente de primeiro acesso e instalação web. Build/typecheck, 306 testes TypeScript, 15 testes Python e cinco testes de configuração passaram nesta data. O player privado do Drive está implementado, mas a conta/pasta real ainda precisa ser configurada. Pix e WhatsApp continuam planejados. A publicação atualizada será conferida no endereço fixo antes de ser indicada como pronta. [Acompanhamento](docs/RETOMADA.md).
+
 **Acesso diário protegido — 23/11/2026.** [Abrir Tatame](https://tatame-test-diario.vercel.app/). O endereço fixo aponta para a publicação do commit `18ce58e`, com proteção da Vercel e login do Tatame. Não depende de executar o VS Code. Publicação READY e 167 fontes conferidas por hash; banco brasileiro retomado. Os dois logins passaram no navegador, com sessão preservada ao atualizar, bloqueio administrativo para aluno e exigência de login após sair. [Estado e instruções](docs/VERCEL_HOMOLOGACAO.md#acesso-diário-protegido--23112026).
 
+**Bolsistas.** Em **Alunos**, marque **Aluno bolsista** no cadastro para isentar a mensalidade. **Mensalidades → Não pagantes** lista os bolsistas. A **Visão geral** mostra a quantidade de bolsistas entre os alunos ativos. [Regras das cobranças](docs/BLOQUEIO_FINANCEIRO.md#aluno-bolsista).
+
 **Chamada em lote.** Em **Presenças**, abra a aula, clique em **Selecionar todos**, desmarque quem não veio e confirme as presenças. A seleção abrange os check-ins pendentes da aula.
+
+**Seleção de dia.** Na agenda do aluno e em **Presenças**, os dias aparecem de segunda a domingo. Escolher uma data mantém a faixa da semana no lugar. As setas selecionam o mesmo dia da semana anterior ou seguinte.
+
+**Horário extra.** Em **Aulas → Adicionar horário extra**, publique um encontro fora da grade para uma data e horário escolhidos. O aluno pode fazer check-in na agenda. [Como adicionar e excluir](docs/AULAS.md#treino-em-data-específica).
+
+**Vídeos do Drive.** A biblioteca aceita vídeos MP4 de uma pasta restrita e usa o player do Tatame para contas com liberação da academia. A conexão real depende da configuração da conta de serviço e da pasta. [Configuração e uso](docs/TECNICAS.md#player-do-tatame-com-google-drive-privado).
+
+**Histórico por faixa.** A ficha e **Minha trajetória** mostram as aulas registradas antes de ajustes ou promoções. O primeiro acesso continua por convite. Para uma conta já ativa, a recuperação é feita pela tela de login quando o e-mail está configurado. [Graduação](docs/EVOLUCAO_GRADUACAO.md) · [Acesso](docs/ACESSO_ALUNO.md).
+
+**Instalação no celular.** Com o Tatame aberto em um endereço HTTPS acessível, no Android use **Instalar app** ou **Adicionar à tela inicial** no menu do Chrome. No iPhone, abra no Safari e use **Compartilhar → Adicionar à Tela de Início → Abrir como App Web**. Agenda e check-in usam conexão com a internet.
+
+**Check-in antecipado.** O aluno pode avisar que vai a uma aula futura assim que ela for publicada e cancelar o próprio check-in pendente até o dia da aula. Na gestão, o professor vê a lista em **Presenças** ao selecionar a data e a aula. [Como testar o fluxo](docs/ACESSO_ALUNO.md#check-in-antecipado).
 
 O login e a ativação têm um botão para mostrar ou ocultar a senha. Ao criar uma senha, use pelo menos oito caracteres e evite combinações comuns. [Guia de acesso](docs/ACESSO_ALUNO.md).
 
 **Ambiente de testes atual.** O Tatame Test de São Paulo pede autenticação da Vercel antes do login do Tatame. [Abrir a prévia](https://tatame-test-en6hefwej-cleiton-pirola.vercel.app/) · [Estado da migração](docs/REGIOES.md).
+
+**Link para avaliadores.** Após uma publicação bem-sucedida do Tatame Test, abra **Gerar link de teste.cmd** na raiz do projeto no Windows. O atalho copia um link de até uma hora para o login do Tatame. [Configuração inicial e uso](docs/VERCEL_HOMOLOGACAO.md#atalho-para-gerar-link-de-teste).
 
 **Recuperação de senha.** Na prévia de São Paulo, o usuário confirmou a entrega de e-mail pelo Resend e a recusa da troca após 15 minutos. A versão mais recente verifica o link antes de mostrar o formulário e permite solicitar outro se ele venceu ou já foi usado. [Configuração e fluxo](docs/ACESSO_ALUNO.md#recuperação-de-senha-e-senhas-comuns--05112026).
 

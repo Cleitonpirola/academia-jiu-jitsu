@@ -1,8 +1,34 @@
 # Arquitetura — Academia de Jiu-Jitsu
 
+## Bolsa de mensalidade
+
+`Aluno.bolsista` é um booleano, com padrão falso para cadastros antigos. A migração acrescenta somente essa coluna. SQLite e PostgreSQL leem o estado da bolsa dentro da mesma transação que grava uma mensalidade. A consulta administrativa deriva o estado `pausada` para cobranças não pagas de bolsistas. O mesmo critério mantém as cobranças pausadas fora da previsão, dos atrasos e dos indicadores. O portal e o check-in verificam a bolsa ao aplicar o bloqueio por mensalidade.
+
+## Treinos por data e vídeo privado do Drive
+
+O treino por data é uma `Aula` de origem `extra` vinculada a uma turma ativa, sem `origemHorarioId`. A criação reutiliza a seleção de alunos previstos e a gravação da aula em uma transação. A exclusão trava a aula no PostgreSQL ou usa uma transação de escrita no SQLite, rejeita vínculos de participação ou cobrança e remove somente os previstos junto do encontro. O esquema dos bancos permanece o mesmo.
+
+Vídeos do Drive usam referência interna `drive://` em `VideoTecnica.url`. A conta de serviço valida tipo, tamanho e vínculo com a pasta configurada. A rota do player é autenticada no contexto do aluno ou dependente e verifica o direito de acesso a cada chamada. O servidor usa a API de mídia do Drive e responde sem cache compartilhado. Os caminhos de YouTube, Vimeo e Storage continuam disponíveis nos contratos existentes.
+
+## Contas já ativadas e histórico de graduação
+
+O convite de ativação exige uma conta sem senha também na gravação condicional do SQLite e do PostgreSQL. A rota de status retorna apenas um booleano para a ficha administrativa. Recuperação de conta ativa usa o fluxo por e-mail.
+
+O campo existente `EventoGraduacao.regraSnapshot` conserva os parâmetros da regra. Ao ajustar a graduação ou mudar a faixa, o snapshot pode conter também `estadoAnterior` com data de início e as duas contagens. A projeção `historicoFaixas` usa os totais registrados nos eventos e lê os snapshots antigos sem inventar a divisão das aulas. Esses ajustes usam o esquema de banco existente.
+
 ## Chamada em lote
 
 A tela envia os IDs dos check-ins selecionados para `POST /api/aulas/:id/chamada`. A rota administrativa grava as presenças em uma transação na tabela `PresencaAula`. O servidor ignora check-ins que perderam a elegibilidade, incluindo cancelamentos e marcações feitas depois que o professor abriu a lista.
+
+## Instalação pelo navegador
+
+O Vite publica `tatame.webmanifest` e os ícones do Tatame como arquivos estáticos. O navegador usa o manifesto para instalar o app e abrir a rota inicial em janela própria. A primeira versão carrega as telas e os dados pela rede, com a autenticação da aplicação.
+
+## Check-in antecipado
+
+O portal devolve os limites e a liberação aplicáveis a cada aula publicada, além dos resumos dos períodos atuais. SQLite e PostgreSQL validam a cota pela data da aula antes de gravar o check-in na transação existente. A gestão lê o mesmo registro em **Presenças**. A confirmação da chamada continua em `PresencaAula`, com bloqueio para datas futuras. O fluxo usa o esquema existente.
+
+O cancelamento do aluno usa `DELETE /api/portal/aulas/:id/checkin/:checkinId`. O portal do responsável aplica a mesma regra de permissão usada para fazer check-in. SQLite e PostgreSQL conferem o vínculo com o aluno e a ausência de marcação na chamada dentro da transação. O ID do check-in evita que um reenvio antigo apague um check-in novo da mesma aula. A operação remove o aviso e recalcula o saldo. A cobrança adicional permanece vinculada à aula.
 
 ## Recuperação de senha — 05/11/2026
 

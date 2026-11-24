@@ -1,6 +1,6 @@
 import type { Analytics } from '@tatame/shared';
 import type { Repository } from '../../repository.js';
-import { currentMonth, today } from '../../domain.js';
+import { currentMonth, mensalidadesConsideradas, today } from '../../domain.js';
 import { HttpError } from '../../http-error.js';
 import { analyticsResponseSchema } from './schema.js';
 
@@ -30,7 +30,7 @@ export async function calculateAnalytics(repo: Repository, mes: string, analytic
       body: JSON.stringify({
         mes, hoje: today(),
         alunos: alunos.map(({ id, nome, faixa, dataMatricula, situacao }) => ({ id, nome, faixa, dataMatricula, situacao })),
-        mensalidades, presencas,
+        mensalidades: mensalidadesConsideradas(alunos, mensalidades), presencas,
       }),
       signal: AbortSignal.timeout(10000),
     });

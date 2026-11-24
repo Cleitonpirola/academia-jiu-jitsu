@@ -1,5 +1,9 @@
 # Registro de prompts
 
+## Sistema atualizado e commitado — 24/11/2026
+
+O usuário pediu **quero o sistema atualizado e commitadio** após receber a explicação de que havia funcionalidades implementadas ainda fora da prévia. Codex interpreta o pedido como aprovação para consolidar e enviar o conjunto do sistema já solicitado e publicar a versão revisada no link fixo para a apresentação ao mestre. Preservar separadamente o portfólio de outro trabalho; não incluir segredos, não abrir acesso público e não tratar a autorização como pedido de implementar integrações ainda planejadas.
+
 ## Acesso diário protegido e teste dos dois perfis — 23/11/2026
 
 Após perguntar sobre segurança, o usuário autorizou o acesso diário mantendo proteção Vercel e login do Tatame, com aluno e professor, e depois pediu **testa**. Codex publicou o commit aprovado em endereço fixo, retomou o banco pausado e preservou as contas de avaliação. O teste automático por bypass foi rejeitado e a credencial criada pela CLI foi revogada. Seguiu-se navegação normal até o login Vercel, sem retirar a proteção; autenticação manual do proprietário foi solicitada para prosseguir com o teste. Não inferir autorização para abrir acesso público, criar chaves persistentes, mudar senhas, migrar dados ou commitar documentos novos.
@@ -11,6 +15,14 @@ Depois de perguntar sobre as pendências de Git, o usuário respondeu **pode com
 ## Aprovação para commit de comunicados — 22/11/2026
 
 Usuário perguntou se o histórico passou, recebeu o resultado das verificações e respondeu **commite**. Codex interpretou a autorização para versionar e enviar somente os comunicados apresentados: destaque/contador, histórico, destinatário e primeira confirmação, ficha de consulta e recolhimento. Não incluiu automaticamente as outras mudanças pendentes ou a futura integração Pix.
+
+## Nome da área — 22/11/2026
+
+O usuário corrigiu o nome da área do aviso de vídeo novo: **Comunicados**, e não Recados. A terminologia e os links internos do planejamento futuro foram ajustados. Escopo permanece adiado, sem implementação de Pix ou envio automático.
+
+## Para depois: vídeo novo, comunicado e Pix — 22/11/2026
+
+Pedido humano: notificar o aluno em recados quando um vídeo novo for colocado, mostrar pagamento Pix abaixo do nome da técnica e liberar o acesso automaticamente. A expressão **para depois** foi respeitada: somente registrado no planejamento. Confirmação de pagamento deve vir do provedor no servidor; preço, modalidade de acesso e provedor permanecem sem decisão. Nenhuma integração foi iniciada nem envio/pagamento autorizado por implicação.
 
 ## Minimizar o histórico da ficha — 22/11/2026
 
@@ -28,9 +40,45 @@ O usuário reforçou que deseja conservar os recados enviados e lidos no perfil 
 
 Pedido: “teria como ficar bem mais aparente no perfil de cada um? temos problemas com alunos que n veem os recados”. Codex implementou destaque persistente de pendências e contador na entrada e nas abas do aluno/responsável, com confirmação explícita. A pergunta anterior sobre notificação no celular/WhatsApp não foi tratada como autorização de disparo ou de integração externa. Implementação e conferência pela IA; validação humana e publicação pendentes.
 
+## Bolsistas e alunos não pagantes
+
+O usuário pediu uma opção de bolsa no cadastro, a ausência de cobrança dos bolsistas e um controle visual separado dos alunos que pagam mensalidade. A classificação atual pausa cobranças em aberto e mantém pagamentos anteriores no histórico.
+
+## Check-in em horário extra
+
+O usuário pediu que os alunos possam fazer check-in em um encontro fora dos horários fixos. O fluxo usa a publicação por data e identifica o treino na agenda pelo nome dado pelo professor.
+
+## Treino por data e Google Drive privado
+
+O usuário confirmou que quer publicar um encontro em data e horário específicos sem alterar a grade, usando como exemplo uma quarta quinta-feira. Para os vídeos, confirmou uma conta Google exclusiva da operação e acesso dentro do Tatame para alunos com pagamento confirmado.
+
+## Solicitações de vídeos, treinos, WhatsApp, acesso e graduação
+
+O usuário pediu um player integrado ao Drive, personalização de dias e horários, registro de falhas e até cinco novas tentativas para parabéns pelo WhatsApp com aviso à gestão, retirada da recuperação administrativa e preservação do histórico por faixa. A implementação local desta rodada separou ativação de recuperação e preservou o estado anterior da graduação. Compartilhamento dos vídeos e abrangência da configuração da agenda precisam de definição.
+
+## Link para avaliadores a cada atualização
+
+O usuário pediu uma forma de gerar um link por clique após publicar novas atualizações. O atalho local usa a sessão da CLI do proprietário para gerar o compartilhamento temporário da última prévia.
+
+Ao mostrar o aviso de link já existente, o usuário indicou a dificuldade de repetir o clique na mesma prévia. O atalho passou a reaproveitar um link que ele gerou e a emitir outro após o vencimento.
+
+## Seleção de dia na agenda
+
+O usuário pediu que a seleção ficasse na posição do dia clicado e fosse mantida ao avançar uma semana. A faixa usa colunas fixas de segunda a domingo e as setas deslocam a data selecionada em sete dias.
+
 ## Chamada em lote
 
 O usuário pediu para selecionar todos da aula e registrar as presenças de uma vez. A tela permite ajustar a seleção entre os check-ins pendentes antes de confirmar.
+
+## Tatame instalável
+
+O usuário escolheu começar pela instalação no navegador. O trabalho reaproveita a interface atual e o símbolo do Tatame para abrir o app pelo ícone da tela inicial.
+
+## Check-in antecipado
+
+O usuário pediu que um aluno pudesse fazer check-in em uma aula de amanhã para o professor consultar quem pretende ir. A implementação usa a agenda publicada e a chamada existentes, com a cota calculada pela data do treino.
+
+Depois, o usuário pediu que o aluno pudesse cancelar o check-in ao perceber que não vai conseguir ir. O cancelamento atua no registro pendente da aula, libera a cota regular e preserva o histórico da chamada e as cobranças.
 
 ## Senhas comuns e recuperação por e-mail — 05/11/2026
 

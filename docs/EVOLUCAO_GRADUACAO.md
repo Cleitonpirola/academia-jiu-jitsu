@@ -1,5 +1,11 @@
 # Evolução configurável da graduação
 
+## Histórico de aulas por faixa
+
+Na ficha do aluno e em **Minha trajetória**, abra **Histórico de aulas por faixa**. A listagem mostra a contagem registrada antes de uma promoção ou ajuste. Novos registros preservam a data de início, o grau e as contagens de aulas confirmadas e reconhecidas manualmente. A contagem atual pode ser corrigida sem sobrescrever esses registros.
+
+Promoções anteriores que só registravam o total continuam mostrando esse total. O sistema omite a data de início e a divisão das aulas quando esses dados não foram guardados na época.
+
 ## Registro manual de graus — 05/11/2026
 
 No ajuste da graduação, faixas padrão até a marrom, inclusive as antigas sem categoria e as infantis, oferecem **Sem graus** e **1º a 4º grau**. A preta oferece até o **6º grau**. A faixa seguinte na referência da IBJJF é vermelha e preta, correspondente ao 7º grau. O catálogo vigente do Tatame termina na preta. [Sistema Geral de Graduação da CBJJ/IBJJF](https://cbjj.com.br/graduation-system).
@@ -99,6 +105,8 @@ Perguntas para estudar: por que um check-in sozinho não comprova que o aluno tr
 
 Meses por grau e permanência mínima foram removidos; esta captura substitui as imagens anteriores que exibiam configuração por tempo.
 
+![Regra por aulas, total de graus e próxima faixa](screenshots/graduacao-apenas-aulas.png)
+
 ## Simplificação final de 27/10/2026
 
 Na configuração da faixa existe somente a quantidade de aulas e Salvar. No perfil administrativo do aluno, Adicionar próximo grau abre a confirmação de um avanço. Aulas e graus já registrados não são modificados ao editar a meta. O limite de quatro é uma decisão de produto para branca/kids/coloridas até marrom; não uma afirmação de norma universal para todas as faixas.
@@ -107,6 +115,8 @@ A API aceita o corpo reduzido {aulasPorGrau}. Preserva destino anterior omitido 
 
 Esta captura substitui os formulários maiores anteriores:
 
+![Configuração apenas de aulas](screenshots/graduacao-configurar-aulas.png)
+
 ## Ajustes sem justificativa e graus com datas — 27/10/2026
 
 O professor usa **Ajustar graduação** sem escrever uma justificativa. O formulário envia somente a graduação, início da faixa, crédito anterior e versão. O backend preenche uma descrição automática no evento; autoria, data, valores anteriores/novos e histórico antigo continuam preservados. Motivos informados por clientes antigos ainda são aceitos e preservados, mas não são pedidos pela interface. O aluno continua sem permissão para alterar graduação.
@@ -114,3 +124,7 @@ O professor usa **Ajustar graduação** sem escrever uma justificativa. O formul
 A seção visível passou a ser **Graus recebidos**: apenas o grau/faixa e a data da concessão registrada. Não exibe ponto de partida, ajustes, pedidos ou explicações. Esses eventos continuam no histórico interno e na resposta autorizada da API. A data mostrada vem da concessão no sistema, em São Paulo; não é inventada a partir de uma correção ou do ponto de partida.
 
 249 testes TypeScript passaram após a mudança do contrato sem justificativa, incluindo ajuste para cima/baixo, autoria e preservação de registros anteriores, além da rejeição de aluno. O último ajuste visual da lista recebeu build/typecheck e conferência de navegador; não se apresenta o teste de backend como prova automatizada dessa tela. Na UI fictícia o ajuste salvou sem texto e a lista manteve apenas o primeiro grau com a data, sem criar um segundo recebimento.
+
+![Ajuste sem justificativa](screenshots/graduacao-ajuste-sem-justificativa.png)
+
+![Graus recebidos e suas datas](screenshots/graduacao-graus-e-datas.png)

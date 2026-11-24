@@ -1,5 +1,17 @@
 # Acesso e área do aluno
 
+## Check-in antecipado
+
+Na agenda do aluno e em **Presenças**, a faixa vai de segunda a domingo. Ao escolher outro dia dessa semana, o destaque muda para o botão escolhido. Use as setas para mudar de semana mantendo o mesmo dia, por exemplo, de uma quinta-feira para a quinta seguinte.
+
+Os horários extras publicados pela academia aparecem com o nome do treino na agenda e em **Meus treinos** após a participação. O check-in segue as mesmas condições de data e cota do plano.
+
+Publique uma aula para amanhã na agenda da gestão. Na **Área do aluno → Aulas e check-in**, escolha amanhã e clique em **Fazer check-in antecipado**. Na gestão, vá a **Presenças**, escolha a mesma data e abra a aula. O aluno aparece com check-in aguardando validação. A chamada aceita a presença a partir da data da aula.
+
+Em planos limitados, o check-in usa a cota da semana e do mês da aula. O cancelamento pela academia libera a cota. Uma aula adicional contratada também permite check-in antecipado, sem outra cobrança. Bloqueios financeiros continuam valendo.
+
+Se desistir, abra o cartão da aula em **Aulas e check-in** e escolha **Cancelar check-in**. O botão fica disponível em aulas de hoje ou futuras enquanto o professor ainda não marcou a chamada. O cancelamento retira o nome da lista, libera a cota da aula regular e permite refazer o check-in. Em aula adicional, o débito continua disponível em **Débitos**.
+
 ## Regras e visibilidade da senha — 07/11/2026
 
 A configuração inicial e a ativação de conta exigem pelo menos oito caracteres. Use espaços entre palavras. A API recusa espaços nas pontas e combinações da lista interna de senhas comuns. Na tela, o botão de olho mostra ou oculta o texto. A confirmação tem seu próprio botão. Senhas existentes continuam sendo aceitas no login.
@@ -14,7 +26,9 @@ Para habilitar, configure `RESEND_API_KEY`, `RESEND_FROM` e `PASSWORD_RESET_ORIG
 
 A migração Prisma `202611050001_recuperacao_senha` foi aplicada no Supabase de testes de São Paulo. A tabela tem RLS e acesso revogado para os papéis da API. Uma API executada localmente com o PostgreSQL brasileiro confirmou a troca de senha, o uso único do link e o encerramento da sessão anterior com e-mail simulado. Para validar a entrega real, há uma conta de aluno de teste vinculada ao e-mail do titular do Resend. Abra a prévia protegida, mantenha a sessão da Vercel no navegador e use **Esqueci minha senha**. O envio real foi adiado a pedido do usuário.
 
-O usuário confirmou a entrega real pelo Resend e a recusa da troca após o vencimento. O Tatame agora consulta a validade do link ao abrir a página. Quando ele já venceu ou foi usado, a tela oferece a opção de solicitar outro link. O servidor também confere o prazo ao salvar. Os campos de senha e de confirmação têm botões independentes para mostrar ou ocultar o texto. O build, 36 testes locais e a verificação da API com PostgreSQL de São Paulo passaram. O teste com PostgreSQL usou envio simulado e reverteu os dados fictícios. A prévia protegida está pronta para validação visual. [Abrir a nova prévia](https://tatame-test-en6hefwej-cleiton-pirola.vercel.app/).
+O usuário confirmou a entrega real pelo Resend e a recusa da troca após o vencimento. O Tatame agora consulta a validade do link ao abrir a página. Quando ele já venceu ou foi usado, a tela oferece a opção de solicitar outro link. O servidor também confere o prazo ao salvar. Os campos de senha e de confirmação têm botões independentes para mostrar ou ocultar o texto. O build, 36 testes locais e a verificação da API com PostgreSQL de São Paulo passaram. O teste com PostgreSQL usou envio simulado e reverteu os dados fictícios. [Abrir a prévia protegida atual](https://tatame-test-f5kaebbmu-cleiton-pirola.vercel.app/).
+
+Na prévia de 07/11/2026, o banco registrou um pedido para a conta administrativa e a Vercel registrou falha depois de reservar o pedido. O remetente configurado continua sendo o de teste. Ele entrega somente ao e-mail vinculado à conta do Resend, que já tem uma conta de teste ativa no Tatame. A resposta exibida é genérica para proteger a privacidade dos cadastros. Com a conta de teste, o usuário confirmou que o e-mail chegou à pasta Spam, que conseguiu salvar a nova senha e entrar com ela. Também mostrou a tela que recusa o link ao reabri-lo. Para enviar a outros endereços, falta configurar um domínio verificado no Resend. [Restrição do remetente de teste](https://resend.com/docs/knowledge-base/403-error-resend-dev-domain).
 
 ## Acesso de menores simplificado — 05/11/2026
 
@@ -60,7 +74,7 @@ Novo perfil responsavel acompanha somente seus menores ativos. Sem celular, ele 
 
 ## Menu Débitos e reserva adicional — 25/10/2026
 
-Ao atingir a cota mensal, o portal informa preço configurado e oferece reservar aula adicional de hoje ou futura no período elegível. O aluno confirma dia/horário, valor e prazo antes de gerar débito. A lista Débitos abre imediatamente; o check-in continua no dia. Débito vencido bloqueia novos check-ins, conforme resposta explícita do usuário, mas login e Débitos permanecem acessíveis, inclusive com mensalidade vencida. Pagamento é registrado pela academia e o estado é atualizado no portal. Autorização, isolamento e limitações em [DEBITOS.md](DEBITOS.md).
+Ao atingir a cota mensal, o portal informa preço configurado e oferece reservar aula adicional de hoje ou futura no período elegível. O aluno confirma dia, horário, valor e prazo antes de gerar débito. A lista Débitos abre imediatamente. O check-in fica disponível na agenda após a reserva. Débito vencido bloqueia novos check-ins e o aluno continua podendo entrar para consultar Débitos. A academia registra o pagamento e o portal atualiza o estado. [Regras dos débitos](DEBITOS.md).
 
 ## Saldo mensal no portal — 25/10/2026
 
@@ -86,7 +100,7 @@ Verificação nova: 141 testes TypeScript aprovados, incluindo cinco casos de en
 
 Implementado localmente em 21–22/10/2026, com testes automatizados e conferência visual. Aguarda validação do usuário antes de commit/push. O login identifica a pessoa antes de abrir a área correspondente. Administrador acessa a gestão; aluno acessa somente o próprio cadastro, mensalidades, aulas publicadas e histórico. A API protege os dados mesmo quando alguém tenta chamar uma rota sem usar as telas.
 
-O primeiro administrador é criado uma única vez pela tela de configuração inicial. Não existe senha padrão. Depois, o administrador gera um link temporário para um aluno cadastrado escolher a própria senha. O link também permite redefinição assistida; não há envio automático de e-mail ou WhatsApp.
+O primeiro administrador é criado uma única vez pela tela de configuração inicial. Não existe senha padrão. Depois, o administrador gera um convite temporário de primeiro acesso para o aluno ou responsável. Para uma conta já ativa, use **Esqueci minha senha** na tela de login, com a entrega de e-mail configurada.
 
 Senhas são armazenadas como hash scrypt com sal aleatório (N=32768, r=8, p=3), nunca como texto. Sessões usam um token aleatório de 32 bytes em cookie HttpOnly/SameSite=Strict; somente seu SHA-256 é salvo no banco, com expiração absoluta de oito horas. Escritas exigem cabeçalho próprio do aplicativo e verificação de origem, sem liberar CORS; formulários enviam JSON. HTTPS e origem explícita são necessários para uso externo.
 
@@ -111,10 +125,10 @@ Migração SQLite 005 acrescenta as três tabelas, com backup automático, sem c
 ## Como usar no seu computador
 
 1. Abra o endereço local informado no README. No primeiro acesso, preencha seu nome, e-mail e uma senha com pelo menos 8 caracteres. Confirme a senha e crie sua conta.
-2. Entre em **Alunos → Ver ficha → Área do aluno → Gerar link de acesso**. O aluno precisa estar ativo. O acesso fica vinculado ao cadastro escolhido; não há cadastro público que permita escolher outro aluno ou perfil de administrador.
-3. Copie o link privado e entregue somente ao aluno correspondente. Vence em 24 horas e funciona uma vez. Gerar outro invalida o anterior. A senha atual só muda quando o novo link é utilizado.
+2. Entre em **Alunos → Ver ficha → Área do aluno → Gerar convite de primeiro acesso**. O aluno precisa estar ativo e ainda não ter ativado a conta. O acesso fica vinculado ao cadastro escolhido.
+3. Copie o convite privado e entregue somente ao aluno correspondente. Vence em 24 horas e funciona uma vez. Gerar outro invalida o anterior.
 4. O aluno abre o link, escolhe e confirma a própria senha. Depois, entra pelo e-mail de acesso. Pode trocar esse endereço em **Meu perfil → Editar meus dados**, confirmando a senha atual; ficha e conta são atualizadas juntas. Na gestão, a troca de e-mail de conta existente passa pela ativação/transferência na seção Responsável e acesso.
-5. Em **Aulas e check-in**, selecione a data ou **Ver próximas aulas**. No dia da aula, clique em **Fazer check-in**. Um segundo clique/reenvio não duplica o aviso.
+5. Em **Aulas e check-in**, selecione a data ou **Ver próximas aulas**. Clique em **Fazer check-in antecipado** para uma aula futura ou **Fazer check-in** no dia. Repetir a solicitação mantém um único aviso.
 6. Na gestão, abra **Aulas → Chamada**. O aluno que avisou aparece mesmo sem ser habitual daquela turma. Marque presente ou ausente. O aluno vê o resultado em **Meus treinos** e na aula.
 7. **Mensalidades** mostra somente as próprias cobranças, valores, vencimentos e pagamentos registrados. É consulta; ainda não existe pagamento online. **Meu perfil** permite consultar a ficha e editar nome, telefone e e-mail de acesso pelas regras acima.
 8. **Sair** revoga a sessão no servidor. Sessão expirada exige novo login. Inativar o aluno impede novo login e uso das sessões existentes; não apaga o histórico.
@@ -132,7 +146,8 @@ Um endereço 127.0.0.1 pertence ao próprio aparelho. Um link com esse endereço
 | POST /api/auth/entrar | Público, com limite de tentativas | Valida credenciais e cria nova sessão |
 | POST /api/auth/ativar | Link temporário | Define senha do aluno, consome o convite e revoga sessões anteriores |
 | POST /api/auth/sair | Sessão atual ou já encerrada | Revoga se existir e remove o cookie |
-| POST /api/auth/alunos/:id/convite | Administrador | Gera/reemite link de ativação ou redefinição assistida |
+| GET /api/auth/alunos/:id/convite | Administrador | Indica se a conta já está ativada |
+| POST /api/auth/alunos/:id/convite | Administrador | Gera ou reemite o convite enquanto a conta aguarda ativação |
 | GET /api/portal | Aluno ativo | Retorna o portal próprio quando regular ou somente mensagem/pendências financeiras quando bloqueado |
 | PUT /api/portal/aulas/:id/checkin | Aluno ativo | Faz aviso em nome do aluno obtido da sessão, nunca de um alunoId escolhido na tela |
 | Demais rotas /api | Administrador | Gestão, finanças, chamada, analytics e assistente |

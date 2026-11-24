@@ -98,6 +98,47 @@ it('duas tentativas concorrentes disputam a última vaga sem ultrapassar a cota'
     assert.deepEqual(responses.map(item => item.status).sort(), [200, 403]); assert.equal((await f.repo.list('CheckinAula')).length, 1);
   } finally { await f.repo.close(); }
 });
+it('check-in antecipado usa o período da aula e aparece na chamada sem marcar presença', async () => {
+  const f = await fixture(1);
+  try {
+    const hoje = today();
+    const [ano, mes] = hoje.slice(0, 7).split('-').map(Number);
+    const segunda = new Date(Date.UTC(ano, mes, 1));
+    segunda.setUTCDate(segunda.getUTCDate() + (8 - segunda.getUTCDay()) % 7);
+    const futura = segunda.toISOString().slice(0, 10);
+    const ontem = new Date(Date.parse(hoje) - 86_400_000).toISOString().slice(0, 10);
+    for (const index of [1, 2]) await f.repo.update('Aula', f.aulas[index].id, { dataAula: futura });
+    await f.repo.update('Aula', f.aulas[3].id, { dataAula: ontem });
+    await f.repo.saveSaldoMensalAluno(f.id, 1);
+
+    await f.checkin(0).expect(200);
+    const agenda = async (index: number) => (await f.portal().expect(200)).body.aulas.find((item: Aula) => item.id === f.aulas[index].id);
+    assert.equal((await agenda(4)).limiteMensalAtingido, true);
+    assert.equal((await agenda(4)).limiteSemanalAtingido, true);
+    assert.equal((await agenda(1)).limiteMensalAtingido, false);
+    assert.equal((await agenda(1)).limiteSemanalAtingido, false);
+    const { body: checkin } = await f.checkin(1).expect(200);
+    assert.equal((await f.checkin(1).expect(200)).body.id, checkin.id);
+    assert.equal((await agenda(1)).checkin.id, checkin.id);
+    assert.equal((await f.portal().expect(200)).body.saldoMensal.utilizadas, 1);
+
+    const aulaPath = `/api/aulas/${f.aulas[1].id}`;
+    const { body: detalhe } = await request(f.app).get(aulaPath).expect(200);
+    assert.equal(detalhe.checkins[0].nome, 'Ana Fictícia');
+    assert.deepEqual(detalhe.chamada, []);
+    await request(f.app).put(`${aulaPath}/chamada/${f.id}`).send({ presente: true }).expect(400);
+    assert.equal((await agenda(2)).limiteMensalAtingido, true);
+    await f.checkin(2).expect(403);
+    await f.repo.saveSaldoMensalAluno(f.id, null);
+    assert.equal((await agenda(2)).limiteSemanalAtingido, true);
+    assert.match((await f.checkin(2).expect(403)).body.message, /limite semanal/);
+    await f.checkin(3).expect(400);
+
+    await f.repo.cancelAula(f.aulas[1].id, 'Cancelamento de teste', now());
+    await f.checkin(1).expect(409);
+    await f.checkin(2).expect(200);
+  } finally { await f.repo.close(); }
+});
 it('ausência explícita e cancelamento liberam vaga; presença confirmada não duplica', async () => {
   const f = await fixture(1);
   try {

@@ -1,5 +1,9 @@
 # Revisão de IA
 
+## Revisão do conjunto atualizado — 24/11/2026
+
+Revisado o conjunto pendente do sistema após autorização explícita para atualização, commit e publicação de teste. Testes executados nesta rodada: 306 TypeScript, 15 Python, cinco de configuração/conexão, build/typecheck e schema Prisma, todos aprovados. A revisão considera controles de sessão e papéis, cotas na data da aula, cancelamento por ID para não apagar nova reserva, transações de bolsa/cobrança e snapshots de graduação. Arquivos privados e portfólio excluídos da seleção. A disponibilidade do Drive real e a entrega de mensagens não são comprovadas por testes simulados. A conferência externa desta versão ainda será registrada após a publicação.
+
 ## Publicação e limite da validação externa — 23/11/2026
 
 Conferidos pacote derivado só de `18ce58e`, 167 hashes remotos idênticos, READY/Preview/gru1, alias fixo e APP_ORIGIN. Segredos continuam em Preview, e origem de recuperação segue o endereço configurado. Banco foi retomado com dados/migrações preservados. A ferramenta de teste da CLI criou bypass persistente; após rejeição da revisão automática, a credencial foi revogada por API, sem regeneração. Consulta confirmou `all` e zero bypasses; navegação anônima exige autenticação.
@@ -9,6 +13,14 @@ Após o proprietário autenticar a aba in-app, os dois logins passaram no endere
 ## Revisão da seleção para commit — 22/11/2026
 
 Separados trechos de arquivos que também continham alterações de bolsa, agenda, convites e graduação. A cópia isolada contém somente HEAD mais os comunicados aprovados; usa seu próprio pacote compartilhado. Build/typecheck e suíte de 295 testes passaram nessa seleção, após corrigir um vínculo de dependências inicialmente negado pelo ambiente. A consulta administrativa continua limitada a nome/perfil do destinatário, com primeira confirmação preservada. Sem migração, segredos, artefatos privados ou publicação. A aprovação do usuário para commit/push foi explícita.
+
+## Terminologia de Comunicados — 22/11/2026
+
+Revisados o nome da área e os links entre os documentos do futuro fluxo de vídeo com Pix: usar **Comunicados**. Registros históricos de falas anteriores foram preservados. Nenhuma alteração na aplicação ou integração; verificação limitada ao diff documental.
+
+## Registro futuro de vídeo com Pix — 22/11/2026
+
+Conferida a separação entre o pedido adiado e o que existe: hoje há contratação/liberação manual; aviso de novo vídeo com Pix e liberação automática continuam planejados. O registro exige confirmação do provedor vinculada ao aluno e evita tratar abertura do Pix como pagamento. Preço e modelo não foram inferidos da captura. Nesta rodada houve somente documentação, sem testes, build ou validação externa. Sem commit/push.
 
 ## Recolhimento do histórico — 22/11/2026
 
@@ -26,9 +38,43 @@ Revisado que a listagem mantém mensagens confirmadas, a API conserva a primeira
 
 Revisado o compartilhamento de consulta entre banner, contador e lista, sem busca duplicada ao abrir a aba. Pendências são retiradas após resposta da API; falhas mantêm os dados carregados. Confirmar não apaga o histórico. Base de acesso e montagem por dependente preservam o isolamento familiar existente. Build/typecheck passou; navegador com dados fictícios aprovou contador, foco, ordem, falha e sucesso de confirmação, histórico, troca de contexto, bloqueio financeiro e falha de consulta. Passaram 17 testes HTTP de acesso familiar e quatro de comunicados coletivos nesta rodada. Não houve conferência externa em Supabase ou publicação. Sem commit/push antes da validação do usuário.
 
+## Bolsa de mensalidade
+
+O teste SQLite de migração confirmou o padrão pagante e a preservação integral das mensalidades anteriores. O teste HTTP cobriu bloqueio de novas cobranças, pausa, preservação da receita recebida, check-in e retorno das pendências ao retirar a bolsa. O Chrome confirmou o cadastro, a exclusão do bolsista do seletor de cobrança, a consulta da cobrança pausada e o indicador. A suíte local teve 305 testes aprovados. O esquema Prisma foi validado. A migração PostgreSQL permanece sem aplicação externa.
+
+## Horário extra com check-in
+
+O teste HTTP publicou horários fora da grade para hoje e amanhã, autenticou o aluno, registrou os dois check-ins e confirmou a presença do encontro do dia na chamada. A grade foi comparada antes e depois. A UI usa as mesmas permissões e cotas da agenda existente. Build e 303 testes locais passaram.
+
+## Treinos por data e Google Drive privado
+
+O teste HTTP publicou um treino numa quinta-feira fora da grade, repetiu a publicação sem criar outra aula, protegeu os registros de participação e verificou a grade após excluir o treino. O teste do player confirmou o bloqueio de sessão sem liberação, a revalidação depois da revogação, a ausência do ID do Drive no catálogo e a entrega de intervalos com limite de 4 MiB. A conta de serviço e a validação de pasta foram testadas com respostas simuladas. Build, 302 testes locais e verificação dos componentes no Chrome passaram. Google Drive e PostgreSQL hospedados não foram alterados.
+
+## Recuperação de senha e histórico de graduação
+
+A verificação HTTP local confirmou que contas ativas não recebem novo convite administrativo, tokens anteriores de redefinição deixam de funcionar e a ativação de novas contas continua funcionando. A alteração de contato familiar preserva a conta já ativada. Os testes de graduação conferiram a recuperação dos valores anteriores ao ajuste e a contagem da faixa concluída após marcar aulas na faixa nova. A suíte local teve 298 testes aprovados e o build passou.
+
+## Atalho para link de teste — 15/11/2026
+
+Foram simulados a escolha da prévia mais recente com a produção fora da seleção, uma nova prévia ainda em construção, um link vencido e a indisponibilidade do login. A validação com a conta do proprietário identificou que o invólucro `.cmd` da CLI separava a consulta no `&` e que a Vercel manteve um link já vencido. A chamada direta ao Node preservou os argumentos. Após revogar o link vencido da prévia, o atalho gerou e validou um link real e o copiou.
+
+A validação simulada do armazenamento local confirmou a reutilização sem chamada de escrita, a revogação restrita ao link vencido registrado pelo atalho e a recusa de substituir um link desconhecido. A chave de compartilhamento é criptografada para o usuário atual do Windows e guardada em `.test-output`, fora do Git.
+
+## Seleção de dia na agenda — 15/11/2026
+
+A faixa compartilhada é calculada a partir da segunda-feira da data selecionada. As setas verificam os limites da data de destino. O teste do componente no Chrome confirmou a posição da seleção, o indicador de aula, a virada de mês e ano, os limites, o filtro vazio e o botão **Hoje**. O build e os 297 testes locais passaram.
+
 ## Chamada em lote
 
 A revisão cobriu reenvio da confirmação, check-ins cancelados ou de outra aula e marcações já registradas. A verificação HTTP passou com SQLite em memória. O caminho PostgreSQL foi verificado pelo TypeScript e ainda aguarda execução em ambiente de testes.
+
+## Cancelamento de check-in pelo aluno — 07/11/2026
+
+A remoção administrativa registra ausência. O cancelamento pelo aluno tem uma operação própria e só retira o aviso pendente. A rota recebe o ID do check-in para proteger uma nova reserva contra reenvio do cancelamento anterior. A suíte local e o build passaram.
+
+## Check-in antecipado — 07/11/2026
+
+A revisão identificou que remover a trava de data faria o check-in futuro consultar a cota do dia do pedido. O servidor e o portal passaram a usar os períodos da aula. O teste de regressão enche as cotas atuais, agenda um treino no próximo mês e verifica que a gestão vê o check-in antes de poder marcar presença. A suíte local passou com 294 testes e o build passou. A verificação HTTP usou SQLite em memória.
 
 ## Senhas comuns e recuperação por e-mail — 05/11/2026
 

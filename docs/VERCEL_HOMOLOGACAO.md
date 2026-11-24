@@ -12,6 +12,16 @@ O Supabase brasileiro `yptdxyjqgvzmkoizavmj` estava INACTIVE e foi retomado, che
 
 **Teste funcional concluído em 23/11/2026:** após o proprietário entrar na Vercel e avisar **pronto**, aluno e professor entraram no Tatame pelo fluxo normal. Ambos mantiveram a sessão ao atualizar; o aluno carregou o próprio portal e Comunicados, recebeu bloqueio ao abrir `/api/alunos`, e após sair essa rota exigiu login. O professor carregou os indicadores, a lista de alunos e a ficha com histórico de comunicados recolhido e consulta vazia após expandir. Os arquivos privados inicialmente reunidos continham senhas antigas; foram corrigidos com os registros brasileiros atuais, que passaram nos logins, sem alterar as contas. Arquivos separados em `.test-output/publicacao-diaria-20261123/privado/ACESSO_ALUNO_DIARIO.txt` e `ACESSO_PROFESSOR_DIARIO.txt`, ignorados pelo Git. Capturas: [aluno](screenshots/acesso-diario-aluno.jpg) e [professor](screenshots/acesso-diario-professor.jpg). Não foram enviados comunicados, confirmadas presenças, alteradas senhas ou executada nova suíte local neste teste.
 
+## Atalho para gerar link de teste
+
+Uma vez no Windows, instale a CLI com `npm install -g vercel` e entre na sua conta com `vercel login`. Use a conta com acesso ao projeto **tatame-test**. [CLI da Vercel](https://vercel.com/docs/cli).
+
+Depois que uma atualização estiver publicada, abra **Gerar link de teste.cmd** na pasta do projeto. Cole o endereço inteiro na mensagem para os avaliadores. O atalho usa a publicação de teste mais recente, verifica se o login responde e copia o link completo. Se a prévia estiver em construção ou tiver falhado, a janela avisa.
+
+Quem receber o link pode abrir a tela do Tatame sem conta na Vercel durante a validade de até uma hora. O login do Tatame ainda é necessário. [Links compartilháveis na Vercel](https://vercel.com/docs/deployment-protection/methods-to-bypass-deployment-protection/sharable-links).
+
+Se você abrir o atalho de novo na mesma prévia, ele copia o link que gerou e guardou de forma criptografada para o seu usuário do Windows. Quando esse link vence, o atalho emite outro. Se o link existente foi criado fora desse fluxo, copie-o em **Share** enquanto estiver válido ou revogue-o ali antes de gerar outro.
+
 ## Publicação atualizada e refresh corrigido — 01/11/2026
 
 Prévia final READY: [Abrir o Tatame](https://tatame-homologacao-f1fi4dmth-cleiton-pirola.vercel.app), deployment `dpl_HzupaAG1JgiEW7KEKkiCZCG5oz2S`, ambiente API staging/Preview. Substitui a prévia original e o candidato intermediário de segurança. Mantidos os dois acessos fictícios, sem alterar senhas. Arquivos privados de acesso atualizados; não encaminhados automaticamente a terceiros.

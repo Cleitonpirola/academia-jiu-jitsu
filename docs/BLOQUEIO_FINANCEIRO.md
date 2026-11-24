@@ -1,5 +1,11 @@
 # Bloqueio de acesso por mensalidade vencida
 
+## Aluno bolsista
+
+Em **Alunos → Editar aluno**, marque **Aluno bolsista**. A opção também está disponível no cadastro inicial. A mensalidade fica isenta enquanto a bolsa estiver ativa. Em **Mensalidades → Não pagantes**, a gestão vê os bolsistas e se cada cadastro está ativo. O indicador da **Visão geral** usa a situação atual dos alunos ativos.
+
+Novas mensalidades são recusadas na API. Cobranças já pagas continuam no histórico e na receita. Mensalidades em aberto ficam visíveis à gestão em **Pausadas pela bolsa**, fora dos atrasos, dos valores a receber e do bloqueio do portal. Retirar a bolsa volta a considerar esses registros em aberto. A bolsa não altera as cotas do plano nem os débitos de aulas adicionais.
+
 **Estado em 22/10/2026:** conjunto aprovado para commit/envio após nova execução bem-sucedida de 121 testes TypeScript, 13 Python, build/typecheck e validação Prisma. Essa autorização supera as pendências históricas abaixo. Registro em [PROCESSO.md](PROCESSO.md).
 
 Incremento solicitado em 22/10/2026, implementado/testado localmente. Aguarda validação do usuário antes de commit/push. O envio de e-mails e a confirmação automática de pagamento por integração externa continuam para etapa posterior.

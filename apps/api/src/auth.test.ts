@@ -4,7 +4,7 @@ import request from 'supertest';
 import { randomUUID } from 'node:crypto';
 import { createApp } from './app.js';
 import { SqliteRepository } from './repository.js';
-import { today } from './domain.js';
+import { dateAt, monthAt, today } from './domain.js';
 import { ADMIN_INICIAL_ID, COOKIE } from './modules/auth/routes.js';
 import { hashPassword, tokenHash, verifyPassword } from './modules/auth/password.js';
 import type { Aluno, Aula, MensalidadeInput } from '@tatame/shared';
@@ -43,6 +43,65 @@ describe('Login, autorização e portal do aluno', () => {
     for (const aula of aulas) await repo.createAula(aula, []);
   });
   afterEach(async () => { await repo.close(); });
+
+  it('pausa mensalidades em aberto do bolsista e conserva os pagamentos e o direito de fazer check-in', async () => {
+    const mes = monthAt(-1);
+    const aberta = { alunoId: aluno.id, competencia: mes, valorCentavos: 9000, dataVencimento: dateAt(-1, 10), dataPagamento: null };
+    const pendente = (await authenticated(adminToken).post('/api/mensalidades').send(aberta).expect(201)).body;
+    const paga = (await authenticated(adminToken).post('/api/mensalidades').send({ ...aberta,
+      competencia: monthAt(-2), valorCentavos: 6500, dataVencimento: dateAt(-2, 10), dataPagamento: dateAt(-1, 2),
+    }).expect(201)).body;
+    assert.equal((await authenticated(alunoToken).get('/api/portal').expect(200)).body.bloqueado, true);
+    const { id, criadoEm, ...cadastro } = aluno;
+    await authenticated(adminToken).put('/api/alunos/' + id).send({ ...cadastro, bolsista: true }).expect(200);
+    await authenticated(adminToken).put('/api/alunos/' + id).send({ ...cadastro, telefone: '11999990001' }).expect(200);
+    assert.equal((await repo.get('Aluno', id))?.bolsista, true);
+    await authenticated(adminToken).post('/api/mensalidades').send({ ...aberta, competencia: monthAt(0) }).expect(409);
+    await authenticated(adminToken).patch(`/api/mensalidades/${pendente.id}/pagamento`).send({ dataPagamento: today() }).expect(409);
+    await authenticated(adminToken).get('/api/mensalidades?status=atrasado').expect(200, []);
+    const pausadas = (await authenticated(adminToken).get('/api/mensalidades?status=pausada').expect(200)).body;
+    assert.equal(pausadas[0].id, pendente.id);
+    const financeiro = (await authenticated(adminToken).get('/api/dashboard?mes=' + mes).expect(200)).body;
+    assert.equal(financeiro.bolsistasAtivos, 1);
+    assert.equal(financeiro.atrasadas, 0);
+    assert.equal(financeiro.pendenteCentavos, 0);
+    assert.equal(financeiro.receita.find((item: {mes:string}) => item.mes === mes).previstoCentavos, 0);
+    assert.equal(financeiro.recebidoCentavos, 6500);
+    const portal = (await authenticated(alunoToken).get('/api/portal').expect(200)).body;
+    assert.equal(portal.bloqueado, false);
+    assert.deepEqual(portal.mensalidades.map((item: {id:string}) => item.id), [paga.id]);
+    await authenticated(alunoToken).put(`/api/portal/aulas/${aulas[0].id}/checkin`).send({}).expect(200);
+    assert.deepEqual(await repo.get('Mensalidade', pendente.id), pendente);
+    await authenticated(adminToken).put('/api/alunos/' + id).send({ ...cadastro, bolsista: false }).expect(200);
+    assert.equal((await authenticated(alunoToken).get('/api/portal').expect(200)).body.bloqueado, true);
+    assert.equal((await authenticated(adminToken).get('/api/dashboard?mes=' + mes).expect(200)).body.atrasadas, 1);
+  });
+
+  it('permite check-in em horário extra publicado sem mudar a grade semanal', async () => {
+    const turma = (await authenticated(adminToken).post('/api/turmas').send({
+      nome: 'Equipe Tatame', professor: 'Mestre', situacao: 'ativo', alunoIds: [],
+      horarios: [{ diaSemana: 1, horaInicio: '18:00', horaFim: '19:00' }],
+    }).expect(201)).body;
+    const grade = await repo.list('HorarioTurma');
+    const data = today();
+    const amanha = new Date(new Date(data + 'T12:00:00Z').getTime() + 86_400_000).toISOString().slice(0, 10);
+    const horario = { turmaId: turma.id, titulo: 'Treino extra de guarda', horaInicio: '20:30', horaFim: '21:30' };
+    const hoje = (await authenticated(adminToken).post('/api/aulas/personalizadas')
+      .send({ ...horario, id: randomUUID(), dataAula: data }).expect(201)).body;
+    const futuro = (await authenticated(adminToken).post('/api/aulas/personalizadas')
+      .send({ ...horario, id: randomUUID(), dataAula: amanha }).expect(201)).body;
+    const portal = (await authenticated(alunoToken).get('/api/portal').expect(200)).body;
+    assert.equal(portal.aulas.find((aula: Aula) => aula.id === hoje.id).titulo, horario.titulo);
+    assert.equal(portal.aulas.find((aula: Aula) => aula.id === futuro.id).origemHorarioId, null);
+    const checkin = (await authenticated(alunoToken).put(`/api/portal/aulas/${hoje.id}/checkin`).send({}).expect(200)).body;
+    await authenticated(alunoToken).put(`/api/portal/aulas/${futuro.id}/checkin`).send({}).expect(200);
+    const chamada = (await authenticated(adminToken).get(`/api/aulas/${hoje.id}`).expect(200)).body;
+    assert.equal(chamada.checkins[0].id, checkin.id);
+    await authenticated(adminToken).post(`/api/aulas/${hoje.id}/chamada`).send({ checkinIds: [checkin.id] }).expect(200);
+    const confirmada = (await authenticated(alunoToken).get('/api/portal').expect(200)).body.aulas.find((aula: Aula) => aula.id === hoje.id);
+    assert.equal(confirmada.presenca.presente, true);
+    assert.deepEqual(await repo.list('HorarioTurma'), grade);
+  });
 
   it('permite administrador local existente sem senha apenas quando habilitado, sem gerar sessão', async () => {
     const local = createApp(repo, { localAdmin: true });
@@ -158,17 +217,52 @@ describe('Login, autorização e portal do aluno', () => {
     assert.equal(portal.body.aulas.find((item: Aula) => item.id === aulas[0].id).presenca.presente, true);
     assert.equal(portal.body.aulas.find((item: Aula) => item.id === aulas[1].id).presenca, null);
   });
-  it('recusa futuro, passado, cancelamento, aula inexistente e data anterior à matrícula', async () => {
-    for (const dataAula of ['2099-01-01','2020-01-01']) {
-      await repo.update('Aula', aulas[0].id, { dataAula });
-      await authenticated(alunoToken).put(`/api/portal/aulas/${aulas[0].id}/checkin`).send({}).expect(400);
-    }
+  it('recusa passado, cancelamento, aula inexistente e data anterior à matrícula', async () => {
+    await repo.update('Aula', aulas[0].id, { dataAula: '2020-01-01' });
+    await authenticated(alunoToken).put(`/api/portal/aulas/${aulas[0].id}/checkin`).send({}).expect(400);
     await repo.update('Aula', aulas[0].id, { dataAula: today(), situacao: 'cancelada', motivoCancelamento: 'Teste', canceladaEm: new Date().toISOString() });
     await authenticated(alunoToken).put(`/api/portal/aulas/${aulas[0].id}/checkin`).send({}).expect(409);
     await authenticated(alunoToken).put(`/api/portal/aulas/${randomUUID()}/checkin`).send({}).expect(404);
     await repo.update('Aula', aulas[0].id, { situacao: 'agendada', motivoCancelamento: null, canceladaEm: null });
     await repo.update('Aluno', aluno.id, { dataMatricula: '2099-01-01' });
     await authenticated(alunoToken).put(`/api/portal/aulas/${aulas[0].id}/checkin`).send({}).expect(400);
+  });
+  it('cancela o próprio check-in futuro, libera a cota e preserva uma nova reserva após reenvio', async () => {
+    const amanha = new Date(Date.parse(today()) + 86_400_000).toISOString().slice(0, 10);
+    const [primeira, segunda] = aulas;
+    for (const aula of aulas) await repo.update('Aula', aula.id, { dataAula: amanha });
+    await repo.saveSaldoMensalAluno(aluno.id, 1);
+    await repo.savePlanoAluno(aluno.id, { nome: 'Uma aula', limiteSemanal: 1 }, new Date().toISOString());
+    const portal = authenticated(alunoToken);
+    const primeiraUrl = `/api/portal/aulas/${primeira.id}/checkin`;
+    const segundaUrl = `/api/portal/aulas/${segunda.id}/checkin`;
+    const checkin = (await portal.put(primeiraUrl).send({}).expect(200)).body;
+    const checkinOutro = await repo.saveCheckin(primeira.id, outro.id, new Date().toISOString());
+    await request(app).delete(`${primeiraUrl}/${checkin.id}`).set('X-Tatame-Request', '1').expect(401);
+    await portal.delete(`${primeiraUrl}/${checkinOutro.id}`).expect(204);
+    await portal.put(segundaUrl).send({}).expect(403);
+    await portal.delete(`${primeiraUrl}/${checkin.id}`).expect(204);
+    const detalhes = (await authenticated(adminToken).get(`/api/aulas/${primeira.id}`).expect(200)).body;
+    assert.deepEqual(detalhes.checkins.map((item: { id: string }) => item.id), [checkinOutro.id]);
+    assert.deepEqual(detalhes.chamada, []);
+
+    const nova = (await portal.put(primeiraUrl).send({}).expect(200)).body;
+    assert.notEqual(nova.id, checkin.id);
+    await portal.delete(`${primeiraUrl}/${checkin.id}`).expect(204);
+    assert.equal((await repo.get('CheckinAula', nova.id))?.id, nova.id);
+    await portal.delete(`${primeiraUrl}/${nova.id}`).expect(204);
+    await portal.put(segundaUrl).send({}).expect(200);
+  });
+  it('permite cancelar check-in do dia até a marcação da chamada', async () => {
+    const portal = authenticated(alunoToken);
+    const url = `/api/portal/aulas/${aulas[0].id}/checkin`;
+    const original = (await portal.put(url).send({}).expect(200)).body;
+    await portal.delete(`${url}/${original.id}`).expect(204);
+    const novo = (await portal.put(url).send({}).expect(200)).body;
+    await authenticated(adminToken).put(`/api/aulas/${aulas[0].id}/chamada/${aluno.id}`).send({ presente: true }).expect(201);
+    await portal.delete(`${url}/${novo.id}`).expect(409);
+    assert.equal((await repo.get('CheckinAula', novo.id))?.id, novo.id);
+    assert.equal((await repo.list('PresencaAula'))[0].presente, true);
   });
   it('inativação bloqueia sessão existente e novos logins do aluno', async () => {
     await repo.update('Aluno', aluno.id, { situacao: 'inativo' });
@@ -262,7 +356,11 @@ describe('Login, autorização e portal do aluno', () => {
     assert.equal(portal.body.aulas.find((item: Aula) => item.id === aulas[0].id).situacao, 'cancelada');
     assert.equal((await repo.list('PresencaAula')).length, 0); assert.equal((await repo.list('CheckinAula')).length, 1);
   });
-  it('convite é temporário e de uso único, não expõe hash e redefinição revoga sessões', async () => {
+  it('permite convite temporário só para o primeiro acesso e rejeita links administrativos antigos de redefinição', async () => {
+    await authenticated(adminToken).get(`/api/auth/alunos/${aluno.id}/convite`).expect(200, { acessoAtivado: true });
+    await authenticated(adminToken).post(`/api/auth/alunos/${aluno.id}/convite`).expect(409);
+    await repo.update('Usuario', usuarioId, { senhaHash: null });
+    await authenticated(adminToken).get(`/api/auth/alunos/${aluno.id}/convite`).expect(200, { acessoAtivado: false });
     const previous = await authenticated(adminToken).post(`/api/auth/alunos/${aluno.id}/convite`).expect(201);
     const invite = await authenticated(adminToken).post(`/api/auth/alunos/${aluno.id}/convite`).expect(201);
     assert.notEqual(previous.body.token, invite.body.token);
@@ -274,9 +372,9 @@ describe('Login, autorização e portal do aluno', () => {
     assert.equal(activation.body.usuario.alunoId, aluno.id);
     await authenticated(alunoToken).get('/api/portal').expect(401);
     await request(app).post('/api/auth/ativar').set('X-Tatame-Request','1').send({ token: invite.body.token, senha: password }).expect(400);
-    const fresh = await authenticated(adminToken).post(`/api/auth/alunos/${aluno.id}/convite`).expect(201);
-    await repo.update('Usuario', usuarioId, { conviteExpiraEm: '2000-01-01T00:00:00.000Z' });
-    await request(app).post('/api/auth/ativar').set('X-Tatame-Request','1').send({ token: fresh.body.token, senha: password }).expect(400);
+    await authenticated(adminToken).post(`/api/auth/alunos/${aluno.id}/convite`).expect(409);
+    await repo.update('Usuario', usuarioId, { conviteHash: tokenHash(previous.body.token), conviteExpiraEm: '9999-12-31T00:00:00.000Z' });
+    await request(app).post('/api/auth/ativar').set('X-Tatame-Request','1').send({ token: previous.body.token, senha: password }).expect(400);
   });
   it('cria acesso apenas para aluno ativo; aluno não pode emitir convites ou configurar administrador', async () => {
     await authenticated(alunoToken).post(`/api/auth/alunos/${outro.id}/convite`).expect(403);

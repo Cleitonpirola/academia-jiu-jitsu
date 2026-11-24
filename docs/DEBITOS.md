@@ -10,7 +10,7 @@ A retirada de criação/exclusão de avulsas não remove este recurso. O usuári
 
 Solicitação: quando a cota mensal terminar, oferecer aula adicional pelo preço da academia, permitir escolher aula/dia, confirmar e gerar débito automaticamente; menu Débitos do aluno e baixa manual pelo professor/administrador. Usuário confirmou que débito vencido deve bloquear novos check-ins, mantendo acesso ao menu Débitos.
 
-O saldo mensal existente continua na tabela Aluno. Aulas adicionais não criam outro contador de aulas do plano: cada confirmação gera uma reserva vinculada a uma aula publicada e um DebitoAula. No dia da aula, o aluno faz check-in. Presença continua dependendo da validação do responsável. O adicional confirmado dispensa a cota semanal/mensal para aquela aula, mas não ignora cadastro inativo, aula cancelada, mensalidade vencida ou débito adicional vencido.
+O saldo mensal existente continua na tabela Aluno. Cada confirmação de aula adicional gera uma reserva vinculada à aula publicada e um DebitoAula. Depois de reservar, o aluno faz check-in no dia ou com antecedência. A presença depende da validação do professor. O adicional confirmado dispensa a cota semanal e mensal para aquela aula, mas o check-in exige cadastro ativo, aula agendada e situação financeira regular.
 
 Não há valor inventado: vender aulas adicionais começa desativado, até a administração configurar o preço em Débitos. Prazo padrão é 3 dias corridos, de 1 a 90 configuráveis, contados da confirmação em America/Sao_Paulo. O vencimento ainda permite check-in; fica vencido no dia seguinte. A administração configura limite mensal na ficha do aluno, preço/prazo na tela Débitos e registra pagamentos recebidos nessa mesma tela.
 

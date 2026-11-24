@@ -1,5 +1,15 @@
 # Aulas datadas — entrega 1B
 
+## Treino em data específica
+
+Em **Aulas → Adicionar horário extra**, escolha uma turma ativa, informe o nome e selecione data, início e término. Para treinar apenas na quarta quinta-feira do mês, selecione a data daquela quinta. A publicação cria um encontro e usa os alunos habituais da turma como previstos. A lista de horários semanais continua igual.
+
+Na área do aluno, o nome publicado aparece sob **Horário extra**. O aluno pode fazer check-in antecipado ou no dia, conforme os limites do seu plano. O professor confirma a presença pela chamada daquele encontro.
+
+Abra **Detalhes → Excluir treino** para retirar um treino por data sem registros de participação ou cobrança. Aulas com check-in podem ser canceladas se ainda não houver chamada. Aulas da grade seguem o fluxo de cancelamento. A exclusão também é verificada no banco.
+
+As rotas administrativas são `POST /api/aulas/personalizadas` e `DELETE /api/aulas/personalizadas/:id`. A criação reutiliza a origem `extra` e o identificador do formulário para proteger contra reenvios. A contratação de treino adicional pago continua limitada a aulas publicadas da grade.
+
 ## Nome de um encontro — 26/10/2026
 
 Em **Aulas → lápis ao lado do nome no cartão**, informe o nome e clique em **Salvar nome**. **Voltar** descarta o rascunho. Permitido ao administrador, inclusive para corrigir aula cancelada ou registro anterior. Nome obrigatório, espaços externos removidos, entre 2 e 120 caracteres.
@@ -10,7 +20,7 @@ Analogia para estudar: turma é o modelo da agenda; aula é um compromisso espec
 
 Validação: 210 testes TypeScript e build/typecheck aprovados, incluindo permissões, entradas inválidas, outras aulas, chamada/check-in/débito, cancelamento e republicação. Navegador com dados fictícios confirmou salvar, cancelar rascunho e manter o outro encontro. Sem nova prova PostgreSQL deste incremento; utiliza a atualização parcial do repositório existente. Ainda aguardando validação do usuário para commit/envio.
 
-## Fluxo atual: aulas publicadas pelas turmas — 26/10/2026
+## Registro anterior: aulas publicadas pelas turmas — 26/10/2026
 
 **Criação e exclusão de aulas avulsas retiradas a pedido do usuário.** Em Turmas, configure os dias e intervalos, usando Incluir mais horários quando necessário. Uma turma coringa pode reunir 12h, 15h e 18h. Em **Aulas → Adicionar aula da turma**, escolha o horário e publique o encontro na data correspondente.
 

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { FAIXAS, type Mensalidade, type Status, type Dashboard, type Aluno } from '@tatame/shared';
+import { HttpError } from './http-error.js';
 export const today = () => new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Sao_Paulo' }).format(new Date());
 export const currentMonth = () => today().slice(0, 7);
 export const monthAt = (offset: number, month = currentMonth()) => { const [y,m] = month.split('-').map(Number); return new Date(Date.UTC(y, m - 1 + offset, 1)).toISOString().slice(0,7); };
@@ -12,6 +13,7 @@ export const alunoSchema = z.object({
   telefone: z.string().trim().max(40),
   email: z.union([z.literal(''),z.string().trim().toLowerCase().email('Informe um e-mail válido.').max(180)]),
   possuiCelular: z.boolean().optional(),
+  bolsista: z.boolean().optional(),
   dataNascimento: date.refine(v => v <= today(), 'Nascimento não pode estar no futuro.'),
   faixa: z.string().trim().min(1).max(80),
   faixaId: z.string().uuid().nullable().optional(),
@@ -39,11 +41,23 @@ export const presencaSchema = z.object({
   tipoTreino: z.enum(['Com kimono','Sem kimono','Fundamentos','Competição']), presente: z.boolean(),
 }).strict();
 export const statusOf = (m: Pick<Mensalidade,'dataPagamento'|'dataVencimento'>, reference = today()): Status => m.dataPagamento ? 'pago' : m.dataVencimento < reference ? 'atrasado' : 'pendente';
-export function dashboard(alunos: Aluno[], mensalidades: Mensalidade[], month: string): Dashboard {
+export const mensalidadePausada = (mensalidade: Pick<Mensalidade, 'dataPagamento'>, aluno?: Pick<Aluno, 'bolsista'>) => Boolean(aluno?.bolsista && !mensalidade.dataPagamento);
+export function mensalidadesConsideradas(alunos: Aluno[], mensalidades: Mensalidade[]) {
+  const porId = new Map(alunos.map(aluno => [aluno.id, aluno]));
+  return mensalidades.filter(mensalidade => !mensalidadePausada(mensalidade, porId.get(mensalidade.alunoId)));
+}
+export function validarMensalidade(aluno: Pick<Aluno, 'bolsista' | 'dataMatricula'> | undefined | null, competencia?: string) {
+  if (!aluno) throw new HttpError(400, 'Selecione um aluno cadastrado.');
+  if (aluno.bolsista) throw new HttpError(409, 'Este aluno é bolsista. As mensalidades ficam pausadas enquanto a bolsa estiver ativa.');
+  if (competencia && competencia < aluno.dataMatricula.slice(0, 7)) throw new HttpError(400, 'A competência deve ser posterior ou igual ao mês da matrícula.');
+}
+export function dashboard(alunos: Aluno[], registros: Mensalidade[], month: string): Dashboard {
+  const mensalidades = mensalidadesConsideradas(alunos, registros);
   const invoices = mensalidades.filter(m => m.competencia === month);
   const income = (mes: string) => mensalidades.filter(m => m.dataPagamento?.startsWith(mes)).reduce((sum,m)=>sum+m.valorCentavos,0);
   return {
     totalAlunos: alunos.length, ativos: alunos.filter(a=>a.situacao==='ativo').length,
+    bolsistasAtivos: alunos.filter(a => a.situacao === 'ativo' && a.bolsista).length,
     inativos: alunos.filter(a=>a.situacao==='inativo').length, novos: alunos.filter(a=>a.dataMatricula.startsWith(month)).length,
     pagas: invoices.filter(m=>statusOf(m)==='pago').length,
     pendentes: invoices.filter(m=>statusOf(m)==='pendente').length,

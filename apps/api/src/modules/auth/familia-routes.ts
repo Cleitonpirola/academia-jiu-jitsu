@@ -24,7 +24,8 @@ export function familiaAdminRouter(repo: Repository) {
     const base={alunoId:aluno.id,autorId:usuarioAtual(res).id,timestamp:new Date().toISOString(),conviteHash:tokenHash(token),expiraEm};
     const result=tipo==='transferir'?await repo.saveFamilia({...base,tipo,input:transferenciaSchema.parse(req.body)}):await repo.saveFamilia({...base,tipo});
     const usuario=await repo.get('Usuario',result.usuarioId);
-    res.status(201).json({token,expiraEm,email:usuario!.email});
+    const convite = usuario?.conviteHash === base.conviteHash ? { token, expiraEm } : {};
+    res.status(201).json({ ...convite, email: usuario!.email });
   });
   router.get('/:id/comunicados',async(req,res)=>{
     const aluno=await alunoAtual(req.params.id);

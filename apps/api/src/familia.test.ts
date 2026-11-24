@@ -134,7 +134,8 @@ describe('Acesso familiar e transferência de responsabilidade',()=>{
     assert.equal(dados.responsaveis[0].tipoVinculo,'contato');assert.ok(dados.aluno.responsabilidadeTransferidaEm);assert.equal(dados.eventos[0].tipo,'transferencia_maioridade');
     await call(token,'get',`/api/responsavel/${irma.id}/portal`).expect(200);
     await request(app).post('/api/auth/ativar').set('X-Tatame-Request','1').send({token:r.body.token,senha}).expect(200);
-    await admin('post',`/api/alunos/${aluno.id}/familia/transferir`).send({email:'adulto@teste.invalid',telefone:'11900000002',maioridade:true,manterContato:false}).expect(201);
+    const alterarContato = await admin('post',`/api/alunos/${aluno.id}/familia/transferir`).send({email:'adulto@teste.invalid',telefone:'11900000002',maioridade:true,manterContato:false}).expect(201);
+    assert.equal(alterarContato.body.token,undefined);
     assert.equal((await repo.list('ResponsavelAluno')).find(v=>v.alunoId===aluno.id)!.tipoVinculo,'arquivado');
   });
   it('aviso e autorização chegam apenas ao destinatário e resposta fica registrada uma única vez',async()=>{

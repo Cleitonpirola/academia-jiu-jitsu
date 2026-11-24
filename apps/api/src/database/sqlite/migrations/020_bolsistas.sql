@@ -1,0 +1,1 @@
+ALTER TABLE Aluno ADD COLUMN bolsista INTEGER NOT NULL DEFAULT 0 CHECK (bolsista IN (0, 1));

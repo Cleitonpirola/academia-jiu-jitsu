@@ -70,3 +70,5 @@ Não considerar validado: cada combinação possível de permissões/planos; tes
 Publicada a fonte local em Preview para validação, sem merge na main, release, tag ou commit/push novo. Base Git continua `c8c7ef4`, branch `codex/evolucao-tatame`; mudanças recentes ainda locais. Após o usuário validar o conjunto e autorizar, revisar diff, criar commit descritivo e enviar ao GitHub conforme AGENTS.md. O código online mais recente não deve ser apresentado como já sincronizado no GitHub.
 
 O domínio principal do projeto mostra somente uma página estática de preparação, usada para inicializar a primeira publicação que a Vercel força para Production. A aplicação validada é a **Preview indicada neste documento**, não esse placeholder. A conexão privada foi configurada somente em Preview.
+
+![Área do aluno na publicação validada](screenshots/homologacao-online-aluno.png)

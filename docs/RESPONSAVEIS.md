@@ -10,6 +10,10 @@ Sem nova tabela, coluna ou migração. A transferência por maioridade continua 
 
 Verificações novas: 287 testes aprovados, incluindo 17 de família, build/typecheck e conferência visual com cadastros fictícios em SQLite na memória. Conferidos adulto, limite de 18 anos, marcar/ocultar, ativar acesso próprio, reabrir a ficha com a escolha salva e desmarcar/salvar novamente. Nenhuma conta real usada no ensaio visual. As verificações externas de Supabase anteriores não são apresentadas como um novo teste desta alteração. [Prévia protegida READY](https://tatame-homologacao-bomdkv0wn-cleiton-pirola.vercel.app); 159 fontes conferidas por hash, sem commit/push. Login e navegação online aguardam validação pessoal no Chrome.
 
+![Menor sem celular: responsável visível](screenshots/menor-sem-celular-responsavel.jpg)
+
+![Menor com celular: responsável oculto](screenshots/menor-com-celular-acesso-proprio.jpg)
+
 Entrega de 25/10/2026, implementada e testada localmente e no Supabase de homologação. **Aguardando validação do usuário; sem commit/push desta entrega e sem publicação no Render.**
 
 ## Para entender do zero

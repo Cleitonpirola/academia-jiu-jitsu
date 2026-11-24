@@ -13,8 +13,9 @@ export interface RegraGraduacao { id:string; faixaId:string; aulasPorGrau:number
 export type RegraGraduacaoInput = Pick<RegraGraduacao,'aulasPorGrau'> & {grausParaFaixa?:number;proximaFaixaId?:string|null;mesesPorGrau?:null;mesesMinimosFaixa?:0};
 export interface EstadoGraduacao { id:string; alunoId:string; faixaId:string; dataInicioFaixa:string; aulasAnteriores:number; marcoAulas:string; versao:number; atualizadoEm:string }
 export interface EventoGraduacao { id:string; alunoId:string; tipo:'ajuste'|'grau'|'faixa'|'solicitacao'; faixaAnterior:string; faixaNova:string; grauAnterior:number|null; grauNovo:number|null; aulasConsideradas:number; motivo:string; autorId:string; versaoEstado:number; regraSnapshot:string|null; criadoEm:string }
+export interface RegistroHistoricoFaixa { eventoId:string; tipo:'ajuste'|'faixa'; faixa:string; grau:number|null; registradoEm:string; aulasTotal:number; dataInicio:string|null; aulasConfirmadas:number|null; aulasAnteriores:number|null }
 export interface MetaGraduacao { aulasNecessarias:number|null; aulasRestantes:number; dataMinima:string; apto:boolean }
-export interface ProgressoGraduacao { alunoId:string; nome:string; faixa:string; grauAtual:number|null; estado:EstadoGraduacao|null; regra:RegraGraduacao|null; regraAssinatura:string|null; aulasConfirmadas:number; aulasAnteriores:number; aulasTotal:number; proximoGrau:number|null; metaGrau:MetaGraduacao|null; proximaFaixa:string|null; metaFaixa:MetaGraduacao|null; solicitacaoPendente:boolean; historico:EventoGraduacao[] }
+export interface ProgressoGraduacao { alunoId:string; nome:string; faixa:string; grauAtual:number|null; estado:EstadoGraduacao|null; regra:RegraGraduacao|null; regraAssinatura:string|null; aulasConfirmadas:number; aulasAnteriores:number; aulasTotal:number; proximoGrau:number|null; metaGrau:MetaGraduacao|null; proximaFaixa:string|null; metaFaixa:MetaGraduacao|null; solicitacaoPendente:boolean; historico:EventoGraduacao[]; historicoFaixas:RegistroHistoricoFaixa[] }
 export type Situacao = 'ativo' | 'inativo';
 export type Status = 'pendente' | 'pago' | 'atrasado';
 export interface Aluno {
@@ -23,6 +24,7 @@ export interface Aluno {
   criadoEm: string;
   limiteAulasMensal?: number | null; aulasRestantesMes?: number | null; mesSaldoAulas?: string | null;
   possuiCelular?: boolean; acessoPrincipal?: 'aluno' | 'responsavel'; responsabilidadeTransferidaEm?: string | null;
+  bolsista?: boolean;
   faixaId?: string | null; grauId?: string | null;
 }
 export type AlunoInput = Omit<Aluno, 'id' | 'criadoEm' | 'limiteAulasMensal' | 'aulasRestantesMes' | 'mesSaldoAulas' | 'acessoPrincipal' | 'responsabilidadeTransferidaEm'>;
@@ -84,7 +86,13 @@ export interface AulaProfessor { id: string; aulaId: string; nome: string; ordem
 export interface AulaView extends Aula { professores: string[]; alunosPrevistos: AulaAlunoPrevisto[]; chamada: PresencaAula[]; checkins: CheckinAula[] }
 export interface UsuarioView { id: string; nome: string; email: string; perfil: 'admin' | 'aluno' | 'responsavel'; alunoId: string | null }
 export interface AuthState { configuracaoInicial: boolean; usuario: UsuarioView | null; recuperacaoDisponivel?: boolean }
-export interface AulaAlunoView extends Aula { checkin: CheckinAula | null; presenca: PresencaAula | null }
+export interface AulaAlunoView extends Aula {
+  checkin: CheckinAula | null;
+  presenca: PresencaAula | null;
+  limiteMensalAtingido: boolean;
+  limiteSemanalAtingido: boolean;
+  liberacaoSemanal: boolean;
+}
 export interface PortalAluno {
   bloqueado: false;
   aluno: Aluno; aulas: AulaAlunoView[];
@@ -105,7 +113,7 @@ export interface Mensalidade {
   id: string; alunoId: string; competencia: string; valorCentavos: number;
   dataVencimento: string; dataPagamento: string | null; criadoEm: string;
 }
-export interface MensalidadeView extends Mensalidade { alunoNome: string; status: Status; faixa: Faixa }
+export interface MensalidadeView extends Mensalidade { alunoNome: string; status: Status | 'pausada'; faixa: Faixa }
 export type MensalidadeInput = Omit<Mensalidade, 'id' | 'criadoEm'>;
 export interface Presenca {
   id: string; alunoId: string; dataTreino: string; tipoTreino: string; presente: boolean;
@@ -121,6 +129,7 @@ export interface Health {
 }
 export interface Dashboard {
   totalAlunos: number; ativos: number; inativos: number; novos: number;
+  bolsistasAtivos: number;
   pagas: number; pendentes: number; atrasadas: number;
   recebidoCentavos: number; pendenteCentavos: number;
   receita: { mes: string; recebidoCentavos: number; previstoCentavos: number }[];
