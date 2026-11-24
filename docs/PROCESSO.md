@@ -1,5 +1,11 @@
 # Processo
 
+## Cidade incluída na publicação diária — 24/11/2026
+
+Após a aprovação explícita, o diff de 44 arquivos foi revisado, verificado sem segredos, commitado em `fd05301` e enviado normalmente para `codex/evolucao-tatame`. Portfólio e artefatos privados preservados fora da seleção; tag v1.0.0 inalterada. Migração aditiva aplicada no projeto brasileiro correto com checksum Prisma. Hashes anteriores de todos os horários/aulas iguais e mesmas contagens de participação, novos campos null e RLS mantida.
+
+Publicação final `dpl_5KPypuvKgvJNwdxuifmLkaGrys9P`, READY/Production/gru1, 180 fontes conferidas por SHA-1; duas entradas out são funções geradas, não fontes extras. Alias diário atualizado pela plataforma. Nova execução HTTP passou com professor/admin, aluno, isolamento 401/403, origem, cookie seguro, logout e analytics disponível. Navegador confirmou campo opcional vazio na turma e no extra, sem salvar. O teste que criaria/excluiria registros sintéticos online foi rejeitado pela revisão automática pelo risco de limpeza no banco compartilhado; não executado nem contornado. Concluída verificação externa sem alteração de cadastros, com a gravação coberta pelos testes locais. [Detalhes](ACESSO_DEMONSTRACAO.md#cidade-publicada-e-conferida). Estes registros e a captura online acompanham a entrega autorizada, sem nova mudança de comportamento.
+
 ## Demonstração direta e aprovação da cidade — 24/11/2026
 
 Usuário solicitou mestre como administrador e conta fictícia de aluno em dois celulares, sem entrada pela Vercel. Recriada a fonte já aprovada em Production, mantida a proteção das prévias via Standard Protection e registrado o domínio diário. Segredos existentes tiveram o alvo estendido sem leitura; origem de recuperação configurada separadamente para produção. Sem bypass, troca de senha, seed ou alteração de cadastros. Conferidos 177 hashes de fonte, login de ambos, 401 sem sessão, 403 do aluno na administração, origem estrangeira recusada, cookie seguro, logout e analytics disponível. Navegador em tela estreita confirmou os dois perfis. Primeira publicação direta pronta e testada.

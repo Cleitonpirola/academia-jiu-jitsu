@@ -1,5 +1,9 @@
 # Revisão de IA
 
+## Conferência final da cidade publicada — 24/11/2026
+
+Commit aprovado `fd05301` enviado; DDL aditivo aplicado com checksum conferido, históricos preservados por hash, RLS mantida e novos campos null. Pacote final contém exatamente 180 fontes aprovadas, sem segredos/fixtures/portfólio. Publicação Production/gru1 READY e alias diário correto. Ambos os acessos e bloqueios HTTP passaram na nova versão. Navegador confirmou required=false, limite 80 e campos vazios em grade/extra, fechando sem salvar. O teste de escrita sintética externa foi rejeitado pela revisão automática, não executado; cobertura de escrita permanece local. Advisor somente informativo para RLS sem políticas, conforme arquitetura privada. Nenhuma política permissiva adicionada. [Evidências](ACESSO_DEMONSTRACAO.md#cidade-publicada-e-conferida).
+
 ## Acesso direto de demonstração — 24/11/2026
 
 Publicação com a mesma fonte aprovada, 177 hashes conferidos e sem novo código na primeira liberação direta. Revisados alvo de variáveis, origem HTTPS, proteção Standard em vez de desativação global, permanência de login/roles e ausência de bypass. Testes HTTP reais passaram para página pública, dados 401, aluno 403, professor 200, origem estrangeira 403, configuração inicial remota bloqueada e logout. Cookie Secure/HttpOnly/SameSite=Strict conferido. Ambas as URLs geradas redirecionam à Vercel sem sessão. Navegador estreito confirmou professor e aluno. Limite por processo continua uma limitação conhecida; não afirmar auditoria completa nem prontidão para dados reais. A inclusão da cidade já apresentada foi aprovada em seguida.

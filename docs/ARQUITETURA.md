@@ -1,5 +1,11 @@
 # Arquitetura — Academia de Jiu-Jitsu
 
+## Hospedagem de demonstração com entrada direta — 24/11/2026
+
+O domínio diário aponta para um deployment Production/gru1, com as variáveis servidoras existentes também nesse alvo. PASSWORD_RESET_ORIGIN tem valor HTTPS diário próprio em Production e sentinela preview nas prévias. Standard Protection mantém Vercel Authentication em prévias e URLs geradas; domínios de produção chegam à aplicação, que continua exigindo sessão e papel para os dados. Não há bypass de automação ou link temporário. A autenticação do Tatame não foi alterada nesta liberação.
+
+A migração de cidade descrita abaixo foi aplicada no projeto brasileiro com checksum do arquivo commitado, e a fonte `fd05301` está publicada. Colunas anteriores preservadas por hashes, novos campos null e RLS mantida. A afirmação anterior de ausência de execução externa registra a etapa de preparação. [Evidências e limites](ACESSO_DEMONSTRACAO.md#cidade-publicada-e-conferida).
+
 ## Cidade opcional de treino — 24/11/2026
 
 `HorarioTurma.cidade` e `Aula.cidade` são textos anuláveis, limitados a 80 caracteres. O schema compartilhado da API aceita ausência, null e texto; remove espaços nas pontas e normaliza vazio para null. Os contratos TypeScript mantêm a propriedade opcional para compatibilidade com consumidores anteriores. SQLite recebe a migração 21 e PostgreSQL a migração aditiva `202611240001_cidade_treino`, sem backfill; registros existentes recebem null. As listas explícitas de colunas do repositório SQLite incluem cidade. Migração PostgreSQL preparada e schema validado, sem execução externa nesta entrega.

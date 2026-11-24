@@ -1,5 +1,7 @@
 # Tatame na Vercel — preparação de homologação
 
+**Atualização final de 24/11/2026:** cidade opcional incluída na fonte `fd05301`, migração brasileira aplicada e deployment `dpl_5KPypuvKgvJNwdxuifmLkaGrys9P` READY/Production/gru1. O domínio diário abre direto no Tatame; prévias mantêm Vercel Authentication via Standard Protection. Dois acessos e bloqueios novamente aprovados por HTTP; formulários online conferidos sem gravações de teste. [Resultado completo](ACESSO_DEMONSTRACAO.md#cidade-publicada-e-conferida).
+
 ## Acesso direto autorizado — 24/11/2026
 
 O usuário pediu demonstração em dois celulares: mestre como administrador e outro aparelho como aluno fictício. O endereço diário agora é domínio de produção com entrada direta pelo Tatame. Vercel Authentication permanece ativa em Standard Protection, preservando prévias e URLs geradas. Sem bypass ou link temporário. Os dois logins e bloqueios foram testados por HTTP e navegador; o usuário aprovou incluir a cidade opcional em seguida. [Estado, configuração e roteiro](ACESSO_DEMONSTRACAO.md). Registros anteriores de proteção all no endereço diário são históricos.

@@ -1,5 +1,7 @@
 # Turmas e grade fixa — entrega 1A
 
+**Publicada em 24/11/2026:** cidade opcional aprovada pelo usuário e enviada em `fd05301`, disponível no endereço diário com login direto pelo Tatame. Migração brasileira aplicada e dados históricos preservados. Formulário online conferido sem salvar alterações. A nota de pendência abaixo registra o estado anterior à aprovação. [Entrega completa](ACESSO_DEMONSTRACAO.md#cidade-publicada-e-conferida).
+
 ## Cidade opcional — 24/11/2026
 
 Na grade de **Nova turma/Editar turma**, cada intervalo tem **Cidade (opcional)**. O texto é livre, com até 80 caracteres, e pode ficar em branco. Não há uma lista obrigatória de cidades. O campo em branco não gera etiqueta ou aviso no cartão.

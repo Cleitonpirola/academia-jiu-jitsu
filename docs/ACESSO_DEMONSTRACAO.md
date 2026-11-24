@@ -30,9 +30,19 @@ DATABASE_URL, RESEND_API_KEY, RESEND_FROM e APP_ORIGIN foram estendidas de Previ
 
 Evidência HTTP privada em `.test-output/acesso-direto-20261124/verificacao-api.json`. O roteiro inicialmente esperava o nome do backend como postgres; ajustado para o valor real supabase e reexecutado com sucesso. Não se repetiu a suíte local nesta liberação de infraestrutura.
 
-## Inclusão da cidade aprovada
+## Cidade publicada e conferida
 
-Após a primeira liberação, o usuário pediu **pode incluir a opção de cidade tbm** e **continue**. Isso aprova o conjunto de cidade já apresentado, seu commit/envio e inclusão no endereço diário. Build/typecheck, 311 testes TypeScript, Prisma e conferência visual local já passaram nesta rodada; a migração brasileira e a publicação atualizada serão verificadas antes da entrega final. Sem preenchimento automático de cidades nos horários reais.
+Após a primeira liberação, o usuário pediu **pode incluir a opção de cidade tbm** e **continue**, aprovando o conjunto apresentado para commit/envio e publicação. Fonte enviada em `fd05301f7ddacf6fdafbb304412d5de40c0c1dee`, branch `codex/evolucao-tatame`. Build/typecheck, 311 testes TypeScript, Prisma e conferência visual local passaram nesta rodada, antes da publicação.
+
+Migração `202611240001_cidade_treino` aplicada no Supabase brasileiro `yptdxyjqgvzmkoizavmj`, com checksum `c4ceb4648ec64810a7b110a96a704df7bc169cc4d7d8e8e672dab223dcdf2933` no histórico Prisma. São duas colunas VARCHAR(80), anuláveis e sem backfill. Hashes de todas as colunas anteriores de HorarioTurma e Aula permaneceram iguais; mantidos 30 horários (incluindo a grade inativa histórica), duas aulas, dois check-ins e duas presenças por aula. RLS permanece habilitada. Nenhuma cidade foi atribuída automaticamente.
+
+Publicação final `dpl_5KPypuvKgvJNwdxuifmLkaGrys9P`, READY/Production/gru1, com 180 fontes conferidas por SHA-1 e duas funções geradas pela plataforma. O domínio diário aponta para essa publicação. Segredos, testes, fixtures e portfólio não fazem parte do pacote. Sem merge, tag ou alteração de versão; v1.0.0 preservada.
+
+O roteiro HTTP dos dois perfis foi executado novamente nesta versão e passou: entrada direta 200, dados 401 sem sessão, aluno 403 na administração, professor 200, cookie seguro, origem estrangeira recusada e logout. Navegador confirmou Cidade (opcional) em Editar turma e Adicionar horário extra, valor vazio, required=false e limite 80; os formulários foram fechados sem salvar. Captura abaixo é da versão online.
+
+A revisão automática rejeitou a execução de um roteiro que criaria e excluiria uma turma e duas aulas fictícias no banco online, pelo risco de limpeza incompleta e ausência de autorização específica para esse teste de escrita. O roteiro não foi executado nem contornado. A verificação externa desta cidade foi concluída por consultas e telas; criação/edição com cidade e snapshot foram validados localmente, sem alegar gravação externa testada. O advisor de segurança retornou somente o aviso informativo de RLS sem políticas nas 35 tabelas privadas, coerente com o acesso exclusivo pelo backend; nenhuma política pública foi adicionada. [Significado do aviso](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy).
+
+![Cidade opcional na versão online, sem alterar a grade](screenshots/cidade-opcional-online.jpg)
 
 ![Entrada direta no celular](screenshots/acesso-direto-login-celular.jpg)
 

@@ -1,5 +1,7 @@
 # Aulas datadas — entrega 1B
 
+**Publicada em 24/11/2026:** a cidade opcional já está no endereço diário, inclusive em Adicionar horário extra. Migração brasileira e fonte `fd05301` publicadas após aprovação. Aulas e participações anteriores preservadas; sem atribuição retroativa de cidade. [Verificações e limites](ACESSO_DEMONSTRACAO.md#cidade-publicada-e-conferida). Referências abaixo a implementação somente local são históricas.
+
 ## Cidade da aula — 24/11/2026
 
 Uma aula publicada da grade copia a cidade opcional daquele horário. **Adicionar horário extra** também aceita **Cidade (opcional)**, livre e com até 80 caracteres. Deixar em branco permite publicar normalmente e não exibe etiqueta vazia. A cidade preenchida aparece na agenda administrativa, detalhes, seleção de chamada e no portal do aluno, incluindo histórico e confirmação de cancelamento do check-in.

@@ -1,5 +1,11 @@
 # Ponto de retomada do Tatame
 
+## Entrega concluída: acesso direto e cidade — 24/11/2026
+
+[Tatame diário](https://tatame-test-diario.vercel.app/) abre diretamente no login próprio. Mesmos acessos privados de professor/admin e aluno, sem troca de senha. Cidade opcional aprovada, commitada e enviada em `fd05301`, com migração brasileira aplicada. Publicação final `dpl_5KPypuvKgvJNwdxuifmLkaGrys9P`, READY/Production/gru1, 180 fontes conferidas; prévias continuam protegidas. Nenhuma cidade atribuída aos horários reais. As pendências de commit/migração/publicação abaixo são históricas e estão resolvidas.
+
+Verificação atual: build/311 testes/Prisma locais da implementação, nova execução HTTP online dos dois perfis e campos conferidos no navegador sem salvar. Teste de criação/exclusão de fixtures no banco online foi bloqueado pela revisão automática e não executado; não alegar escrita externa validada. Usuário pode fazer a demonstração em dois celulares, publicando uma aula como professor e consultando como aluno. Contas individuais, limitador distribuído e demais integrações continuam temas separados para uso com dados reais. [Roteiro](ACESSO_DEMONSTRACAO.md).
+
 ## Acesso direto liberado; cidade aprovada para inclusão — 24/11/2026
 
 O endereço diário abre diretamente o login do Tatame, com prévias protegidas por Standard Protection. Professor/admin e aluno fictício passaram em HTTP e navegador estreito; sem troca de senha. Primeira publicação direta `dpl_2UTdP7uckSRwiecsvN3iNKZKpwur`, fonte `9ba3873`, READY/Production/gru1. [Roteiro](ACESSO_DEMONSTRACAO.md).
